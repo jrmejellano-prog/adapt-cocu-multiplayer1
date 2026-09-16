@@ -1537,6 +1537,8 @@
         <p class="conversion-help" id="xp-convert-help">You need at least 10 XP. Only complete groups of 10 XP can be converted.</p>
         <button class="btn btn-primary btn-block" id="btn-convert-xp" style="margin-top:10px">Convert XP</button>
       </div>
+      <button class="btn btn-block" id="btn-export-my-progress">📄 Export My Progress</button>
+      <button class="btn btn-block" id="btn-open-teacher-gate">🧑‍🏫 Teacher Dashboard</button>
       <button class="btn btn-primary btn-block screen-home-btn" data-main-menu>🏠 Back to Main Menu</button>
     </div>
   </section>
@@ -1791,6 +1793,73 @@
     </div>
   </section>
 
+  <!-- TEACHER ACCESS GATE -->
+  <section id="screen-teacher-gate" class="screen">
+    <div class="inner">
+      <p class="eyebrow">🔒 Teacher Access</p>
+      <h1 class="display" id="teacher-gate-title">Teacher Access</h1>
+      <p class="subtitle" id="teacher-gate-desc"></p>
+      <div class="card">
+        <label class="field-label" for="teacher-gate-code">Access Code</label>
+        <input type="password" id="teacher-gate-code" autocomplete="off" style="width:100%;padding:10px;border-radius:10px;border:2px solid #dbe3f5;margin-bottom:10px">
+        <div id="teacher-gate-confirm-row">
+          <label class="field-label" for="teacher-gate-confirm">Confirm Access Code</label>
+          <input type="password" id="teacher-gate-confirm" autocomplete="off" style="width:100%;padding:10px;border-radius:10px;border:2px solid #dbe3f5;margin-bottom:10px">
+        </div>
+        <p class="conversion-help" id="teacher-gate-error" style="color:#c23a3a;min-height:1.2em"></p>
+        <button class="btn btn-primary btn-block" id="teacher-gate-submit">Unlock Dashboard</button>
+      </div>
+      <div id="teacher-gate-reset-row"><button class="btn btn-block" id="teacher-gate-reset">Reset Access Code</button></div>
+      <button class="btn btn-block" id="teacher-gate-back">⬅️ Back to Profile</button>
+    </div>
+  </section>
+
+  <!-- TEACHER / FACILITATOR DASHBOARD -->
+  <section id="screen-teacher-dashboard" class="screen">
+    <div class="inner">
+      <p class="eyebrow">🧑‍🏫 Facilitator Tools</p>
+      <h1 class="display">Progress Dashboard</h1>
+      <p class="subtitle">Monitoring data stored on this device. Tap Refresh to pull in records from the online server, if one is configured and reachable.</p>
+      <div class="stat-grid" id="teacher-overview"></div>
+      <div class="teacher-controls">
+        <input type="text" id="teacher-search" placeholder="🔍 Search name or student code…">
+        <select id="teacher-filter-section"></select>
+        <select id="teacher-filter-mode">
+          <option value="all">All Modes</option>
+          <option value="quickgame">Quick Game</option>
+          <option value="adventure">Challenge Mode</option>
+          <option value="speculation">Speculation</option>
+        </select>
+        <select id="teacher-sort">
+          <option value="recent">Sort: Most Recent</option>
+          <option value="name">Sort: Name</option>
+          <option value="progress">Sort: Progress (XP)</option>
+        </select>
+      </div>
+      <div class="teacher-action-row">
+        <button class="btn" id="teacher-refresh">🔄 Refresh</button>
+        <label class="btn" for="teacher-import-input" style="cursor:pointer">📥 Import Records</label>
+        <input type="file" id="teacher-import-input" accept="application/json" multiple hidden>
+        <button class="btn" id="teacher-export-csv">📤 Export Class Summary</button>
+      </div>
+      <div id="teacher-roster-list" class="history-list" aria-live="polite"></div>
+      <button class="btn btn-block" id="teacher-dashboard-back">⬅️ Back to Profile</button>
+      <button class="btn btn-block" id="teacher-logout">🔒 Lock Dashboard</button>
+    </div>
+  </section>
+
+  <!-- TEACHER / FACILITATOR STUDENT REPORT -->
+  <section id="screen-teacher-report" class="screen">
+    <div class="inner teacher-report-printable">
+      <p class="eyebrow">📄 Student Report</p>
+      <div id="teacher-report-body"></div>
+      <div class="teacher-action-row no-print">
+        <button class="btn btn-primary" id="teacher-report-print">🖨️ Print Report</button>
+        <button class="btn" id="teacher-report-back">⬅️ Back to Dashboard</button>
+      </div>
+    </div>
+  </section>
+
   <!-- RESULTS (generic: quickgame/adventure) -->
   <section id="screen-results" class="screen">
     <div class="inner">
@@ -1835,6 +1904,7 @@
       <h3>Privacy Policy</h3>
       <p>The application uses the name and section you enter to personalize the local game experience. Your game progress, scores, settings, achievements, coins, and customization can be stored locally on the device so the game can remember your progress.</p>
       <p>This local version does not claim that your personal information is collected, sold, or shared with a server. Online multiplayer is different: room information and multiplayer game state are sent to the configured multiplayer server when you choose to use online multiplayer.</p>
+      <p><strong>Teacher/Facilitator Progress Monitoring:</strong> Adapt CoCu can generate a compact progress summary from your local game data — your name, section, player code, level, XP, lesson and activity completion, accuracy, and achievements — so a teacher or facilitator can monitor learning progress. This summary is stored locally on this device and is only shared with a teacher if you export it, if a teacher imports it, or if the same online multiplayer server is reachable and a teacher's Progress Dashboard is used to retrieve it. It is separate from your personal History, which remains private on your own device. Teacher Dashboard access on a device requires a locally-set access code and is not accessible to other students.</p>
       <p>If Offline Mode is enabled, the application continues using supported local features. Online multiplayer requires an internet connection and a working multiplayer server.</p>
       <h3>Your Choice</h3>
       <p>You may stop using the application at any time. You can also clear the application's local storage through your browser/device settings, which may remove locally saved game progress.</p>
@@ -2081,7 +2151,7 @@
 
   function defaultState(){
     return {
-      name:'Player', birthYear:2008, section:'', playerCodename:null,
+      name:'Player', birthYear:2008, section:'', playerCodename:null, lastActiveAt:null,
       coins:300, xp:0, gamesPlayed:0, adventuresCompleted:0,
       coinsSpent:0, coinsEarnedTotal:0, totalPlaySeconds:0, consecutiveAdvWins:0, hatWins:0, perfectGates:0, everScored150:false,
       correctStreak:0, bestCorrectStreak:0, totalPoints:0, bestScore:0, bestChallengeScore:0, speculationSolved:0, xpEarnedTotal:0, lessonsCompleted:0, completedLessons:{},
@@ -2449,6 +2519,7 @@
       saveQueued=true;
       return;
     }
+    if(S) S.lastActiveAt = Date.now();
     const serialized=serializeState();
     if(!serialized) return;
     saveInFlight=true;
@@ -2457,6 +2528,12 @@
     finally{
       saveInFlight=false;
       if(saveQueued) performQueuedSave();
+      // Keep the Teacher Dashboard's local roster (and, when the online
+      // server is reachable, the shared roster) current every time this
+      // student's own progress is saved. Best-effort and silent — a
+      // learner's game never waits on or breaks because of this.
+      try{ if(S && S.onboarded && S.playerCodename) mergeSnapshotIntoRoster(buildProgressSnapshot()); }catch(e){}
+      queueProgressSync();
     }
   }
 
@@ -2742,12 +2819,13 @@
     }
   }
 
-  const SCREENS = ['intro','agegate','loading','menu','lesson','lesson-modes','profile','trophies','leaders','adv-setup','adventure','trivia','quickgame','challenge','store','results','customize','spec-setup','spec-play','mp-lobby','history','history-review'];
+  const SCREENS = ['intro','agegate','loading','menu','lesson','lesson-modes','profile','trophies','leaders','adv-setup','adventure','trivia','quickgame','challenge','store','results','customize','spec-setup','spec-play','mp-lobby','history','history-review','teacher-gate','teacher-dashboard','teacher-report'];
   const SCREEN_BG = {
     intro:'bg-intro', agegate:'bg-menu', loading:'bg-menu', menu:'bg-menu', lesson:'bg-menu', 'lesson-modes':'bg-menu', profile:'bg-profile', trophies:'bg-trophies',
     leaders:'bg-leaders', 'adv-setup':'bg-adventure', adventure:'bg-adventure', trivia:'bg-menu',
     quickgame:'bg-arcade', challenge:'bg-arcade', store:'bg-store',
-    results:'bg-menu', customize:'bg-profile', 'spec-setup':'bg-adventure', 'spec-play':'bg-menu', history:'bg-menu', 'history-review':'bg-menu'
+    results:'bg-menu', customize:'bg-profile', 'spec-setup':'bg-adventure', 'spec-play':'bg-menu', history:'bg-menu', 'history-review':'bg-menu',
+    'teacher-gate':'bg-profile', 'teacher-dashboard':'bg-profile', 'teacher-report':'bg-profile'
   };
   function showScreen(name){
     try{
@@ -2780,7 +2858,8 @@
     menu:'Main Menu', lesson:'Lessons', 'lesson-modes':'Choose Game Mode', profile:'Profile', trophies:'Trophies', leaders:'Leaderboards', 'adv-setup':'Choose Subject',
     adventure:'Adventure', trivia:'Trivia', quickgame:'Quick Game', challenge:'Challenge',
     store:'Store', results:'Results', customize:'Customize',
-    'spec-setup':'Speculation', 'spec-play':'Speculation', history:'Game History', 'history-review':'Review Questions', 'mp-lobby':'Multiplayer Lobby'
+    'spec-setup':'Speculation', 'spec-play':'Speculation', history:'Game History', 'history-review':'Review Questions', 'mp-lobby':'Multiplayer Lobby',
+    'teacher-gate':'Teacher Access', 'teacher-dashboard':'Progress Dashboard', 'teacher-report':'Student Report'
   };
   function renderBreadcrumb(name){
     const bar = $('breadcrumb-bar');
@@ -3681,6 +3760,343 @@
     }).join('');
   }
   $('review-back-btn')?.addEventListener('click', () => { sfx('click'); closeQuestionReview(); });
+
+  /* =========================================================
+     TEACHER / FACILITATOR PROGRESS MONITORING
+     =========================================================
+     Data flow, offline-first:
+       1. Every learner device keeps its own S.history / achievements /
+          XP etc. (unchanged — this is still that learner's private
+          History & Review screens).
+       2. buildProgressSnapshot() distills that into one compact,
+          teacher-facing record (no personal data beyond what the
+          learner already entered: name, section, codename).
+       3. mergeSnapshotIntoRoster() writes that record into a LOCAL
+          roster (adaptcocu_teacher_roster_v1) on THIS device, keyed by
+          codename, newest-lastActive-wins — so re-saving, re-importing,
+          or re-syncing a record never overwrites newer data with older.
+       4. If the existing online multiplayer server is reachable
+          (mpHasBackend/mpStSet/mpStGet — the same key-value API used
+          for online rooms), the snapshot is also pushed there under
+          "progress:<codename>", and the Teacher Dashboard pulls every
+          "progress:*" key when it refreshes. No server is required —
+          without one, Import/Export still lets a teacher collect
+          records from each device manually.
+  */
+  const TEACHER_ROSTER_KEY='adaptcocu_teacher_roster_v1';
+  function readLocalRoster(){
+    try{ const o=JSON.parse(localStorage.getItem(TEACHER_ROSTER_KEY)||'{}'); return (o && typeof o==='object' && !Array.isArray(o)) ? o : {}; }catch(e){ return {}; }
+  }
+  function writeLocalRoster(obj){ try{ localStorage.setItem(TEACHER_ROSTER_KEY, JSON.stringify(obj)); }catch(e){} }
+  function mergeSnapshotIntoRoster(snapshot){
+    if(!snapshot || !snapshot.studentId) return;
+    const roster = readLocalRoster();
+    const existing = roster[snapshot.studentId];
+    // Newest lastActive always wins, so importing an old export or a stale
+    // synced copy can never clobber more recent progress already on file.
+    if(!existing || (Number(snapshot.lastActive)||0) >= (Number(existing.lastActive)||0)){
+      roster[snapshot.studentId] = snapshot;
+      writeLocalRoster(roster);
+    }
+  }
+  function buildProgressSnapshot(){
+    const hist = (Array.isArray(S.history)?S.history:[]).filter(h => h && HISTORY_MODE_META[String(h.mode||'').toLowerCase()]);
+    const totalQuestions = hist.reduce((n,h)=>n+(Number(h.total)||0),0);
+    const totalCorrect = hist.reduce((n,h)=>n+(Number(h.correct)||0),0);
+    const byMode = {};
+    Object.keys(HISTORY_MODE_META).forEach(m => { byMode[m] = { label:HISTORY_MODE_META[m].label, icon:HISTORY_MODE_META[m].icon, count:0, correct:0, total:0, bestScore:0 }; });
+    hist.forEach(h => {
+      const m=String(h.mode||'').toLowerCase(); if(!byMode[m]) return;
+      byMode[m].count++; byMode[m].correct += Number(h.correct)||0; byMode[m].total += Number(h.total)||0;
+      byMode[m].bestScore = Math.max(byMode[m].bestScore, Number(h.score)||0);
+    });
+    const achievementsEarned = Object.keys(S.achievementsCollected||{}).filter(k => S.achievementsCollected[k]);
+    return {
+      studentId: S.playerCodename || null,
+      name: S.name || 'Player',
+      section: S.section || '',
+      level: level(),
+      xp: Math.floor(S.xp||0),
+      xpEarnedTotal: Math.floor(S.xpEarnedTotal||0),
+      coins: Math.floor(S.coins||0),
+      lessonsCompleted: S.lessonsCompleted||0,
+      totalActivities: hist.length,
+      byMode,
+      totalQuestions, totalCorrect, totalWrong: Math.max(0,totalQuestions-totalCorrect),
+      overallAccuracy: totalQuestions ? Math.round(totalCorrect/totalQuestions*100) : 0,
+      bestScore: S.bestScore||0,
+      bestAccuracy: S.bestAccuracy||0,
+      achievementsEarnedCount: achievementsEarned.length,
+      achievementsTotal: ACHIEVEMENTS.length,
+      recentActivity: hist.slice(0,15).map(h => ({ mode:h.mode, label:h.label, subject:h.subject, score:h.score, correct:h.correct, total:h.total, accuracy:h.accuracy, timestamp:h.timestamp })),
+      lastActive: S.lastActiveAt || (hist[0] ? hist[0].timestamp : null),
+      updatedAt: Date.now()
+    };
+  }
+  let progressSyncTimer=null;
+  function queueProgressSync(){
+    clearTimeout(progressSyncTimer);
+    progressSyncTimer=setTimeout(()=>{ progressSyncTimer=null; pushProgressSnapshot(); }, 1500);
+  }
+  async function pushProgressSnapshot(){
+    if(!S || !S.onboarded || !S.playerCodename) return;
+    const snap = buildProgressSnapshot();
+    mergeSnapshotIntoRoster(snap);
+    if(!mpHasBackend()) return;
+    try{ await mpStSet('progress:'+snap.studentId, JSON.stringify(snap)); }catch(e){}
+  }
+  async function fetchRemoteRosterAndMerge(){
+    if(!mpHasBackend()) return false;
+    try{
+      const keys = await mpStListPrefix('progress:');
+      const values = await Promise.all(keys.map(k => mpStGet(k)));
+      values.forEach(v => { if(!v) return; try{ mergeSnapshotIntoRoster(JSON.parse(v)); }catch(e){} });
+      return true;
+    }catch(e){ return false; }
+  }
+
+  /* ---- Teacher access gate ----
+     No teacher password ships in this file. The first teacher to open the
+     dashboard on a device sets their own access code, which is hashed
+     (SHA-256) before it's stored — the plain code itself is never written
+     to disk. This is prototype-level protection against a curious student
+     tapping the wrong button, not real account security; a production
+     deployment should verify teacher access on a server instead. */
+  const TEACHER_AUTH_KEY='adaptcocu_teacher_access_hash_v1';
+  const TEACHER_SESSION_KEY='adaptcocu_teacher_session_v1';
+  async function sha256Hex(str){
+    str = String(str||'');
+    // crypto.subtle needs a secure context (HTTPS/localhost). Classrooms
+    // often run this over plain HTTP on a LAN or straight from a file, so
+    // fall back to a simple deterministic hash there — still avoids storing
+    // the code in plain text, just with weaker guarantees than SHA-256.
+    if(window.crypto && window.crypto.subtle){
+      try{
+        const enc=new TextEncoder().encode(str);
+        const buf=await window.crypto.subtle.digest('SHA-256', enc);
+        return 'sha256:'+Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      }catch(e){ /* fall through to the simple hash below */ }
+    }
+    let h1=0xdeadbeef, h2=0x41c6ce57;
+    for(let i=0;i<str.length;i++){
+      const ch=str.charCodeAt(i);
+      h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677);
+    }
+    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+    h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+    return 'fnv:'+(h1>>>0).toString(16)+(h2>>>0).toString(16);
+  }
+  function hasTeacherAccessSetUp(){ return !!localStorage.getItem(TEACHER_AUTH_KEY); }
+  async function setTeacherAccessCode(code){ localStorage.setItem(TEACHER_AUTH_KEY, await sha256Hex(code)); }
+  async function verifyTeacherAccessCode(code){ return hasTeacherAccessSetUp() && (await sha256Hex(code))===localStorage.getItem(TEACHER_AUTH_KEY); }
+  function isTeacherSessionActive(){ return sessionStorage.getItem(TEACHER_SESSION_KEY)==='1'; }
+  function setTeacherSessionActive(v){ if(v) sessionStorage.setItem(TEACHER_SESSION_KEY,'1'); else sessionStorage.removeItem(TEACHER_SESSION_KEY); }
+  function openTeacherEntry(){
+    if(isTeacherSessionActive()){ openTeacherDashboard(); return; }
+    showScreen('teacher-gate');
+    renderTeacherGate();
+  }
+  function renderTeacherGate(){
+    const setup = !hasTeacherAccessSetUp();
+    $('teacher-gate-title').textContent = setup ? '🧑\u200d🏫 Set Up Teacher Access' : '🧑\u200d🏫 Teacher Access';
+    $('teacher-gate-desc').textContent = setup
+      ? 'Create an access code for this device. Only enter one you\u2019ll remember — it isn\u2019t sent anywhere and can\u2019t be recovered, only reset.'
+      : 'Enter the teacher access code for this device to open the Progress Dashboard.';
+    $('teacher-gate-confirm-row').classList.toggle('hidden', !setup);
+    $('teacher-gate-code').value=''; $('teacher-gate-confirm').value=''; $('teacher-gate-error').textContent='';
+    $('teacher-gate-submit').textContent = setup ? 'Create & Continue' : 'Unlock Dashboard';
+    $('teacher-gate-reset-row').classList.toggle('hidden', setup);
+  }
+  $('teacher-gate-submit')?.addEventListener('click', async () => {
+    const setup = !hasTeacherAccessSetUp();
+    const code = $('teacher-gate-code').value.trim();
+    const err = $('teacher-gate-error');
+    if(code.length<4){ err.textContent='Use at least 4 characters.'; return; }
+    if(setup){
+      if(code !== $('teacher-gate-confirm').value.trim()){ err.textContent='Codes do not match.'; return; }
+      await setTeacherAccessCode(code);
+      setTeacherSessionActive(true);
+      sfx('correct'); openTeacherDashboard();
+    } else {
+      if(await verifyTeacherAccessCode(code)){ setTeacherSessionActive(true); sfx('correct'); openTeacherDashboard(); }
+      else { err.textContent='Incorrect access code.'; sfx('wrong'); }
+    }
+  });
+  $('teacher-gate-reset')?.addEventListener('click', () => {
+    if(window.confirm('Reset the teacher access code on this device? You\u2019ll set a new one immediately — student progress records are not affected.')){
+      localStorage.removeItem(TEACHER_AUTH_KEY); setTeacherSessionActive(false); renderTeacherGate();
+    }
+  });
+  $('teacher-gate-back')?.addEventListener('click', () => { sfx('click'); showScreen('profile'); });
+
+  /* ---- Dashboard state / rendering ---- */
+  let teacherFilter = { q:'', section:'all', mode:'all', sort:'recent' };
+  function openTeacherDashboard(){
+    showScreen('teacher-dashboard');
+    renderTeacherDashboard();
+    fetchRemoteRosterAndMerge().then(ok => { if(ok) renderTeacherDashboard(); });
+  }
+  function rosterEntries(){ return Object.values(readLocalRoster()).filter(Boolean); }
+  function isRecentlyActive(ts){ return !!ts && (Date.now()-Number(ts)) <= 14*24*60*60*1000; }
+  function renderTeacherClassOverview(rows){
+    const wrap=$('teacher-overview'); if(!wrap) return;
+    const total=rows.length;
+    const active=rows.filter(r=>isRecentlyActive(r.lastActive)).length;
+    const completed=rows.filter(r=>r.totalActivities>0).length;
+    const avgAccuracy = total ? Math.round(rows.reduce((n,r)=>n+(r.overallAccuracy||0),0)/total) : 0;
+    const modeTotals={};
+    rows.forEach(r => Object.entries(r.byMode||{}).forEach(([m,d]) => { modeTotals[m]=(modeTotals[m]||0)+(d.count||0); }));
+    const modeEntries=Object.entries(modeTotals).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+    const mostPlayed = modeEntries.length ? (HISTORY_MODE_META[modeEntries[0][0]]||{}).label||modeEntries[0][0] : '—';
+    const totalActivities = rows.reduce((n,r)=>n+(r.totalActivities||0),0);
+    wrap.innerHTML = [
+      ['Total Learners', total],
+      ['Active (14 days)', active],
+      ['Completed ≥1 Activity', completed],
+      ['Class Avg. Accuracy', avgAccuracy+'%'],
+      ['Total Activities Logged', totalActivities],
+      ['Most Played Mode', mostPlayed]
+    ].map(([l,v]) => `<div class="stat-box"><div class="sv">${escapeHtml(v)}</div><div class="sl">${escapeHtml(l)}</div></div>`).join('');
+  }
+  function renderTeacherFilters(rows){
+    const sectionSel=$('teacher-filter-section');
+    const sections=[...new Set(rows.map(r=>r.section).filter(Boolean))].sort();
+    sectionSel.innerHTML = '<option value="all">All Sections</option>' + sections.map(s=>`<option value="${escapeHtml(s)}"${teacherFilter.section===s?' selected':''}>${escapeHtml(s)}</option>`).join('');
+    if(!sections.includes(teacherFilter.section)) teacherFilter.section='all';
+    sectionSel.value=teacherFilter.section;
+  }
+  function renderTeacherRoster(){
+    const rows = rosterEntries();
+    renderTeacherClassOverview(rows);
+    renderTeacherFilters(rows);
+    let filtered = rows.filter(r => {
+      if(teacherFilter.section!=='all' && r.section!==teacherFilter.section) return false;
+      if(teacherFilter.mode!=='all' && !((r.byMode||{})[teacherFilter.mode]||{}).count) return false;
+      if(teacherFilter.q){ const q=teacherFilter.q.toLowerCase(); if(!(String(r.name||'').toLowerCase().includes(q) || String(r.studentId||'').toLowerCase().includes(q))) return false; }
+      return true;
+    });
+    filtered.sort((a,b) => {
+      if(teacherFilter.sort==='name') return String(a.name||'').localeCompare(String(b.name||''));
+      if(teacherFilter.sort==='progress') return (b.xpEarnedTotal||0)-(a.xpEarnedTotal||0);
+      return (Number(b.lastActive)||0)-(Number(a.lastActive)||0); // recent
+    });
+    const list=$('teacher-roster-list');
+    if(!filtered.length){
+      list.innerHTML = `<div class="card history-empty"><div class="history-empty-icon">🧑\u200d🏫</div><strong>${rows.length? 'No learners match these filters.' : 'No learner records yet.'}</strong><p>${rows.length? 'Try a different search or filter.' : 'Records appear here automatically as learners play on this device, or use Import to load progress files exported from other devices.'}</p></div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(r => {
+      const dot = isRecentlyActive(r.lastActive) ? 'teacher-dot-active' : 'teacher-dot-idle';
+      return `<article class="history-card teacher-row" data-student-id="${escapeHtml(r.studentId)}">
+        <div class="history-card-head">
+          <div class="history-mode"><span class="teacher-dot ${dot}"></span><div><strong>${escapeHtml(r.name)}</strong><small>${escapeHtml(r.section||'No section')} · ${escapeHtml(r.studentId)}</small></div></div>
+          <strong class="history-score">Lv. ${Number(r.level)||1}</strong>
+        </div>
+        <div class="history-meta">
+          <span>✓ ${r.overallAccuracy||0}% Accuracy</span>
+          <span>🎮 ${r.totalActivities||0} Activities</span>
+          <span>⭐ ${r.xpEarnedTotal||0} XP</span>
+          <span>🏆 ${r.achievementsEarnedCount||0}/${r.achievementsTotal||0}</span>
+        </div>
+        <div class="history-meta"><span>Last active: ${r.lastActive?formatHistoryDate(r.lastActive):'—'}</span></div>
+        <button type="button" class="btn btn-block history-review-btn" data-teacher-report="${escapeHtml(r.studentId)}">📄 View Report</button>
+      </article>`;
+    }).join('');
+  }
+  function renderTeacherDashboard(){ renderTeacherRoster(); }
+  $('teacher-search')?.addEventListener('input', e => { teacherFilter.q=e.target.value; renderTeacherRoster(); });
+  $('teacher-filter-section')?.addEventListener('change', e => { teacherFilter.section=e.target.value; renderTeacherRoster(); });
+  $('teacher-filter-mode')?.addEventListener('change', e => { teacherFilter.mode=e.target.value; renderTeacherRoster(); });
+  $('teacher-sort')?.addEventListener('change', e => { teacherFilter.sort=e.target.value; renderTeacherRoster(); });
+  $('teacher-refresh')?.addEventListener('click', async () => { sfx('click'); const btn=$('teacher-refresh'); btn.disabled=true; btn.textContent='Refreshing…'; await fetchRemoteRosterAndMerge(); renderTeacherRoster(); btn.disabled=false; btn.textContent='🔄 Refresh'; });
+  $('teacher-roster-list')?.addEventListener('click', e => {
+    const btn=e.target.closest('[data-teacher-report]'); if(!btn) return;
+    sfx('click'); openTeacherReport(btn.dataset.teacherReport);
+  });
+  $('teacher-logout')?.addEventListener('click', () => { setTeacherSessionActive(false); showScreen('profile'); });
+  $('teacher-dashboard-back')?.addEventListener('click', () => { sfx('click'); showScreen('profile'); });
+
+  /* ---- Import / Export ---- */
+  $('btn-export-my-progress')?.addEventListener('click', () => {
+    if(!S.onboarded || !S.playerCodename){ showInfo('📄 Export Progress', 'Finish setting up your name, section, and player code first (Home Menu onboarding), then export.'); return; }
+    const snap = buildProgressSnapshot();
+    const blob = new Blob([JSON.stringify(snap,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download = `adaptcocu-progress-${snap.studentId}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    sfx('click');
+  });
+  $('teacher-import-input')?.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files||[]); e.target.value='';
+    let imported=0, skipped=0;
+    for(const f of files){
+      try{
+        const text = await f.text();
+        const data = JSON.parse(text);
+        const list = Array.isArray(data) ? data : [data];
+        list.forEach(snap => { if(snap && snap.studentId){ mergeSnapshotIntoRoster(snap); imported++; } else { skipped++; } });
+      }catch(e){ skipped++; }
+    }
+    renderTeacherRoster();
+    showInfo('📥 Import Complete', `Imported ${imported} record${imported===1?'':'s'}.${skipped?` Skipped ${skipped} invalid file${skipped===1?'':'s'}.`:''}`);
+  });
+  $('teacher-export-csv')?.addEventListener('click', () => {
+    const rows = rosterEntries();
+    if(!rows.length){ showInfo('📤 Export Class Summary', 'No learner records to export yet.'); return; }
+    const headers=['Name','Section','Student Code','Level','XP Earned','Coins','Lessons Completed','Total Activities','Overall Accuracy %','Best Score','Achievements Earned','Last Active'];
+    const csvEsc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+    const lines=[headers.join(',')].concat(rows.map(r => [r.name,r.section,r.studentId,r.level,r.xpEarnedTotal,r.coins,r.lessonsCompleted,r.totalActivities,r.overallAccuracy,r.bestScore,`${r.achievementsEarnedCount}/${r.achievementsTotal}`, r.lastActive?formatHistoryDate(r.lastActive):''].map(csvEsc).join(',')));
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`adaptcocu-class-summary-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    sfx('click');
+  });
+
+  /* ---- Student report ---- */
+  let teacherReportStudentId = null;
+  function openTeacherReport(studentId){
+    teacherReportStudentId = studentId;
+    showScreen('teacher-report');
+    renderTeacherReport();
+  }
+  function renderTeacherReport(){
+    const r = readLocalRoster()[teacherReportStudentId];
+    const wrap=$('teacher-report-body');
+    if(!r){ wrap.innerHTML = `<div class="card history-empty"><strong>Record not found.</strong><p>It may have been removed. Go back and refresh the dashboard.</p></div>`; return; }
+    const modeRows = Object.entries(r.byMode||{}).filter(([,d])=>d.count>0).map(([,d]) => `<div class="stat-box"><div class="sv">${d.count}</div><div class="sl">${escapeHtml(d.icon)} ${escapeHtml(d.label)} · ${d.total?Math.round(d.correct/d.total*100):0}%</div></div>`).join('') || '<p class="subtitle">No completed activities yet.</p>';
+    const activityRows = (r.recentActivity||[]).map(a => {
+      const meta=HISTORY_MODE_META[String(a.mode||'').toLowerCase()]||{icon:'📘',label:a.mode};
+      return `<article class="qr-card"><div class="qr-num">${formatHistoryDate(a.timestamp)}</div><div class="qr-question">${meta.icon} ${escapeHtml(meta.label)}${a.subject?' · '+escapeHtml(a.subject):''}</div><div class="qr-answer-row"><span class="qr-label">Score:</span><span class="qr-value">${a.score||0} pts</span></div><div class="qr-answer-row"><span class="qr-label">Result:</span><span class="qr-value">${a.correct||0}/${a.total||0} · ${a.accuracy||0}%</span></div></article>`;
+    }).join('') || '<p class="subtitle">No recent activity recorded.</p>';
+    wrap.innerHTML = `
+      <div class="card teacher-report-head">
+        <h2 style="margin:0">${escapeHtml(r.name)}</h2>
+        <p class="subtitle" style="margin:2px 0 0">${escapeHtml(r.section||'No section')} · Student Code: <strong>${escapeHtml(r.studentId)}</strong></p>
+        <p class="subtitle" style="margin:2px 0 0">Last active: ${r.lastActive?formatHistoryDate(r.lastActive):'—'}</p>
+      </div>
+      <h3>Performance</h3>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="sv">Lv. ${r.level}</div><div class="sl">Current Level</div></div>
+        <div class="stat-box"><div class="sv">${r.xpEarnedTotal}</div><div class="sl">XP Earned</div></div>
+        <div class="stat-box"><div class="sv">${r.overallAccuracy}%</div><div class="sl">Overall Accuracy</div></div>
+        <div class="stat-box"><div class="sv">${r.bestScore}</div><div class="sl">Best Score</div></div>
+        <div class="stat-box"><div class="sv">${r.totalCorrect}/${r.totalQuestions}</div><div class="sl">Correct / Total Answers</div></div>
+        <div class="stat-box"><div class="sv">${r.achievementsEarnedCount}/${r.achievementsTotal}</div><div class="sl">Achievements</div></div>
+      </div>
+      <h3>Learning Progress</h3>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="sv">${r.lessonsCompleted}</div><div class="sl">Lessons Completed</div></div>
+        <div class="stat-box"><div class="sv">${r.totalActivities}</div><div class="sl">Total Activities</div></div>
+        ${modeRows}
+      </div>
+      <h3>Recent Activity</h3>
+      <div class="review-list">${activityRows}</div>
+    `;
+  }
+  $('teacher-report-back')?.addEventListener('click', () => { sfx('click'); showScreen('teacher-dashboard'); });
+  $('teacher-report-print')?.addEventListener('click', () => window.print());
+  $('btn-open-teacher-gate')?.addEventListener('click', () => { sfx('click'); openTeacherEntry(); });
 
   /* ================= MAIN MENU ================= */
   function renderMenu(){
@@ -6090,6 +6506,25 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   body.high-contrast .qr-card{background:#1a2440!important;color:#eef2ff!important;border-color:#7284c4!important;box-shadow:0 5px 0 #101a30!important}
   body.high-contrast .qr-label{color:#c9d3f5!important}
   body.high-contrast .qr-value{color:#eef2ff!important}
+
+  /* ===== Teacher / Facilitator Dashboard ===== */
+  #teacher-gate-confirm-row.hidden, #teacher-gate-reset-row.hidden{ display:none; }
+  .teacher-controls{ display:grid; gap:8px; margin:12px 0; }
+  .teacher-controls input, .teacher-controls select{ padding:10px; border-radius:10px; border:2px solid #dbe3f5; font-family:inherit; font-size:.85rem; background:#fff; }
+  .teacher-action-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .teacher-action-row .btn{ flex:1 1 140px; }
+  .teacher-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+  .teacher-dot-active{ background:#2fbf6f; box-shadow:0 0 0 3px rgba(47,191,111,0.18); }
+  .teacher-dot-idle{ background:#c3cbe0; }
+  .teacher-row .history-mode{ align-items:center; }
+  .teacher-report-head{ margin-bottom:6px; }
+  @media(min-width:640px){ .teacher-controls{ grid-template-columns:2fr 1fr 1fr 1fr; } }
+  @media print{
+    .no-print, #app-header, #breadcrumb-bar, #mobile-menu-panel, #mobile-menu-btn, #btn-home, #btn-pause{ display:none !important; }
+    .screen{ position:static !important; display:none !important; }
+    #screen-teacher-report.active{ display:block !important; }
+    body{ background:#fff !important; }
+  }
 
   /* ===== Accessibility + visual polish patch ===== */
   body.high-contrast .lesson-selector{
