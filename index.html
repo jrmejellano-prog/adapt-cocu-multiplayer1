@@ -3163,63 +3163,392 @@
   function ownedCharacters(){ return CHARACTERS.filter(c => c.price===0 || S.purchased.includes(c.id)); }
 
   /* ================= REAL 3D CHARACTER VIEWER ================= */
+  /*
+   * Avatar3D — anchored block-humanoid rig.
+   *
+   * IMPORTANT: every wearable/facial piece is built in the local coordinate
+   * system of the body part it belongs to.  This avoids the old "floating
+   * face/hair" problem caused by mixing world-space offsets with scaled
+   * parent transforms.
+   *
+   * Rig:
+   * Root -> Pelvis -> Torso -> Neck -> Head -> Face/Hair/Head wear
+   *                -> Shoulder -> UpperArm -> Forearm -> Hand
+   *         Pelvis -> Hip -> Thigh -> Shin -> Foot -> Shoe
+   */
   const Avatar3D = (() => {
-    let gl=null, program=null, canvas=null, viewer=null, raf=0, last=0;
-    let cfg=null, mode='idle', modeStarted=0, rotation=0, dragging=false, lastX=0, hintHidden=false;
+    let gl=null, program=null, canvas=null, viewer=null, raf=0;
+    let cfg=null, mode='idle', modeStarted=0, rotation=0;
+    let dragging=false, lastX=0, pointerId=null, hintHidden=false;
     let buffers={};
-    const V=`attribute vec3 aPos; attribute vec3 aNormal; uniform mat4 uMVP; uniform mat4 uModel; varying vec3 vN; varying vec3 vP; void main(){ vec4 wp=uModel*vec4(aPos,1.0); vP=wp.xyz; vN=normalize(mat3(uModel)*aNormal); gl_Position=uMVP*vec4(aPos,1.0); }`;
-    const F=`precision mediump float; uniform vec3 uColor; varying vec3 vN; varying vec3 vP; void main(){ vec3 L=normalize(vec3(-0.45,0.9,0.65)); float d=max(dot(normalize(vN),L),0.0); float rim=pow(1.0-max(dot(normalize(vN),vec3(0,0,1)),0.0),2.0)*0.12; gl_FragColor=vec4(uColor*(0.32+0.62*d+rim),1.0); }`;
-    function shader(type,src){ const sh=gl.createShader(type); gl.shaderSource(sh,src); gl.compileShader(sh); if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) throw Error(gl.getShaderInfoLog(sh)); return sh; }
-    function matMul(a,b){ const o=new Float32Array(16); for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3]; return o; }
-    function I(){ const m=new Float32Array(16); m[0]=m[5]=m[10]=m[15]=1; return m; }
-    function T(x,y,z){ const m=I(); m[12]=x;m[13]=y;m[14]=z;return m; }
-    function S(x,y,z){ const m=I();m[0]=x;m[5]=y;m[10]=z;return m; }
+
+    const V=`
+      attribute vec3 aPos;
+      attribute vec3 aNormal;
+      uniform mat4 uMVP;
+      uniform mat4 uModel;
+      varying vec3 vN;
+      void main(){
+        vN=normalize(mat3(uModel)*aNormal);
+        gl_Position=uMVP*vec4(aPos,1.0);
+      }`;
+    const F=`
+      precision mediump float;
+      uniform vec3 uColor;
+      varying vec3 vN;
+      void main(){
+        vec3 N=normalize(vN);
+        vec3 L=normalize(vec3(-0.45,0.88,0.55));
+        vec3 L2=normalize(vec3(0.70,0.25,-0.40));
+        float d=max(dot(N,L),0.0);
+        float fill=max(dot(N,L2),0.0)*0.18;
+        vec3 c=uColor*(0.44+0.52*d+fill);
+        gl_FragColor=vec4(c,1.0);
+      }`;
+
+    function shader(type,src){
+      const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);
+      if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(sh)||'Shader compile failed');
+      return sh;
+    }
+    function I(){const m=new Float32Array(16);m[0]=m[5]=m[10]=m[15]=1;return m;}
+    function matMul(a,b){
+      const o=new Float32Array(16);
+      for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];
+      return o;
+    }
+    function T(x,y,z){const m=I();m[12]=x;m[13]=y;m[14]=z;return m;}
+    function S(x,y,z){const m=I();m[0]=x;m[5]=y;m[10]=z;return m;}
     function Rx(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[5]=c;m[6]=s;m[9]=-s;m[10]=c;return m;}
     function Ry(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[0]=c;m[2]=-s;m[8]=s;m[10]=c;return m;}
     function Rz(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[0]=c;m[1]=s;m[4]=-s;m[5]=c;return m;}
-    function TRS(x,y,z,rx,ry,rz,sx,sy,sz){ return matMul(matMul(matMul(matMul(T(x,y,z),Rz(rz||0)),Ry(ry||0)),Rx(rx||0)),S(sx||1,sy||1,sz||1)); }
-    function perspective(fovy,aspect,n,f){const t=1/Math.tan(fovy/2),m=new Float32Array(16);m[0]=t/aspect;m[5]=t;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=(2*f*n)/(n-f);return m;}
-    function lookAt(eye,center,up){let zx=eye[0]-center[0],zy=eye[1]-center[1],zz=eye[2]-center[2],zl=Math.hypot(zx,zy,zz);zx/=zl;zy/=zl;zz/=zl;let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx;let xl=Math.hypot(xx,xy,xz);xx/=xl;xy/=xl;xz/=xl;let yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;const m=I();m[0]=xx;m[1]=yx;m[2]=zx;m[4]=xy;m[5]=yy;m[6]=zy;m[8]=xz;m[9]=yz;m[10]=zz;m[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);m[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);m[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);return m;}
-    function mesh(name,verts,norms,inds){const b={v:gl.createBuffer(),n:gl.createBuffer(),i:gl.createBuffer(),count:inds.length};gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(norms),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(inds),gl.STATIC_DRAW);buffers[name]=b;}
-    function makeCube(){const v=[-1,-1,-1,1,-1,-1,1,1,-1,-1,1,-1,-1,-1,1,1,-1,1,1,1,1,-1,1,1],n=[],i=[];const faces=[[0,1,2,3,0,0,-1],[4,7,6,5,0,0,1],[0,4,5,1,-1,0,0],[3,2,6,7,1,0,0],[0,3,7,4,0,-1,0],[1,5,6,2,0,1,0]];faces.forEach(f=>{const a=f.slice(0,4),nx=f[4],ny=f[5],nz=f[6];a.forEach(()=>n.push(nx,ny,nz));const base=n.length/3-4;i.push(base,base+1,base+2,base,base+2,base+3);});mesh('cube',v,n,i);}
-    function makeSphere(){const v=[],n=[],i=[],la=18,lo=12;for(let y=0;y<=lo;y++){const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,sq=Math.sin(q),cq=Math.cos(q);v.push(sp*cq,cp,sp*sq);n.push(sp*cq,cp,sp*sq);}}for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,b=a+la+1;i.push(a,b,a+1,b,b+1,a+1);}mesh('sphere',v,n,i);}
-    function makeCylinder(){const v=[],n=[],i=[],seg=20;for(let y=0;y<=1;y++){for(let x=0;x<=seg;x++){const a=x*2*Math.PI/seg;v.push(Math.cos(a),y*2-1,Math.sin(a));n.push(Math.cos(a),0,Math.sin(a));}}for(let x=0;x<seg;x++){const a=x,b=x+1,c=seg+1+x,d=c+1;i.push(a,c,b,b,c,d);}mesh('cyl',v,n,i);}
-    function init(){ try{ canvas=$('cust-3d-canvas'); viewer=$('cust-3d-viewer'); gl=canvas.getContext('webgl',{alpha:true,antialias:true,preserveDrawingBuffer:false}); if(!gl) throw Error('WebGL unavailable'); program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);buffers={};makeCube();makeSphere();makeCylinder();gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);bind();resize();window.addEventListener('resize',resize,{passive:true});window.addEventListener('orientationchange',resize,{passive:true}); if(!raf) raf=requestAnimationFrame(loop); return true;}catch(e){ console.warn('3D character viewer fallback:',e); return false; } }
-    function bind(){ if(!viewer) return; viewer.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;viewer.classList.add('dragging');hideHint();try{viewer.setPointerCapture(e.pointerId)}catch(_){}});viewer.addEventListener('pointermove',e=>{if(!dragging)return;rotation+=(e.clientX-lastX)*0.012;lastX=e.clientX;});viewer.addEventListener('pointerup',e=>{dragging=false;viewer.classList.remove('dragging');try{viewer.releasePointerCapture(e.pointerId)}catch(_){}});viewer.addEventListener('pointercancel',()=>{dragging=false;viewer.classList.remove('dragging')}); }
+    function TRS(x,y,z,rx,ry,rz,sx,sy,sz){
+      return matMul(matMul(matMul(matMul(T(x,y,z),Rz(rz||0)),Ry(ry||0)),Rx(rx||0)),S(sx||1,sy||1,sz||1));
+    }
+    function perspective(fovy,aspect,n,f){
+      const t=1/Math.tan(fovy/2),m=new Float32Array(16);
+      m[0]=t/aspect;m[5]=t;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=(2*f*n)/(n-f);return m;
+    }
+    function lookAt(eye,center,up){
+      let zx=eye[0]-center[0],zy=eye[1]-center[1],zz=eye[2]-center[2],zl=Math.hypot(zx,zy,zz);
+      zx/=zl;zy/=zl;zz/=zl;
+      let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx,xl=Math.hypot(xx,xy,xz);
+      xx/=xl;xy/=xl;xz/=xl;
+      const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx,m=I();
+      m[0]=xx;m[1]=yx;m[2]=zx;m[4]=xy;m[5]=yy;m[6]=zy;m[8]=xz;m[9]=yz;m[10]=zz;
+      m[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);
+      m[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);
+      m[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);
+      return m;
+    }
+    function mesh(name,verts,norms,inds){
+      const b={v:gl.createBuffer(),n:gl.createBuffer(),i:gl.createBuffer(),count:inds.length};
+      gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(norms),gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(inds),gl.STATIC_DRAW);
+      buffers[name]=b;
+    }
+
+    function makeBox(){
+      const p=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]];
+      const faces=[
+        [0,1,2,3,[0,0,1]],[5,4,7,6,[0,0,-1]],
+        [1,5,6,2,[1,0,0]],[4,0,3,7,[-1,0,0]],
+        [3,2,6,7,[0,1,0]],[4,5,1,0,[0,-1,0]]
+      ];
+      const v=[],n=[],i=[];
+      faces.forEach(f=>{const base=v.length/3;for(let k=0;k<4;k++){v.push(...p[f[k]]);n.push(...f[4]);}i.push(base,base+1,base+2,base,base+2,base+3);});
+      mesh('box',v,n,i);
+    }
+
+    /* Classic block-avatar head: flat cylindrical sides + softly rounded crown. */
+    function makeHead(){
+      const v=[],n=[],i=[],seg=24;
+      const rings=[
+        {y:-.50,r:.82},{y:-.44,r:.94},{y:.36,r:.94},{y:.45,r:.86},{y:.50,r:.55}
+      ];
+      rings.forEach((q,ri)=>{
+        for(let x=0;x<=seg;x++){
+          const a=x*2*Math.PI/seg,c=Math.cos(a),s=Math.sin(a);
+          v.push(q.r*c,q.y,q.r*s);
+          const ny=ri===0?-0.35:ri===rings.length-1?0.85:0;
+          n.push(c,ny,s);
+        }
+      });
+      const cols=seg+1;
+      for(let y=0;y<rings.length-1;y++)for(let x=0;x<seg;x++){
+        const a=y*cols+x,b=a+1,c=a+cols,d=c+1;i.push(a,c,b,b,c,d);
+      }
+      const top=v.length/3;v.push(0,.50,0);n.push(0,1,0);
+      const bottom=v.length/3;v.push(0,-.50,0);n.push(0,-1,0);
+      for(let x=0;x<seg;x++){const a=(rings.length-1)*cols+x,b=a+1;i.push(a,b,top);const c=x,d=x+1;i.push(bottom,d,c);}
+      mesh('head',v,n,i);
+    }
+
+    function makeSphere(){
+      const v=[],n=[],i=[],la=16,lo=10;
+      for(let y=0;y<=lo;y++){
+        const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);
+        for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,c=Math.cos(q),s=Math.sin(q);v.push(sp*c,cp,sp*s);n.push(sp*c,cp,sp*s);}
+      }
+      for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,b=a+la+1;i.push(a,b,a+1,b,b+1,a+1);}
+      mesh('sphere',v,n,i);
+    }
+    function makeCapsule(){
+      const v=[],n=[],i=[],seg=16,rings=5;
+      for(let j=0;j<=rings*2;j++){
+        let yy,rad,nY;
+        if(j<=rings){const a=-Math.PI/2+(j/rings)*(Math.PI/2);yy=-.5+Math.sin(a)*.5;rad=Math.cos(a)*.5;nY=Math.sin(a);}
+        else{const k=j-rings,a=(k/rings)*(Math.PI/2);yy=.5+Math.sin(a)*.5;rad=Math.cos(a)*.5;nY=Math.sin(a);}
+        for(let x=0;x<=seg;x++){const q=x*2*Math.PI/seg,c=Math.cos(q),s=Math.sin(q),nR=Math.cos(Math.asin(nY));v.push(rad*c,yy,rad*s);n.push(c*nR,nY,s*nR);}
+      }
+      const cols=seg+1;for(let y=0;y<rings*2;y++)for(let x=0;x<seg;x++){const a=y*cols+x,b=a+1,c=a+cols,d=c+1;i.push(a,c,b,b,c,d);}
+      mesh('capsule',v,n,i);
+    }
+
+    function init(){
+      try{
+        canvas=$('cust-3d-canvas');viewer=$('cust-3d-viewer');
+        gl=canvas.getContext('webgl',{alpha:true,antialias:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});
+        if(!gl)throw Error('WebGL unavailable');
+        program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(program);
+        if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program)||'Program link failed');
+        gl.useProgram(program);buffers={};makeBox();makeHead();makeSphere();makeCapsule();
+        gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);bind();resize();
+        window.addEventListener('resize',resize,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(resize,60),{passive:true});
+        canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;},{passive:false});
+        canvas.addEventListener('webglcontextrestored',()=>{gl=null;buffers={};init();});
+        if(!raf)raf=requestAnimationFrame(loop);
+        const st=$('cust-3d-status');if(st)st.textContent='3D Block Avatar • Drag to rotate';
+        return true;
+      }catch(e){console.warn('3D character viewer fallback:',e);return false;}
+    }
+    function bind(){
+      if(!viewer||viewer.dataset.avatar3dBound)return;viewer.dataset.avatar3dBound='1';
+      viewer.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;dragging=true;pointerId=e.pointerId;lastX=e.clientX;viewer.classList.add('dragging');hideHint();try{viewer.setPointerCapture(e.pointerId);}catch(_){} });
+      viewer.addEventListener('pointermove',e=>{if(!dragging||(pointerId!==null&&e.pointerId!==pointerId))return;rotation+=(e.clientX-lastX)*.010;lastX=e.clientX;});
+      const end=e=>{if(pointerId!==null&&e&&e.pointerId!==undefined&&e.pointerId!==pointerId)return;dragging=false;pointerId=null;viewer.classList.remove('dragging');if(e){try{viewer.releasePointerCapture(e.pointerId);}catch(_){}}};
+      viewer.addEventListener('pointerup',end);viewer.addEventListener('pointercancel',end);viewer.addEventListener('lostpointercapture',()=>{dragging=false;pointerId=null;viewer.classList.remove('dragging');});
+    }
     function hideHint(){if(hintHidden)return;hintHidden=true;const h=$('cust-3d-hint');if(h)h.classList.add('hidden-hint');}
-    function resize(){if(!canvas||!gl)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));gl.viewport(0,0,canvas.width,canvas.height);}
+    function resize(){if(!canvas||!gl)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.floor(r.width*d)),h=Math.max(1,Math.floor(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,canvas.width,canvas.height);}
     function setCfg(c){cfg=Object.assign(defaultAvatar(),c||{});}
-    function setMode(m,anim){mode=m;modeStarted=performance.now();if(anim)cfg=Object.assign(cfg||defaultAvatar(),{walkAnim:anim,victoryAnim:anim});}
-    function color(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return [0.65,.7,.8];const n=parseInt(m[1],16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
-    function draw(name,model,col,viewProj){const b=buffers[name];if(!b)return;gl.bindBuffer(gl.ARRAY_BUFFER,b.v);const ap=gl.getAttribLocation(program,'aPos');gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);const an=gl.getAttribLocation(program,'aNormal');gl.enableVertexAttribArray(an);gl.vertexAttribPointer(an,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uModel'),false,model);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uMVP'),false,matMul(viewProj,model));gl.uniform3fv(gl.getUniformLocation(program,'uColor'),new Float32Array(color(col)));gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);}
-    function part(parent,x,y,z,sx,sy,sz,rx,ry,rz,col,shape='cube'){return {m:matMul(parent,TRS(x,y,z,rx,ry,rz,sx,sy,sz)),col,shape};}
-    function build(c,t){const walk=['bounce','skip','robot','moonwalk'].includes(c.walkAnim)?c.walkAnim:'bounce',vic=['jump','spin','dance','flex'].includes(c.victoryAnim)?c.victoryAnim:'jump';let jump=0,armL=0,armR=0,legL=0,legR=0,bodyBob=0,bodyRy=0;const elapsed=t-modeStarted;if(mode==='walk'){const q=elapsed/1000* (walk==='robot'?5.0:5.8);legL=Math.sin(q)*.48;legR=-legL;armL=-legL*.75;armR=-armL;bodyBob=Math.abs(Math.sin(q))*0.035;if(walk==='skip')bodyBob=Math.abs(Math.sin(q))*0.08;if(walk==='robot'){armL*=.5;armR*=.5;}if(walk==='moonwalk'){legL*=.7;legR*=.7;bodyRy=-.12;}}else if(mode==='victory'){const q=Math.min(1,elapsed/1400);if(vic==='spin')bodyRy=(Math.PI*2)*q;else if(vic==='dance'){armL=Math.sin(elapsed/120)*.7;armR=-armL;legL=Math.sin(elapsed/150)*.25;legR=-legL;}else if(vic==='flex'){armL=-.9;armR=.9;}else{jump=Math.sin(Math.min(Math.PI,q*Math.PI))*0.38;armL=-.8;armR=.8;legL=.2;legR=-.2;}}
-      const root=TRS(0,jump+bodyBob,0,0,rotation+bodyRy,0,1,1,1),out=[];
-      const torso=part(root,0,1.45,0,.58,.72,.36,0,0,0,c.clothes);out.push(torso);
-      const head=part(root,0,2.62,0,.48,.48,.48,0,0,0,c.skin,'sphere');out.push(head);
-      // neck
-      out.push(part(root,0,2.05,0,.18,.22,.18,0,0,0,c.skin));
-      // limbs, each parented to the body so rotations remain attached
-      out.push(part(root,-.72,1.48,0,.17,.58,.17,legL,0,0,c.clothes));out.push(part(root,.72,1.48,0,.17,.58,.17,legR,0,0,c.clothes));
-      out.push(part(root,-.72,.78,0,.19,.42,.19,legL*.35,0,0,c.clothes));out.push(part(root,.72,.78,0,.19,.42,.19,legR*.35,0,0,c.clothes));
-      out.push(part(root,-.72,.25,.03,.31,.13,.48,0,0,0,c.shoes));out.push(part(root,.72,.25,.03,.31,.13,.48,0,0,0,c.shoes));
-      out.push(part(root,-.78,1.55,0,.18,.55,.18,armL,0,0,c.skin));out.push(part(root,.78,1.55,0,.18,.55,.18,armR,0,0,c.skin));
-      out.push(part(root,-.78,.86,0,.16,.42,.16,armL*.4,0,0,c.skin,'cyl'));out.push(part(root,.78,.86,0,.16,.42,.16,armR*.4,0,0,c.skin,'cyl'));
-      // Hair: depth-bearing primitives rather than a flat image.
-      const hc=c.hairColor||'#1f2937'; if(c.hairStyle!=='bald'){out.push(part(root,0,2.99,-.01,.5,.20,.49,0,0,0,hc,'sphere')); if(c.hairStyle==='long'){out.push(part(root,-.43,2.58,0,.13,.42,.16,0,0,0,hc,'cyl'));out.push(part(root,.43,2.58,0,.13,.42,.16,0,0,0,hc,'cyl'));}else if(c.hairStyle==='ponytail')out.push(part(root,.55,2.76,-.04,.16,.34,.16,0,0,.35,hc,'sphere'));else if(c.hairStyle==='curly'){[-.32,0,.32].forEach(x=>out.push(part(root,x,3.02,.02,.22,.22,.22,0,0,0,hc,'sphere')))}else if(c.hairStyle==='mohawk')out.push(part(root,0,3.18,0,.15,.28,.16,0,0,0,hc,'cube'));}
-      // Face details follow the head orientation by sharing the same root.
-      const eyeCol='#1f2b40'; out.push(part(root,-.19,2.68,.455,.055,.055,.055,0,0,0,eyeCol,'sphere'));out.push(part(root,.19,2.68,.455,.055,.055,.055,0,0,0,eyeCol,'sphere'));out.push(part(root,0,2.48,.47,.09,.035,.035,0,0,0,'#7a3b3b','sphere'));
-      if(c.glasses && c.glasses!=='none'){out.push(part(root,-.19,2.68,.49,.16,.08,.035,0,0,0,'#1f2b40'));out.push(part(root,.19,2.68,.49,.16,.08,.035,0,0,0,'#1f2b40'));out.push(part(root,0,2.68,.49,.08,.025,.025,0,0,0,'#1f2b40'));}
-      // Hat options from the existing store remain cosmetic but become real 3D geometry.
-      if(c.hat&&c.hat!=='none'){out.push(part(root,0,3.16,0,.62,.14,.62,0,0,0,'#273b67','cyl'));out.push(part(root,0,3.34,0,.36,.25,.36,0,0,0,'#334f86','sphere'));}
-      if(c.back==='backpack')out.push(part(root,0,1.3,-.43,.43,.52,.14,0,0,0,'#5c3a1e'));if(c.back==='cape')out.push(part(root,0,1.18,-.46,.48,.9,.08,0,0,0,'#7a2946'));if(c.back==='wings'){out.push(part(root,-.62,1.5,-.25,.5,.28,.08,0,.15,.3,'#eef2fb'));out.push(part(root,.62,1.5,-.25,.5,.28,.08,0,-.15,-.3,'#eef2fb'));}
-      if(c.accessory==='necklace'){for(let i=-2;i<=2;i++)out.push(part(root,i*.1,2.02,.38,.035,.035,.035,0,0,0,'#d9a92f','sphere'));}if(c.accessory==='watch')out.push(part(root,-.78,.48,.02,.13,.08,.08,0,0,0,'#d9a92f'));if(c.accessory==='earring')out.push(part(root,-.5,2.62,.03,.05,.09,.05,0,0,0,'#55b6d9','sphere'));
+    function color(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return[.65,.7,.8];const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+    function draw(shape,model,col,vp){
+      const b=buffers[shape];if(!b)return;
+      const ap=gl.getAttribLocation(program,'aPos'),an=gl.getAttribLocation(program,'aNormal');
+      gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.enableVertexAttribArray(an);gl.vertexAttribPointer(an,3,gl.FLOAT,false,0,0);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uModel'),false,model);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uMVP'),false,matMul(vp,model));gl.uniform3fv(gl.getUniformLocation(program,'uColor'),new Float32Array(color(col)));gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);
+    }
+
+    /* A node is a real local transform. Children inherit it automatically. */
+    function node(parent,x,y,z,rx,ry,rz,sx,sy,sz,shape,col){
+      return{m:matMul(parent,TRS(x,y,z,rx,ry,rz,sx,sy,sz)),shape:shape||'box',col:col||'#9ca3af'};
+    }
+    function box(parent,x,y,z,rx,ry,rz,sx,sy,sz,col){return node(parent,x,y,z,rx,ry,rz,sx,sy,sz,'box',col);}
+    function child(parent,x,y,z,rx,ry,rz,sx,sy,sz){return matMul(parent,TRS(x,y,z,rx,ry,rz,sx,sy,sz));}
+
+    /*
+     * Arm anchors are deliberately at the OUTER top edge of the torso.
+     * The arm geometry extends down from that anchor with overlap at the
+     * shoulder and elbow, eliminating gaps while retaining articulation.
+     */
+    function addArm(out,torso,side,upperRot,foreRot,skin,shirt){
+      const shoulder=child(torso,side*.72,.52,0,0,0,upperRot,1,1,1);
+      out.push(box(shoulder,0,-.45,0,0,0,0,.25,.48,.27,shirt));
+      const elbow=child(shoulder,0,-.86,0,0,0,foreRot,1,1,1);
+      out.push(box(elbow,0,-.43,0,0,0,0,.24,.44,.26,skin));
+      /* Small hand is centered on the wrist anchor and slightly overlaps it. */
+      const hand=child(elbow,0,-.82,0,0,0,0,1,1,1);
+      out.push(box(hand,0,-.09,0,0,0,0,.25,.18,.27,skin));
+      return{shoulder,elbow,hand};
+    }
+
+    function addLeg(out,pelvis,side,thighRot,shinRot,pants,shoes){
+      const hip=child(pelvis,side*.36,0,0,thighRot,0,0,1,1,1);
+      out.push(box(hip,0,-.50,0,0,0,0,.32,.52,.35,pants));
+      const knee=child(hip,0,-.99,0,shinRot,0,0,1,1,1);
+      out.push(box(knee,0,-.46,0,0,0,0,.31,.49,.34,pants));
+      const ankle=child(knee,0,-.91,0,0,0,0,1,1,1);
+      out.push(box(ankle,0,-.10,.07,0,0,0,.34,.20,.43,shoes));
+      out.push(box(ankle,0,-.10,.29,0,0,0,.32,.15,.23,shoes));
+      return{hip,knee,ankle};
+    }
+
+    function pantsColor(c){
+      const ch=String(c.character||'');
+      if(ch==='char:student_m')return'#8bd23f';
+      if(ch==='char:student_f')return'#77c957';
+      if(ch==='char:robot')return'#64748b';
+      if(ch==='char:alien')return'#39a95f';
+      return'#5f9f42';
+    }
+    function darken(hex,f){const q=color(hex);return'#'+q.map(v=>Math.round(Math.max(0,Math.min(1,v*f))*255).toString(16).padStart(2,'0')).join('');}
+
+    function addClothingDetails(out,torso,c){
+      /* Details are children of the torso, so they can never drift from it. */
+      out.push(box(torso,0,.67,.405,0,0,0,.31,.035,.018,c.clothes));
+      out.push(box(torso,0,-.67,.405,0,0,0,.43,.035,.018,darken(c.clothes,.86)));
+    }
+
+    /* Head-local anchors.  The head is scaled to ~0.94 radius, so these
+       offsets deliberately stay just outside its front/sides. */
+    function addHair(out,head,c){
+      const hc=c.hairColor||'#2b1b0e';
+      if(c.hairStyle==='bald')return;
+
+      /*
+       * Hair is completely Head-local.  The scalp volume is deliberately
+       * shifted a little toward the back so it wraps the crown without
+       * covering the face.  The front hairline then meets the forehead.
+       */
+      out.push(node(head,0,.30,-.08,0,0,0,.92,.30,.88,'sphere',hc));
+      out.push(box(head,0,.25,.80,0,0,0,.78,.13,.12,hc));
+
+      if(c.hairStyle==='long'){
+        out.push(box(head,-.82,-.03,-.02,0,0,0,.15,.52,.16,hc));
+        out.push(box(head,.82,-.03,-.02,0,0,0,.15,.52,.16,hc));
+        out.push(box(head,0,-.02,-.72,0,0,0,.72,.50,.14,hc));
+      }else if(c.hairStyle==='ponytail'){
+        out.push(node(head,.72,.12,-.42,.12,0,.18,.16,.36,.16,'capsule',hc));
+      }else if(c.hairStyle==='curly'){
+        [-.62,-.31,0,.31,.62].forEach(x=>{
+          out.push(node(head,x,.34,-.02,0,0,0,.27,.24,.27,'sphere',hc));
+        });
+      }else if(c.hairStyle==='mohawk'){
+        out.push(box(head,0,.55,-.03,0,0,0,.18,.30,.18,hc));
+        out.push(box(head,0,.56,.22,0,0,0,.17,.25,.17,hc));
+      }
+    }
+
+    function addFace(out,head,c){
+      /* Face is entirely Head-local: no world-space offsets. */
+      const eyeCol='#151515';
+      const eyeY=.08;
+      const eyeZ=.955;
+      const eyeType=c.eyes||'normal';
+      if(eyeType==='sleepy'){
+        out.push(box(head,-.30,eyeY,eyeZ,0,0,0,.12,.025,.018,eyeCol));
+        out.push(box(head,.30,eyeY,eyeZ,0,0,0,.12,.025,.018,eyeCol));
+      }else if(eyeType==='happy'){
+        out.push(box(head,-.30,eyeY,eyeZ,0,0,.18,.11,.025,.018,eyeCol));
+        out.push(box(head,.30,eyeY,eyeZ,0,0,-.18,.11,.025,.018,eyeCol));
+      }else if(eyeType==='wink'){
+        out.push(node(head,-.30,eyeY,eyeZ,0,0,0,.075,.075,.035,'sphere',eyeCol));
+        out.push(box(head,.30,eyeY,eyeZ,0,0,-.25,.12,.025,.018,eyeCol));
+      }else if(eyeType==='star'){
+        out.push(node(head,-.30,eyeY,eyeZ,0,0,0,.09,.09,.035,'sphere',eyeCol));
+        out.push(node(head,.30,eyeY,eyeZ,0,0,0,.09,.09,.035,'sphere',eyeCol));
+      }else{
+        out.push(node(head,-.30,eyeY,eyeZ,0,0,0,.065,.085,.035,'sphere',eyeCol));
+        out.push(node(head,.30,eyeY,eyeZ,0,0,0,.065,.085,.035,'sphere',eyeCol));
+      }
+      const expr=c.expression||'smile';
+      const mouthZ=.975;
+      if(expr==='surprised')out.push(node(head,0,-.23,mouthZ,0,0,0,.10,.12,.035,'sphere','#713b35'));
+      else if(expr==='neutral')out.push(box(head,0,-.24,mouthZ,0,0,0,.13,.025,.025,'#713b35'));
+      else{
+        /* Two short mouth segments form a readable smile without a floating plane. */
+        out.push(box(head,-.065,-.24,mouthZ,0,0,-.24,.075,.022,.025,'#713b35'));
+        out.push(box(head,.065,-.24,mouthZ,0,0,.24,.075,.022,.025,'#713b35'));
+      }
+    }
+
+    function addAccessories(out,root,head,torso,handL,c){
+      const dark='#1f2937',gold='#d9a92f';
+      if(c.glasses&&c.glasses!=='none'){
+        out.push(box(head,-.30,.08,1.00,0,0,0,.29,.15,.025,dark));
+        out.push(box(head,.30,.08,1.00,0,0,0,.29,.15,.025,dark));
+        out.push(box(head,0,.08,1.005,0,0,0,.11,.035,.025,dark));
+      }
+      if(c.accessory==='necklace'){
+        for(let i=-4;i<=4;i++){const a=i/4*.9;out.push(node(torso,Math.sin(a)*.30,.12+Math.cos(a)*.08,.405,0,0,0,.025,.025,.025,'sphere',gold));}
+      }else if(c.accessory==='earring'){
+        out.push(node(head,-.96,-.03,.03,0,0,0,.07,.12,.07,'sphere','#55b6d9'));
+        out.push(node(head,.96,-.03,.03,0,0,0,.07,.12,.07,'sphere','#55b6d9'));
+      }else if(c.accessory==='watch'){
+        out.push(box(handL,0,0,.16,0,0,0,.11,.07,.07,gold));
+      }
+      if(c.hat&&c.hat!=='none'){
+        /* Hat is Head-local and sits over the hair/scalp anchor. */
+        out.push(box(head,0,.52,0,0,0,0,.88,.13,.82,'#273b67'));
+        out.push(box(head,0,.43,.28,0,0,0,1.05,.055,.28,'#334f86'));
+      }
+      if(c.back==='backpack'){
+        out.push(box(torso,0,.02,-.43,0,0,0,.50,.62,.16,'#5c3a1e'));
+        out.push(box(torso,-.30,.30,-.22,.12,0,.15,.06,.38,.06,'#7b5228'));
+        out.push(box(torso,.30,.30,-.22,.12,0,-.15,.06,.38,.06,'#7b5228'));
+      }else if(c.back==='cape')out.push(box(torso,0,-.05,-.43,0,0,0,.56,.82,.05,'#7a2946'));
+      else if(c.back==='wings'){
+        out.push(box(torso,-.58,.10,-.28,0,.18,.35,.45,.31,.06,'#eef2fb'));
+        out.push(box(torso,.58,.10,-.28,0,-.18,-.35,.45,.31,.06,'#eef2fb'));
+      }
+      const e=String(c.effect||'none').toLowerCase();if(e!=='none'){
+        const ec=e.includes('fire')?'#ff8a3d':e.includes('water')?'#4da6ff':e.includes('lightning')?'#ffe56b':e.includes('neon')?'#66e0ff':e.includes('rainbow')?'#ff7bc8':e.includes('ghost')?'#d9dff2':e.includes('confetti')?'#ffd94a':e.includes('dollar')?'#4dcf7a':e.includes('musical')?'#9b6bff':e.includes('heart')?'#ff6fa5':'#f4d35e';
+        for(let i=0;i<10;i++){const a=i*Math.PI/5;out.push(node(root,Math.cos(a)*.82,1.55+Math.sin(a)*1.35,.05,0,0,0,.025,.025,.025,'sphere',ec));}
+      }
+    }
+
+    function build(c,t){
+      const walk=['bounce','skip','robot','moonwalk'].includes(c.walkAnim)?c.walkAnim:'bounce';
+      const vic=['jump','spin','dance','flex'].includes(c.victoryAnim)?c.victoryAnim:'jump';
+      let jump=0,bob=0,bodyRy=0,armL=0,armR=0,foreL=0,foreR=0,legL=0,legR=0,shinL=0,shinR=0;
+      const elapsed=t-modeStarted;
+      if(mode==='walk'){
+        const q=elapsed/1000*(walk==='robot'?4.7:5.2);
+        legL=Math.sin(q)*.30;legR=-legL;
+        shinL=-Math.max(0,Math.sin(q))*.11;shinR=-Math.max(0,-Math.sin(q))*.11;
+        armL=-legL*.72;armR=-armL;foreL=armL*.18;foreR=armR*.18;
+        bob=Math.abs(Math.sin(q))*(walk==='skip'?.045:.025);
+        if(walk==='robot'){armL*=.55;armR*=.55;foreL*=.45;foreR*=.45;}
+        if(walk==='moonwalk'){bodyRy=-.08;legL*=.75;legR*=.75;}
+      }else if(mode==='victory'){
+        const q=Math.min(1,elapsed/1400);
+        if(vic==='spin')bodyRy=Math.PI*2*q;
+        else if(vic==='dance'){armL=Math.sin(elapsed/150)*.60;armR=-armL;foreL=-armL*.45;foreR=-armR*.45;legL=Math.sin(elapsed/180)*.13;legR=-legL;}
+        else if(vic==='flex'){armL=-.72;armR=.72;foreL=-.68;foreR=.68;}
+        else{jump=Math.sin(Math.min(Math.PI,q*Math.PI))*.22;armL=-.62;armR=.62;foreL=-.30;foreR=.30;legL=.08;legR=-.08;}
+      }
+
+      /* One world-space root. Everything else is local to a parent anchor. */
+      const root=TRS(0,jump+bob,0,0,rotation+bodyRy,0,1,1,1),out=[];
+      const pelvis=child(root,0,1.55,0,0,0,0,1,1,1);
+      const torso=child(pelvis,0,.91,0,0,0,0,1,1,1);
+      const neck=child(torso,0,.83,0,0,0,0,1,1,1);
+      const head=child(neck,0,.36,0,0,0,0,1,1,1);
+      const shirt=c.clothes||'#4d9dff',pants=pantsColor(c),skin=c.skin||'#f1c27d',shoes=c.shoes||'#1f2b40';
+
+      /* BODY: classic block-avatar silhouette with deliberate overlap at joints. */
+      out.push(box(pelvis,0,0,0,0,0,0,.40,.28,.37,pants));
+      out.push(box(torso,0,0,0,0,0,0,.69,.69,.42,shirt));
+      /* Neck is hidden inside the shirt/head interface so there is no gap. */
+      out.push(box(neck,0,-.02,0,0,0,0,.16,.22,.16,skin));
+      out.push(node(head,0,0,0,0,0,0,.98,1.02,.98,'head',skin));
+
+      /* Ears are head children and sit just outside the side silhouette. */
+      out.push(box(head,-.98,-.03,0,0,0,0,.07,.14,.09,skin));
+      out.push(box(head,.98,-.03,0,0,0,0,.07,.14,.09,skin));
+
+      const armsL=addArm(out,torso,-1,armL,foreL,skin,shirt);
+      const armsR=addArm(out,torso,1,armR,foreR,skin,shirt);
+      addLeg(out,pelvis,-1,legL,shinL,pants,shoes);addLeg(out,pelvis,1,legR,shinR,pants,shoes);
+      addClothingDetails(out,torso,c);addHair(out,head,c);addFace(out,head,c);
+      addAccessories(out,root,head,torso,armsL.hand,c);
       return out;
     }
-    function loop(now){raf=requestAnimationFrame(loop);if(!gl||!cfg||document.hidden)return;const dt=Math.min(50,now-last||16);last=now;const r=canvas.getBoundingClientRect(),aspect=Math.max(.5,r.width/Math.max(1,r.height));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const proj=perspective(Math.PI/4.2,aspect,.1,30),eye=[0,1.55,7.2],view=lookAt(eye,[0,1.65,0],[0,1,0]),vp=matMul(proj,view);build(cfg,now).forEach(o=>draw(o.shape==='sphere'?'sphere':o.shape==='cyl'?'cyl':'cube',o.m,o.col,vp));if(mode==='victory'&&now-modeStarted>1500){mode='idle';} }
+
+    function loop(now){
+      raf=requestAnimationFrame(loop);if(!gl||!cfg||document.hidden)return;resize();
+      const r=canvas.getBoundingClientRect(),aspect=Math.max(.55,r.width/Math.max(1,r.height));
+      gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      const proj=perspective(Math.PI/4.7,aspect,.1,30),eye=[0,2.25,8.8],view=lookAt(eye,[0,2.15,0],[0,1,0]),vp=matMul(proj,view);
+      build(cfg,now).forEach(o=>draw(o.shape,o.m,o.col,vp));
+      if(mode==='victory'&&now-modeStarted>1500)mode='idle';
+    }
     function show(c,m,anim){if(!gl||!canvas)return;setCfg(c);mode=m||'idle';modeStarted=performance.now();if(anim){if(m==='walk')cfg.walkAnim=anim;if(m==='victory')cfg.victoryAnim=anim;}resize();}
-    function ready(){return !!gl;}
-    return {init,show,ready};
+    function ready(){return!!gl;}
+    return{init,show,ready};
   })();
 
   /* Customize screen wiring */
