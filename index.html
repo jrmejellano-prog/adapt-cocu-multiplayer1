@@ -47,18 +47,6 @@
     body.large-text .topt, body.large-text .question-text, body.large-text .trivia-q, body.large-text .trivia-opts{ font-size:1.08rem; }
     body.large-text .menu-card .mn{ font-size:1.05rem; }
     body.large-text input[type=text], body.large-text input[type=number]{ font-size:1.08rem; }
-    body.small-text{ font-size:0.88rem; }
-    body.small-text .btn, body.small-text .menu-card, body.small-text .tab-btn, body.small-text .hbtn{ font-size:.9rem; }
-    body.small-text .subtitle, body.small-text .card, body.small-text .lb-row, body.small-text .chat-bubble{ font-size:.92rem; }
-    body.small-text h1.display{ font-size:1.5rem; }
-    body.small-text .eyebrow, body.small-text .field-label, body.small-text .sr-label, body.small-text .sl{ font-size:.72rem; }
-    body.small-text .topt, body.small-text .question-text, body.small-text .trivia-q, body.small-text .trivia-opts{ font-size:.92rem; }
-    body.small-text .menu-card .mn{ font-size:.88rem; }
-    body.small-text input[type=text], body.small-text input[type=number]{ font-size:.92rem; }
-    .textsize-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .textsize-toggle{ display:flex; gap:6px; }
-    .textsize-btn{ all:unset; cursor:pointer; padding:6px 12px; border-radius:10px; font-weight:800; font-size:.85rem; background:rgba(0,0,0,.06); border:2px solid transparent; }
-    .textsize-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent-d,var(--accent)); }
     body.high-contrast{ --bg:#101a30; --ink:#eef2ff; }
     body.high-contrast .panel, body.high-contrast .card{ background:#1a2440 !important; color:#eef2ff !important; border-color:#4a5a8a !important; }
     h1,h2,h3,.display{ font-family:'Baloo 2',sans-serif; }
@@ -273,6 +261,10 @@
     .loading-fill{ height:100%; background:var(--accent); width:0%; transition:width .25s linear; }
     .loading-percent{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; color:var(--accent-d); min-height:1.4em; }
     .loading-tip{ font-size:0.8rem; color:#5b6b8a; font-weight:700; text-align:center; max-width:260px; }
+    .player-progress{ width:min(320px,82vw); margin-top:2px; }
+    .player-progress-label{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:.82rem; font-weight:800; color:var(--ink); }
+    .player-progress-track{ width:100%; height:14px; background:#dbe3f5; border:2px solid rgba(0,0,0,.08); border-radius:999px; overflow:hidden; }
+    .player-progress-fill{ width:0%; height:100%; background:linear-gradient(90deg,var(--accent),var(--teal)); border-radius:inherit; transition:width .45s ease; }
 
 
     /* ---- MODAL ---- */
@@ -297,30 +289,21 @@
     .title-chip{ font-size:0.68rem; font-weight:800; color:var(--accent-d); }
 
     .menu-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
-    .menu-card{ all:unset; cursor:pointer; position:relative; background:linear-gradient(180deg,#ffffff,#f7f9ff); border:1px solid #e2e7f7; border-top:4px solid #dbe3f5; border-radius:16px; padding:20px 12px 16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 3px 0 rgba(20,30,60,.05), 0 10px 22px -14px rgba(20,30,60,.35); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
-    .menu-card:hover{ transform:translateY(-2px); box-shadow:0 4px 0 rgba(20,30,60,.06), 0 16px 28px -14px rgba(20,30,60,.4); }
-    .menu-card.mc-challenge{ border-top-color:var(--teal); }
-    .menu-card.mc-speculation{ border-top-color:var(--purple); }
-    .menu-card.mc-quickgame{ border-top-color:var(--orange); }
-    .menu-card.mc-store{ border-top-color:var(--pink); }
-    .menu-card.mc-customize{ border-top-color:var(--blue); }
-    .menu-card#card-lesson{ border-top-color:var(--purple); }
-    .menu-card#card-history{ border-top-color:var(--accent); }
+    .menu-card{ all:unset; cursor:pointer; background:#fff; border:3px solid #dbe3f5; border-radius:18px; padding:18px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .menu-card.mc-challenge{ background:#e8faf5; border-color:var(--teal); }
+    .menu-card.mc-speculation{ background:#f3edff; border-color:var(--purple); }
+    .menu-card.mc-quickgame{ background:#fff2e6; border-color:var(--orange); }
+    .menu-card.mc-store{ background:#ffeef5; border-color:var(--pink); }
+    .menu-card.mc-customize{ background:#eaf4ff; border-color:var(--blue); }
+    .menu-card#card-lesson{ background:#f2efff; border-color:var(--purple); }
     .progress-bar-wrap{ margin-top:14px; }
     .progress-bar-label{ display:flex; justify-content:space-between; align-items:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.82rem; color:var(--ink); margin-bottom:5px; }
     .progress-bar-track{ height:16px; background:#dbe3f5; border-radius:10px; overflow:hidden; border:2px solid #c7d0ea; }
     .progress-bar-fill{ height:100%; background:linear-gradient(90deg,var(--teal),var(--gold)); border-radius:10px; transition:width 0.4s ease; }
     body.high-contrast .progress-bar-track{ background:#1a2440; border-color:#5b6dae; }
     body.high-contrast .progress-bar-label{ color:#eef2ff; }
-    .menu-card .mi{ font-size:1.5rem; width:52px; height:52px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:linear-gradient(150deg,#eef2ff,#dfe6fb); box-shadow:inset 0 0 0 1px rgba(20,30,60,.06), 0 4px 10px -4px rgba(20,30,60,.25); }
-    .menu-card.mc-challenge .mi{ background:linear-gradient(150deg,#e3fbf4,#c9f3e6); }
-    .menu-card.mc-speculation .mi{ background:linear-gradient(150deg,#f2ebff,#e2d3ff); }
-    .menu-card.mc-quickgame .mi{ background:linear-gradient(150deg,#fff0df,#ffdcb3); }
-    .menu-card.mc-store .mi{ background:linear-gradient(150deg,#ffe9f2,#ffcfe3); }
-    .menu-card.mc-customize .mi{ background:linear-gradient(150deg,#e3f0ff,#c9e2ff); }
-    .menu-card#card-lesson .mi{ background:linear-gradient(150deg,#efeaff,#dccfff); }
-    .menu-card#card-history .mi{ background:linear-gradient(150deg,#fff4e0,#ffe3ad); }
-    .menu-card .mn{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:.01em; color:var(--ink); }
+    .menu-card .mi{ font-size:2rem; }
+    .menu-card .mn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem; }
     .menu-card:active{ transform:scale(0.97); }
 
     /* ---- PROFILE ---- */
@@ -547,23 +530,6 @@
     .store-item.equipped{ border-color:var(--teal); }
     .swatch-item{ width:100%; aspect-ratio:1/1; border-radius:10px; margin-bottom:2px; }
 
-    /* ---- TUTORIAL ---- */
-    .tutorial-overlay{ position:fixed; inset:0; z-index:9000; background:rgba(10,14,28,.72); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:opacity .2s ease; }
-    .tutorial-overlay.hidden{ display:none; }
-    .tutorial-spotlight{ position:fixed; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.9), 0 0 0 9999px rgba(10,14,28,.72), 0 0 30px 6px rgba(255,214,102,.55); pointer-events:none; transition:top .3s ease, left .3s ease, width .3s ease, height .3s ease; }
-    .tutorial-spotlight.no-target{ opacity:0; }
-    .tutorial-tooltip{ position:relative; max-width:min(360px,86vw); background:#fff; color:var(--ink); border-radius:18px; padding:18px 20px; box-shadow:0 18px 40px rgba(0,0,0,.35); text-align:center; transition:transform .3s ease, margin .3s ease; }
-    .tutorial-eyebrow{ font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-d); margin:0 0 6px; }
-    .tutorial-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.25rem; margin:0 0 6px; }
-    .tutorial-desc{ font-size:.92rem; color:#4a5675; margin:0 0 10px; line-height:1.4; }
-    .tutorial-tap-hint{ font-size:.78rem; font-weight:800; color:var(--accent-d); margin:0; opacity:.85; }
-    body.small-text .tutorial-desc{ font-size:.85rem; }
-    body.large-text .tutorial-desc{ font-size:1rem; }
-    /* First-run safety net: while the tutorial overlay is active, game-mode
-       buttons underneath it are also non-interactive (the overlay itself
-       already intercepts clicks, this just backs it up). */
-    body.tutorial-active .menu-grid button, body.tutorial-active .header-nav .hbtn{ pointer-events:none; }
-
     /* ---- SETTINGS ---- */
     .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:2px solid #eef1fb; gap:10px; }
     .setting-row .sr-label{ font-weight:700; font-size:0.88rem; }
@@ -644,7 +610,7 @@
       .menu-grid{ grid-template-columns:1fr; gap:8px; }
       .map-grid,.store-grid{ grid-template-columns:1fr 1fr; gap:7px; }
       .menu-card{ padding:13px 8px; }
-      .menu-card .mi{ font-size:1.7rem; width:44px; height:44px; }
+      .menu-card .mi{ font-size:1.7rem; }
       .map-card{ padding:12px 5px; }
       .map-card .mci{ font-size:1.5rem; }
       .pc-btn{ min-width:70px; min-height:44px; }
@@ -662,6 +628,7 @@
       .setting-row{ flex-wrap:wrap; }
       .setting-row .sr-label{ flex:1 1 60%; }
       input[type=range]{ width:110px; max-width:45%; }
+      .player-progress{ width:min(300px,88vw); }
       .day-track{ gap:5px; }
       .day-cell{ padding:6px 2px; }
       .day-cell .dlabel{ font-size:.55rem; }
@@ -808,7 +775,7 @@
   h1.display{ font-size:clamp(1.25rem, 4.5vw, 2rem); }
   .subtitle{ font-size:clamp(.78rem, 2.4vw, .95rem); }
   .btn{ font-size:clamp(.82rem, 2.4vw, 1rem); padding:clamp(9px,2vw,12px) clamp(12px,3vw,20px); }
-  .menu-card .mi{ font-size:clamp(1.2rem, 4.5vw, 1.6rem); width:clamp(40px,11vw,56px); height:clamp(40px,11vw,56px); }
+  .menu-card .mi{ font-size:clamp(1.55rem, 7vw, 2.3rem); }
   .menu-card .mn{ font-size:clamp(.78rem,2.5vw,.95rem); }
 
   /* Phone */
@@ -954,28 +921,6 @@
   .av-badge{ position:absolute; top:calc(var(--av-w) * 1.18); left:calc(var(--av-w) * -0.14); font-size:calc(var(--av-w) * 0.22); z-index:7; }
   .av-name{ text-align:center; font-weight:800; font-family:'Baloo 2',sans-serif; font-size:.74rem; margin-top:8px; color:var(--ink); }
 
-  /* ---- PROFILE 3D CHARACTER VIEWER ----
-     A convincing "3D" presentation built from the existing flat character
-     art: a two-sided card (front face = normal avatar render, back face =
-     a generated back-view silhouette in the same colors) rotated in 3D
-     space with CSS. Because accessories/hat/hair are drawn as part of the
-     same single SVG that rotates as one rigid unit, they can never float,
-     detach, or drift out of sync while spinning. */
-  .avatar-3d-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; margin:4px 0 14px; }
-  .avatar-3d-scene{ width:min(240px,70vw); height:min(300px,60vh); perspective:900px; margin:0 auto; touch-action:pan-y; }
-  .avatar-3d-stage{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .45s cubic-bezier(.2,.7,.3,1); cursor:grab; }
-  .avatar-3d-stage.dragging{ transition:none; cursor:grabbing; }
-  .avatar-3d-face{ position:absolute; inset:0; backface-visibility:hidden; display:flex; align-items:flex-end; justify-content:center; }
-  .avatar-3d-face .avatar-figure{ --av-w:190px; --av-h:280px; }
-  .avatar-3d-face.avatar-3d-back{ transform:rotateY(180deg); }
-  .avatar-3d-controls{ display:flex; align-items:center; gap:14px; }
-  .avatar-3d-turn{ all:unset; cursor:pointer; width:38px; height:38px; border-radius:50%; background:#fff; border:2px solid #dbe3f5; display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:0 3px 8px -3px rgba(20,30,60,.3); }
-  .avatar-3d-turn:active{ transform:scale(.92); }
-  .avatar-3d-facing{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.85rem; color:var(--accent-d); min-width:64px; text-align:center; }
-  .avatar-3d-hint{ font-size:.72rem; color:#8892b0; font-weight:700; text-align:center; }
-  body.high-contrast .avatar-3d-turn{ background:#1a2440; border-color:#4a5a8a; color:#eef2ff; }
-  body.high-contrast .avatar-3d-facing{ color:#eef2ff; }
-
   .avatar-figure.avatar-idle .char-svg .rig,
   .avatar-figure.avatar-idle .char-svg .grp-upper,
   .avatar-figure.avatar-idle .char-svg .grp-legs,
@@ -1092,6 +1037,22 @@
   @keyframes rig-forearm-flex-r{ 0%{ transform:rotate(0deg) scale(1);} 30%{ transform:rotate(-85deg) scale(1.05);} 50%{ transform:rotate(-85deg) scale(1.18);} 70%{ transform:rotate(-85deg) scale(1.05);} 100%{ transform:rotate(0deg) scale(1);} }
   @keyframes rig-flex-body{ 0%,100%{ transform:translateY(0);} 30%,70%{ transform:translateY(-2px);} }
 
+
+  /* Interactive WebGL character showcase. The existing SVG avatar remains the
+     app-wide fallback, while the customization screen uses a real depth-based
+     WebGL model with pointer events (mouse, trackpad and touch). */
+  .character-3d-viewer{ position:relative; width:100%; min-height:430px; height:clamp(430px,55vh,620px); overflow:hidden; border-radius:20px; background:radial-gradient(circle at 50% 25%,#ffffff 0%,#eef3ff 58%,#dfe7f8 100%); border:2px solid #dbe3f5; box-shadow:inset 0 -80px 100px rgba(61,83,130,.08),0 12px 30px rgba(34,50,90,.08); touch-action:none; user-select:none; }
+  .character-3d-viewer canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
+  .character-3d-viewer.dragging canvas{ cursor:grabbing; }
+  .character-3d-grid{ position:absolute; left:7%; right:7%; bottom:8%; height:30%; opacity:.42; pointer-events:none; background:linear-gradient(rgba(77,101,150,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(77,101,150,.12) 1px,transparent 1px); background-size:34px 34px; transform:perspective(320px) rotateX(62deg); transform-origin:center bottom; mask-image:linear-gradient(to top,rgba(0,0,0,.85),transparent); }
+  .character-3d-hint{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); padding:7px 12px; border-radius:999px; background:rgba(20,32,57,.78); color:#fff; font-size:.75rem; font-weight:800; letter-spacing:.02em; pointer-events:none; transition:opacity .25s ease,transform .25s ease; white-space:nowrap; }
+  .character-3d-hint.hidden-hint{ opacity:0; transform:translate(-50%,8px); }
+  .character-3d-status{ position:absolute; top:12px; left:12px; padding:6px 9px; border-radius:9px; background:rgba(255,255,255,.78); color:#41506b; font-size:.68rem; font-weight:800; pointer-events:none; backdrop-filter:blur(8px); }
+  .avatar-3d-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; background:#f7f9ff; }
+  .avatar-3d-fallback:not(.hidden){ display:flex; }
+  @media (min-width:640px){ .avatar-preview-wrap{ flex-basis:440px; padding:18px; } }
+  @media (max-width:639px){ .character-3d-viewer{ min-height:390px; height:52vh; } }
+  @media (prefers-reduced-motion:reduce){ .character-3d-hint{ transition:none; } }
   .swatch-row{ display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 4px; }
   .swatch-opt{ all:unset; cursor:pointer; width:34px; height:34px; border-radius:50%; border:3px solid #dbe3f5; }
   .swatch-opt.active{ border-color:var(--ink); box-shadow:0 0 0 2px var(--gold); }
@@ -1323,7 +1284,7 @@
   <div class="header-stats">
     <span class="coin-badge">🪙 <span id="header-coins">0</span></span>
     <span class="xp-badge">⭐ <span id="header-xp">0</span> XP</span>
-    <button id="btn-pause" class="hidden" aria-label="Game Menu" title="Game Menu">☰</button>
+    <button id="btn-pause" class="hidden" aria-label="Pause Speculation">⏸️</button>
     <button id="btn-gear">⚙️</button>
   </div>
 </div>
@@ -1406,6 +1367,10 @@
       <div class="loading-bar" aria-label="Application loading progress"><div class="loading-fill" id="loading-fill"></div></div>
       <div class="loading-percent" id="loading-percent" aria-live="polite">0%</div>
       <div class="loading-tip" id="loading-tip">Loading your adventure…</div>
+      <div class="player-progress" aria-label="Player completion progress">
+        <div class="player-progress-label"><span>Progress</span><strong id="player-progress-percent">0%</strong></div>
+        <div class="player-progress-track"><div class="player-progress-fill" id="player-progress-fill"></div></div>
+      </div>
     </div>
   </section>
 
@@ -1476,7 +1441,13 @@
       <p class="subtitle">Changes preview live and appear everywhere you play.</p>
       <div class="customize-layout">
         <div class="avatar-preview-wrap">
-          <div class="avatar-figure" id="cust-preview" style="--av-w:120px; --av-h:158px;"></div>
+          <div class="character-3d-viewer" id="cust-3d-viewer">
+            <canvas id="cust-3d-canvas" aria-label="Interactive 3D character viewer"></canvas>
+            <div class="character-3d-grid" aria-hidden="true"></div>
+            <div class="character-3d-hint" id="cust-3d-hint">↔ Drag to rotate</div>
+            <div class="character-3d-status" id="cust-3d-status">3D Character Viewer</div>
+            <div class="avatar-3d-fallback hidden" id="cust-3d-fallback"></div>
+          </div>
           <div class="btn-row" style="justify-content:center;">
             <button class="btn" id="btn-preview-walk">🚶 Walk</button>
             <button class="btn" id="btn-preview-victory">🎉 Victory</button>
@@ -1975,40 +1946,22 @@
     <div class="setting-row"><span class="sr-label">Music Volume</span><input type="range" id="set-music" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Sound Effects</span><input type="range" id="set-sfx" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Reduced Motion</span><label class="toggle"><input type="checkbox" id="set-motion"><span class="tslider"></span></label></div>
-    <div class="setting-row textsize-row"><span class="sr-label">Text Size</span>
-      <div class="textsize-toggle">
-        <button type="button" class="textsize-btn" id="set-text-small" aria-pressed="false">A− Smaller</button>
-        <button type="button" class="textsize-btn" id="set-text-large" aria-pressed="false">A+ Larger</button>
-      </div>
-    </div>
+    <div class="setting-row"><span class="sr-label">Larger Text</span><label class="toggle"><input type="checkbox" id="set-text"><span class="tslider"></span></label></div>
     <div class="setting-row"><span class="sr-label">High Contrast</span><label class="toggle"><input type="checkbox" id="set-contrast"><span class="tslider"></span></label></div>
     <div class="setting-row" style="border-bottom:none;"><span class="sr-label">Offline Mode</span><label class="toggle"><input type="checkbox" id="set-offline"><span class="tslider"></span></label></div>
     <div class="offline-note"><strong>Offline Mode</strong>Works for features that do not need the internet. Features that require an online connection may not be available.</div>
-    <button class="btn btn-block" id="btn-replay-tutorial" style="margin-top:12px;">🔁 Replay Tutorial</button>
-    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:8px;">Done</button>
+    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:12px;">Done</button>
   </div>
 </div>
 
 <!-- PAUSE MODAL -->
 <div class="modal-overlay" id="modal-pause">
   <div class="modal-box">
-    <h1 class="display">⏸️ Game Menu</h1>
+    <h1 class="display">⏸️ Paused</h1>
     <div class="btn-row" style="flex-direction:column;">
       <button class="btn btn-primary btn-block" id="btn-resume">▶️ Resume</button>
-      <button class="btn btn-block" id="btn-playagain">↻ Restart</button>
-      <button class="btn btn-block" id="btn-mainmenu">✕ Exit Game</button>
-    </div>
-  </div>
-</div>
-
-<!-- CONFIRM MODAL (Restart / Exit Game, etc.) -->
-<div class="modal-overlay" id="modal-confirm">
-  <div class="modal-box">
-    <h1 class="display" id="confirm-title">Are you sure?</h1>
-    <p class="subtitle" id="confirm-body"></p>
-    <div class="btn-row" style="flex-direction:column;">
-      <button class="btn btn-primary btn-block" id="btn-confirm-yes">Yes</button>
-      <button class="btn btn-block" id="btn-confirm-no">Cancel</button>
+      <button class="btn btn-block" id="btn-playagain">🔄 Play Again</button>
+      <button class="btn btn-block" id="btn-mainmenu">🏠 Return to Main Menu</button>
     </div>
   </div>
 </div>
@@ -2058,18 +2011,6 @@
 <div class="modal-overlay" id="modal-convert-done">
   <div class="modal-box"><div style="font-size:3rem">🎉</div><h1 class="display">Conversion Complete!</h1><p class="subtitle">⭐ XP was converted successfully into 🪙 Coins.</p><button class="btn btn-primary btn-block" id="btn-convert-done">Done</button></div>
 </div>
-
-<!-- INTERACTIVE "KNOW THE APP" TUTORIAL -->
-<div class="tutorial-overlay hidden" id="tutorial-overlay" role="dialog" aria-label="App tutorial" aria-live="polite">
-  <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
-  <div class="tutorial-tooltip" id="tutorial-tooltip">
-    <p class="tutorial-eyebrow" id="tutorial-step-count">Step 1 of 9</p>
-    <h2 class="tutorial-title" id="tutorial-title">Welcome</h2>
-    <p class="tutorial-desc" id="tutorial-desc"></p>
-    <p class="tutorial-tap-hint">Tap anywhere to continue</p>
-  </div>
-</div>
-
 
 <script>
   (function(){
@@ -2246,14 +2187,13 @@
       achievementsCollected:{},
       dailyReward:{ lastCollectedDate:null, streakDay:0 },
       weekStart: startOfWeekISO(), weeklyScore:0,
-      settings:{ musicVol:0.5, sfxVol:0.6, reducedMotion:false, textSize:'default', highContrast:false, offlineMode:false },
+      settings:{ musicVol:0.5, sfxVol:0.6, reducedMotion:false, largerText:false, highContrast:false, offlineMode:false },
       playerColor:'blue',
       avatar: null,
       lastScreen:'menu',
       activeSession:null,
       onboarded:false,
       termsAccepted:false,
-      tutorialCompleted:false,
       mp:{ gamesPlayed:0, wins:0, bestScore:0, top3:0 }
     };
   }
@@ -2356,9 +2296,6 @@
     const merged = Object.assign(base, loaded);
     const fresh = safeDefaultState();
     merged.settings = Object.assign({}, fresh.settings||{}, loaded.settings||{});
-    // Migrate the old boolean "largerText" flag (pre text-size options) to the new textSize setting.
-    if(merged.settings.textSize === undefined){ merged.settings.textSize = merged.settings.largerText ? 'large' : 'default'; }
-    delete merged.settings.largerText;
     merged.equipped = Object.assign({}, fresh.equipped||{}, loaded.equipped||{});
     merged.completedLessons = Object.assign({}, fresh.completedLessons||{}, loaded.completedLessons||{});
     merged.achievementsCollected = Object.assign({}, fresh.achievementsCollected||{}, loaded.achievementsCollected||{});
@@ -2907,10 +2844,6 @@
   }
 
   const SCREENS = ['intro','agegate','loading','menu','lesson','lesson-modes','profile','trophies','leaders','adv-setup','adventure','trivia','quickgame','challenge','store','results','customize','spec-setup','spec-play','mp-lobby','history','history-review','teacher-gate','teacher-dashboard','teacher-report'];
-  // Screens where actual gameplay/timers are running. These get the in-game
-  // "Game Menu" (Resume / Restart / Exit) button instead of the plain Home
-  // button, so a player can never accidentally leave a game mid-round.
-  const GAME_SCREENS = ['adventure','trivia','quickgame','challenge','spec-play'];
   const SCREEN_BG = {
     intro:'bg-intro', agegate:'bg-menu', loading:'bg-menu', menu:'bg-menu', lesson:'bg-menu', 'lesson-modes':'bg-menu', profile:'bg-profile', trophies:'bg-trophies',
     leaders:'bg-leaders', 'adv-setup':'bg-adventure', adventure:'bg-adventure', trivia:'bg-menu',
@@ -2921,16 +2854,15 @@
   function showScreen(name){
     try{
       closeMobileMenu();
-      if(!GAME_SCREENS.includes(name)){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
+      if(name!=='spec-play'){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
       const previous=document.querySelector('.screen.active');
       if(previous && previous.id !== 'screen-'+name && !S.settings.reducedMotion){ previous.classList.add('screen-leaving'); setTimeout(()=>previous.classList.remove('screen-leaving'),180); }
       SCREENS.forEach(n => $('screen-'+n)?.classList.toggle('active', n===name));
-      const showPause = GAME_SCREENS.includes(name);
+      const showPause = name === 'spec-play';
       $('btn-pause')?.classList.toggle('hidden', !showPause);
       document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('active'));
-      // Home is only needed while inside another screen, and is replaced by
-      // the Game Menu button while a game mode is actually in progress.
-      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu'].includes(name) || GAME_SCREENS.includes(name));
+      // Home is only needed while inside another screen.
+      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu'].includes(name));
       if(name==='profile') $('nav-profile')?.classList.add('active');
       if(name==='trophies') $('nav-trophies')?.classList.add('active');
       if(name==='leaders') $('nav-leaders')?.classList.add('active');
@@ -3230,88 +3162,65 @@
   }
   function ownedCharacters(){ return CHARACTERS.filter(c => c.price===0 || S.purchased.includes(c.id)); }
 
-  /* ---- Profile 3D character viewer ---- */
-  function av_backFaceSvg(cfg){
-    // A simplified, recognizable "view from behind" built from the same
-    // equipped colors/items as the front render, so it reads as the same
-    // character rather than a different one.
-    cfg = Object.assign(defaultAvatar(), cfg || {});
-    const back = av_backMarkup(cfg.back);
-    const hatItem = (cfg.hat && cfg.hat!=='none') ? STORE.hats.find(h=>h.id===cfg.hat) : null;
-    return `<svg viewBox="0 0 200 300" class="char-svg" preserveAspectRatio="xMidYMax meet">
-  <g>
-    <rect x="72" y="168" width="20" height="112" rx="10" fill="${cfg.clothes}"/>
-    <rect x="108" y="168" width="20" height="112" rx="10" fill="${cfg.clothes}"/>
-    <rect x="72" y="282" width="30" height="14" rx="4" fill="${cfg.shoes}"/>
-    <rect x="98" y="282" width="30" height="14" rx="4" fill="${cfg.shoes}"/>
-    <rect x="62" y="80" width="16" height="96" rx="8" fill="${cfg.skin}"/>
-    <rect x="122" y="80" width="16" height="96" rx="8" fill="${cfg.skin}"/>
-    <path d="M69,80 L131,80 Q133,120 128,150 L125,168 L75,168 L72,150 Q67,120 69,80 Z" fill="${cfg.clothes}"/>
-    ${back}
-    <rect x="92" y="64" width="16" height="16" fill="${cfg.skin}"/>
-    <circle cx="100" cy="42" r="24" fill="${cfg.hairColor||'#3a2a1e'}"/>
-    ${hatItem ? `<text x="100" y="16" font-size="28" text-anchor="middle" dominant-baseline="middle">${hatItem.icon}</text>` : ''}
-  </g>
-</svg>`;
-  }
-  function buildProfile3DViewer(container, cfg){
-    container.innerHTML = '';
-    container.classList.add('avatar-3d-wrap');
-    const scene = document.createElement('div'); scene.className = 'avatar-3d-scene';
-    const stage = document.createElement('div'); stage.className = 'avatar-3d-stage';
-    const front = document.createElement('div'); front.className = 'avatar-3d-face avatar-3d-front';
-    const frontFigure = document.createElement('div');
-    front.appendChild(frontFigure);
-    const back = document.createElement('div'); back.className = 'avatar-3d-face avatar-3d-back';
-    back.innerHTML = `<div class="avatar-figure">${av_backFaceSvg(cfg)}</div>`;
-    stage.appendChild(front); stage.appendChild(back);
-    scene.appendChild(stage);
-    const controls = document.createElement('div'); controls.className = 'avatar-3d-controls';
-    const btnLeft = document.createElement('button'); btnLeft.className='avatar-3d-turn'; btnLeft.setAttribute('aria-label','Rotate left'); btnLeft.textContent='◀';
-    const facing = document.createElement('div'); facing.className='avatar-3d-facing'; facing.textContent='Front';
-    const btnRight = document.createElement('button'); btnRight.className='avatar-3d-turn'; btnRight.setAttribute('aria-label','Rotate right'); btnRight.textContent='▶';
-    controls.appendChild(btnLeft); controls.appendChild(facing); controls.appendChild(btnRight);
-    const hint = document.createElement('p'); hint.className='avatar-3d-hint'; hint.textContent='Drag to rotate, or use the arrows';
-    container.appendChild(scene); container.appendChild(controls); container.appendChild(hint);
-
-    renderAvatarInto(frontFigure, cfg, { showBadge:true });
-
-    let angle = 0; // degrees, snaps to multiples of 90
-    const FACING_NAMES = {0:'Front', 90:'Right', 180:'Back', 270:'Left'};
-    function applyAngle(){
-      stage.style.transform = `rotateY(${angle}deg)`;
-      const snapped = ((Math.round(angle/90)*90) % 360 + 360) % 360;
-      facing.textContent = FACING_NAMES[snapped] || 'Front';
+  /* ================= REAL 3D CHARACTER VIEWER ================= */
+  const Avatar3D = (() => {
+    let gl=null, program=null, canvas=null, viewer=null, raf=0, last=0;
+    let cfg=null, mode='idle', modeStarted=0, rotation=0, dragging=false, lastX=0, hintHidden=false;
+    let buffers={};
+    const V=`attribute vec3 aPos; attribute vec3 aNormal; uniform mat4 uMVP; uniform mat4 uModel; varying vec3 vN; varying vec3 vP; void main(){ vec4 wp=uModel*vec4(aPos,1.0); vP=wp.xyz; vN=normalize(mat3(uModel)*aNormal); gl_Position=uMVP*vec4(aPos,1.0); }`;
+    const F=`precision mediump float; uniform vec3 uColor; varying vec3 vN; varying vec3 vP; void main(){ vec3 L=normalize(vec3(-0.45,0.9,0.65)); float d=max(dot(normalize(vN),L),0.0); float rim=pow(1.0-max(dot(normalize(vN),vec3(0,0,1)),0.0),2.0)*0.12; gl_FragColor=vec4(uColor*(0.32+0.62*d+rim),1.0); }`;
+    function shader(type,src){ const sh=gl.createShader(type); gl.shaderSource(sh,src); gl.compileShader(sh); if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) throw Error(gl.getShaderInfoLog(sh)); return sh; }
+    function matMul(a,b){ const o=new Float32Array(16); for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3]; return o; }
+    function I(){ const m=new Float32Array(16); m[0]=m[5]=m[10]=m[15]=1; return m; }
+    function T(x,y,z){ const m=I(); m[12]=x;m[13]=y;m[14]=z;return m; }
+    function S(x,y,z){ const m=I();m[0]=x;m[5]=y;m[10]=z;return m; }
+    function Rx(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[5]=c;m[6]=s;m[9]=-s;m[10]=c;return m;}
+    function Ry(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[0]=c;m[2]=-s;m[8]=s;m[10]=c;return m;}
+    function Rz(a){const c=Math.cos(a),s=Math.sin(a),m=I();m[0]=c;m[1]=s;m[4]=-s;m[5]=c;return m;}
+    function TRS(x,y,z,rx,ry,rz,sx,sy,sz){ return matMul(matMul(matMul(matMul(T(x,y,z),Rz(rz||0)),Ry(ry||0)),Rx(rx||0)),S(sx||1,sy||1,sz||1)); }
+    function perspective(fovy,aspect,n,f){const t=1/Math.tan(fovy/2),m=new Float32Array(16);m[0]=t/aspect;m[5]=t;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=(2*f*n)/(n-f);return m;}
+    function lookAt(eye,center,up){let zx=eye[0]-center[0],zy=eye[1]-center[1],zz=eye[2]-center[2],zl=Math.hypot(zx,zy,zz);zx/=zl;zy/=zl;zz/=zl;let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx;let xl=Math.hypot(xx,xy,xz);xx/=xl;xy/=xl;xz/=xl;let yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;const m=I();m[0]=xx;m[1]=yx;m[2]=zx;m[4]=xy;m[5]=yy;m[6]=zy;m[8]=xz;m[9]=yz;m[10]=zz;m[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);m[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);m[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);return m;}
+    function mesh(name,verts,norms,inds){const b={v:gl.createBuffer(),n:gl.createBuffer(),i:gl.createBuffer(),count:inds.length};gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(norms),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(inds),gl.STATIC_DRAW);buffers[name]=b;}
+    function makeCube(){const v=[-1,-1,-1,1,-1,-1,1,1,-1,-1,1,-1,-1,-1,1,1,-1,1,1,1,1,-1,1,1],n=[],i=[];const faces=[[0,1,2,3,0,0,-1],[4,7,6,5,0,0,1],[0,4,5,1,-1,0,0],[3,2,6,7,1,0,0],[0,3,7,4,0,-1,0],[1,5,6,2,0,1,0]];faces.forEach(f=>{const a=f.slice(0,4),nx=f[4],ny=f[5],nz=f[6];a.forEach(()=>n.push(nx,ny,nz));const base=n.length/3-4;i.push(base,base+1,base+2,base,base+2,base+3);});mesh('cube',v,n,i);}
+    function makeSphere(){const v=[],n=[],i=[],la=18,lo=12;for(let y=0;y<=lo;y++){const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,sq=Math.sin(q),cq=Math.cos(q);v.push(sp*cq,cp,sp*sq);n.push(sp*cq,cp,sp*sq);}}for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,b=a+la+1;i.push(a,b,a+1,b,b+1,a+1);}mesh('sphere',v,n,i);}
+    function makeCylinder(){const v=[],n=[],i=[],seg=20;for(let y=0;y<=1;y++){for(let x=0;x<=seg;x++){const a=x*2*Math.PI/seg;v.push(Math.cos(a),y*2-1,Math.sin(a));n.push(Math.cos(a),0,Math.sin(a));}}for(let x=0;x<seg;x++){const a=x,b=x+1,c=seg+1+x,d=c+1;i.push(a,c,b,b,c,d);}mesh('cyl',v,n,i);}
+    function init(){ try{ canvas=$('cust-3d-canvas'); viewer=$('cust-3d-viewer'); gl=canvas.getContext('webgl',{alpha:true,antialias:true,preserveDrawingBuffer:false}); if(!gl) throw Error('WebGL unavailable'); program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);buffers={};makeCube();makeSphere();makeCylinder();gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);bind();resize();window.addEventListener('resize',resize,{passive:true});window.addEventListener('orientationchange',resize,{passive:true}); if(!raf) raf=requestAnimationFrame(loop); return true;}catch(e){ console.warn('3D character viewer fallback:',e); return false; } }
+    function bind(){ if(!viewer) return; viewer.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;viewer.classList.add('dragging');hideHint();try{viewer.setPointerCapture(e.pointerId)}catch(_){}});viewer.addEventListener('pointermove',e=>{if(!dragging)return;rotation+=(e.clientX-lastX)*0.012;lastX=e.clientX;});viewer.addEventListener('pointerup',e=>{dragging=false;viewer.classList.remove('dragging');try{viewer.releasePointerCapture(e.pointerId)}catch(_){}});viewer.addEventListener('pointercancel',()=>{dragging=false;viewer.classList.remove('dragging')}); }
+    function hideHint(){if(hintHidden)return;hintHidden=true;const h=$('cust-3d-hint');if(h)h.classList.add('hidden-hint');}
+    function resize(){if(!canvas||!gl)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));gl.viewport(0,0,canvas.width,canvas.height);}
+    function setCfg(c){cfg=Object.assign(defaultAvatar(),c||{});}
+    function setMode(m,anim){mode=m;modeStarted=performance.now();if(anim)cfg=Object.assign(cfg||defaultAvatar(),{walkAnim:anim,victoryAnim:anim});}
+    function color(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return [0.65,.7,.8];const n=parseInt(m[1],16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+    function draw(name,model,col,viewProj){const b=buffers[name];if(!b)return;gl.bindBuffer(gl.ARRAY_BUFFER,b.v);const ap=gl.getAttribLocation(program,'aPos');gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);const an=gl.getAttribLocation(program,'aNormal');gl.enableVertexAttribArray(an);gl.vertexAttribPointer(an,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uModel'),false,model);gl.uniformMatrix4fv(gl.getUniformLocation(program,'uMVP'),false,matMul(viewProj,model));gl.uniform3fv(gl.getUniformLocation(program,'uColor'),new Float32Array(color(col)));gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);}
+    function part(parent,x,y,z,sx,sy,sz,rx,ry,rz,col,shape='cube'){return {m:matMul(parent,TRS(x,y,z,rx,ry,rz,sx,sy,sz)),col,shape};}
+    function build(c,t){const walk=['bounce','skip','robot','moonwalk'].includes(c.walkAnim)?c.walkAnim:'bounce',vic=['jump','spin','dance','flex'].includes(c.victoryAnim)?c.victoryAnim:'jump';let jump=0,armL=0,armR=0,legL=0,legR=0,bodyBob=0,bodyRy=0;const elapsed=t-modeStarted;if(mode==='walk'){const q=elapsed/1000* (walk==='robot'?5.0:5.8);legL=Math.sin(q)*.48;legR=-legL;armL=-legL*.75;armR=-armL;bodyBob=Math.abs(Math.sin(q))*0.035;if(walk==='skip')bodyBob=Math.abs(Math.sin(q))*0.08;if(walk==='robot'){armL*=.5;armR*=.5;}if(walk==='moonwalk'){legL*=.7;legR*=.7;bodyRy=-.12;}}else if(mode==='victory'){const q=Math.min(1,elapsed/1400);if(vic==='spin')bodyRy=(Math.PI*2)*q;else if(vic==='dance'){armL=Math.sin(elapsed/120)*.7;armR=-armL;legL=Math.sin(elapsed/150)*.25;legR=-legL;}else if(vic==='flex'){armL=-.9;armR=.9;}else{jump=Math.sin(Math.min(Math.PI,q*Math.PI))*0.38;armL=-.8;armR=.8;legL=.2;legR=-.2;}}
+      const root=TRS(0,jump+bodyBob,0,0,rotation+bodyRy,0,1,1,1),out=[];
+      const torso=part(root,0,1.45,0,.58,.72,.36,0,0,0,c.clothes);out.push(torso);
+      const head=part(root,0,2.62,0,.48,.48,.48,0,0,0,c.skin,'sphere');out.push(head);
+      // neck
+      out.push(part(root,0,2.05,0,.18,.22,.18,0,0,0,c.skin));
+      // limbs, each parented to the body so rotations remain attached
+      out.push(part(root,-.72,1.48,0,.17,.58,.17,legL,0,0,c.clothes));out.push(part(root,.72,1.48,0,.17,.58,.17,legR,0,0,c.clothes));
+      out.push(part(root,-.72,.78,0,.19,.42,.19,legL*.35,0,0,c.clothes));out.push(part(root,.72,.78,0,.19,.42,.19,legR*.35,0,0,c.clothes));
+      out.push(part(root,-.72,.25,.03,.31,.13,.48,0,0,0,c.shoes));out.push(part(root,.72,.25,.03,.31,.13,.48,0,0,0,c.shoes));
+      out.push(part(root,-.78,1.55,0,.18,.55,.18,armL,0,0,c.skin));out.push(part(root,.78,1.55,0,.18,.55,.18,armR,0,0,c.skin));
+      out.push(part(root,-.78,.86,0,.16,.42,.16,armL*.4,0,0,c.skin,'cyl'));out.push(part(root,.78,.86,0,.16,.42,.16,armR*.4,0,0,c.skin,'cyl'));
+      // Hair: depth-bearing primitives rather than a flat image.
+      const hc=c.hairColor||'#1f2937'; if(c.hairStyle!=='bald'){out.push(part(root,0,2.99,-.01,.5,.20,.49,0,0,0,hc,'sphere')); if(c.hairStyle==='long'){out.push(part(root,-.43,2.58,0,.13,.42,.16,0,0,0,hc,'cyl'));out.push(part(root,.43,2.58,0,.13,.42,.16,0,0,0,hc,'cyl'));}else if(c.hairStyle==='ponytail')out.push(part(root,.55,2.76,-.04,.16,.34,.16,0,0,.35,hc,'sphere'));else if(c.hairStyle==='curly'){[-.32,0,.32].forEach(x=>out.push(part(root,x,3.02,.02,.22,.22,.22,0,0,0,hc,'sphere')))}else if(c.hairStyle==='mohawk')out.push(part(root,0,3.18,0,.15,.28,.16,0,0,0,hc,'cube'));}
+      // Face details follow the head orientation by sharing the same root.
+      const eyeCol='#1f2b40'; out.push(part(root,-.19,2.68,.455,.055,.055,.055,0,0,0,eyeCol,'sphere'));out.push(part(root,.19,2.68,.455,.055,.055,.055,0,0,0,eyeCol,'sphere'));out.push(part(root,0,2.48,.47,.09,.035,.035,0,0,0,'#7a3b3b','sphere'));
+      if(c.glasses && c.glasses!=='none'){out.push(part(root,-.19,2.68,.49,.16,.08,.035,0,0,0,'#1f2b40'));out.push(part(root,.19,2.68,.49,.16,.08,.035,0,0,0,'#1f2b40'));out.push(part(root,0,2.68,.49,.08,.025,.025,0,0,0,'#1f2b40'));}
+      // Hat options from the existing store remain cosmetic but become real 3D geometry.
+      if(c.hat&&c.hat!=='none'){out.push(part(root,0,3.16,0,.62,.14,.62,0,0,0,'#273b67','cyl'));out.push(part(root,0,3.34,0,.36,.25,.36,0,0,0,'#334f86','sphere'));}
+      if(c.back==='backpack')out.push(part(root,0,1.3,-.43,.43,.52,.14,0,0,0,'#5c3a1e'));if(c.back==='cape')out.push(part(root,0,1.18,-.46,.48,.9,.08,0,0,0,'#7a2946'));if(c.back==='wings'){out.push(part(root,-.62,1.5,-.25,.5,.28,.08,0,.15,.3,'#eef2fb'));out.push(part(root,.62,1.5,-.25,.5,.28,.08,0,-.15,-.3,'#eef2fb'));}
+      if(c.accessory==='necklace'){for(let i=-2;i<=2;i++)out.push(part(root,i*.1,2.02,.38,.035,.035,.035,0,0,0,'#d9a92f','sphere'));}if(c.accessory==='watch')out.push(part(root,-.78,.48,.02,.13,.08,.08,0,0,0,'#d9a92f'));if(c.accessory==='earring')out.push(part(root,-.5,2.62,.03,.05,.09,.05,0,0,0,'#55b6d9','sphere'));
+      return out;
     }
-    function snapTo(target){
-      angle = target;
-      applyAngle();
-    }
-    btnLeft.addEventListener('click', () => { sfx('click'); snapTo(angle - 90); });
-    btnRight.addEventListener('click', () => { sfx('click'); snapTo(angle + 90); });
-
-    let dragging = false, startX = 0, startAngle = 0;
-    function onDown(x){ dragging = true; startX = x; startAngle = angle; stage.classList.add('dragging'); }
-    function onMove(x){
-      if(!dragging) return;
-      const dx = x - startX;
-      stage.style.transform = `rotateY(${startAngle + dx/2}deg)`;
-    }
-    function onUp(x){
-      if(!dragging) return;
-      dragging = false; stage.classList.remove('dragging');
-      const dx = x - startX;
-      angle = Math.round((startAngle + dx/2)/90)*90;
-      applyAngle();
-    }
-    scene.addEventListener('pointerdown', e => { onDown(e.clientX); scene.setPointerCapture(e.pointerId); });
-    scene.addEventListener('pointermove', e => { if(dragging) onMove(e.clientX); });
-    scene.addEventListener('pointerup', e => onUp(e.clientX));
-    scene.addEventListener('pointercancel', () => { dragging = false; stage.classList.remove('dragging'); applyAngle(); });
-
-    applyAngle();
-    return { setCfg(newCfg){ renderAvatarInto(frontFigure, newCfg, { showBadge:true }); back.innerHTML = `<div class="avatar-figure">${av_backFaceSvg(newCfg)}</div>`; } };
-  }
+    function loop(now){raf=requestAnimationFrame(loop);if(!gl||!cfg||document.hidden)return;const dt=Math.min(50,now-last||16);last=now;const r=canvas.getBoundingClientRect(),aspect=Math.max(.5,r.width/Math.max(1,r.height));gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const proj=perspective(Math.PI/4.2,aspect,.1,30),eye=[0,1.55,7.2],view=lookAt(eye,[0,1.65,0],[0,1,0]),vp=matMul(proj,view);build(cfg,now).forEach(o=>draw(o.shape==='sphere'?'sphere':o.shape==='cyl'?'cyl':'cube',o.m,o.col,vp));if(mode==='victory'&&now-modeStarted>1500){mode='idle';} }
+    function show(c,m,anim){if(!gl||!canvas)return;setCfg(c);mode=m||'idle';modeStarted=performance.now();if(anim){if(m==='walk')cfg.walkAnim=anim;if(m==='victory')cfg.victoryAnim=anim;}resize();}
+    function ready(){return !!gl;}
+    return {init,show,ready};
+  })();
 
   /* Customize screen wiring */
   let custDraft = null;
@@ -3322,6 +3231,7 @@
   let custActiveCat = 'character';
   function openCustomize(){
     showScreen('customize');
+    if(!Avatar3D.ready()){ const ok=Avatar3D.init(); const fb=$('cust-3d-fallback'); if(fb && !ok) fb.classList.remove('hidden'); }
     custDraft = Object.assign(defaultAvatar(), JSON.parse(JSON.stringify(S.avatar||{})));
     renderCustCatNav();
     renderCustomizeScreen();
@@ -3360,7 +3270,8 @@
   }
   function renderCustomizeScreen(){
     showCustCatPanel();
-    renderAvatarInto($('cust-preview'), custDraft, { name:S.name, showBadge:true });
+    if(Avatar3D.ready()) Avatar3D.show(custDraft,'idle');
+    else { const fb=$('cust-3d-fallback'); if(fb){ fb.classList.remove('hidden'); renderAvatarInto(fb,custDraft,{name:S.name,showBadge:true}); } }
     chipRow('cust-character', ownedCharacters(), () => custDraft.character, v => {
       custDraft.character = v;
       const def = CHARACTERS.find(c=>c.id===v);
@@ -3386,14 +3297,15 @@
   }
   $('btn-preview-walk').addEventListener('click', () => {
     if(custPreviewTimer){ clearTimeout(custPreviewTimer); custPreviewTimer=null; }
-    renderAvatarInto($('cust-preview'), custDraft, { name:S.name, showBadge:true, walking:true });
-    // Walk preview is intentionally finite so it always returns to idle.
-    custPreviewTimer=setTimeout(finishCustPreview, 2050);
+    if(Avatar3D.ready()) Avatar3D.show(custDraft,'walk',custDraft.walkAnim);
+    else { const fb=$('cust-3d-fallback'); if(fb){fb.classList.remove('hidden');renderAvatarInto(fb,custDraft,{name:S.name,showBadge:true,walking:true});} }
+    custPreviewTimer=setTimeout(finishCustPreview, 3600);
   });
   $('btn-preview-victory').addEventListener('click', () => {
     if(custPreviewTimer){ clearTimeout(custPreviewTimer); custPreviewTimer=null; }
-    renderAvatarInto($('cust-preview'), custDraft, { name:S.name, showBadge:true, victory:true });
-    custPreviewTimer=setTimeout(finishCustPreview, 1550);
+    if(Avatar3D.ready()) Avatar3D.show(custDraft,'victory',custDraft.victoryAnim);
+    else { const fb=$('cust-3d-fallback'); if(fb){fb.classList.remove('hidden');renderAvatarInto(fb,custDraft,{name:S.name,showBadge:true,victory:true});} }
+    custPreviewTimer=setTimeout(finishCustPreview, 1650);
   });
   $('btn-randomize').addEventListener('click', () => {
     const ownedChars = ownedCharacters();
@@ -3410,7 +3322,8 @@
   let custPreviewTimer = null;
   function finishCustPreview(){
     if(custPreviewTimer){ clearTimeout(custPreviewTimer); custPreviewTimer=null; }
-    renderCustomizeScreen();
+    if(Avatar3D.ready()) Avatar3D.show(custDraft,'idle');
+    else renderCustomizeScreen();
   }
   $('btn-save-avatar').addEventListener('click', () => {
     S.avatar = Object.assign(defaultAvatar(), JSON.parse(JSON.stringify(custDraft)));
@@ -3745,6 +3658,25 @@
   const LOADING_TIPS = [
     "Loading your adventure…","Sharpening pencils and dice…","Waking up the bot players…","Polishing the leaderboard…","Fueling the rocket map…","Shuffling trivia cards…"
   ];
+  function getPlayerCompletionPercent(){
+    if(!S) return 0;
+    const achievementTotal = (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.length) ? ACHIEVEMENTS.length : 1;
+    const achievementsDone = Object.keys(S.achievementsCollected || {}).length;
+    const achievementPct = Math.min(100, (achievementsDone / achievementTotal) * 100);
+    const gamesPct = Math.min(100, ((S.gamesPlayed || 0) / 10) * 100);
+    const adventurePct = Math.min(100, ((S.adventuresCompleted || 0) / 5) * 100);
+    const correctPct = Math.min(100, ((S.totalCorrectAnswers || 0) / 20) * 100);
+    const profilePct = (S.name && S.name !== 'Player' && S.section) ? 100 : 0;
+    return Math.round((achievementPct + gamesPct + adventurePct + correctPct + profilePct) / 5);
+  }
+  function updatePlayerLoadingProgress(){
+    const pct = getPlayerCompletionPercent();
+    const fill = $('player-progress-fill');
+    const label = $('player-progress-percent');
+    if(fill) fill.style.width = pct + '%';
+    if(label) label.textContent = pct + '%';
+  }
+
   let loadingTimer=null;
   let loadingWatchdog=null;
   function runLoadingSequence(fromOnboarding=false){
@@ -3758,7 +3690,7 @@
       loadingWatchdog=null;
       if(document.getElementById('screen-loading') && document.getElementById('screen-loading').classList.contains('active')){
         if(loadingTimer){ clearInterval(loadingTimer); loadingTimer=null; }
-        enterMainMenu(fromOnboarding);
+        enterMainMenu();
       }
     }, 6000);
     let pct=0; let step=0;
@@ -3767,6 +3699,7 @@
     fill.style.width='0%';
     const percentLabel = $('loading-percent');
     if(percentLabel) percentLabel.textContent='0%';
+    updatePlayerLoadingProgress();
     loadingTimer=setInterval(() => {
       step++;
       pct=Math.min(100, pct + (step<4 ? 18 : 14));
@@ -3776,102 +3709,22 @@
       if(pct>=100){
         clearInterval(loadingTimer); loadingTimer=null;
         if(loadingWatchdog){ clearTimeout(loadingWatchdog); loadingWatchdog=null; }
-        setTimeout(() => enterMainMenu(fromOnboarding), S.settings.reducedMotion ? 0 : 220);
+        setTimeout(enterMainMenu, S.settings.reducedMotion ? 0 : 220);
       }
     }, S.settings.reducedMotion ? 40 : 150);
   }
 
-  function enterMainMenu(fromOnboarding=false){
+  function enterMainMenu(){
+    updatePlayerLoadingProgress();
     updateHeaderStats();
     showScreen('menu');
     setMusicTheme('menu');
     renderMenu();
-    // First-time players get the interactive tutorial before anything else
-    // is unlocked; returning players go straight to their normal main menu.
-    if(fromOnboarding && !S.tutorialCompleted){
-      lockMenuForTutorial(true);
-      if(pendingCodenameReveal && S.playerCodename){
-        showCodenameReveal();
-        const startAfterCodename = () => {
-          $('btn-codename-done')?.removeEventListener('click', startAfterCodename);
-          startTutorial();
-        };
-        $('btn-codename-done')?.addEventListener('click', startAfterCodename);
-      } else {
-        startTutorial();
-      }
-    } else {
-      showCodenameReveal();
-      // Every fresh launch/reopen lands on the Main Menu — an active gameplay
-      // screen from a previous run is never auto-restored (see loadState()).
-      maybeShowDailyReward();
-    }
-  }
-  /* ================= "KNOW THE APP" TUTORIAL ================= */
-  const TUTORIAL_STEPS = [
-    { selector:'#btn-gear', title:'Settings', desc:'Customize your game experience, audio, text size, accessibility, and other preferences.' },
-    { selector:'#nav-profile', title:'Profile', desc:'View your character, track your level and XP, and customize your look.' },
-    { selector:'#card-adventure', title:'Challenge Mode', desc:'Work through story-driven challenges tied to what you\u2019ve learned.' },
-    { selector:'#card-speculation', title:'Speculation', desc:'Test your reasoning by predicting outcomes and solving puzzles under pressure.' },
-    { selector:'#card-quickgame', title:'Quick Game', desc:'Jump into a short arcade challenge followed by real trivia questions.' },
-    { selector:'#card-lesson', title:'Lessons', desc:'Access bite-sized educational content whenever you want a refresher.' },
-    { selector:'#card-history', title:'History', desc:'Review your previous activities and results.' },
-    { selector:'#card-store', title:'Store', desc:'Spend coins on cosmetics and rewards for your character.' },
-    { selector:'#screen-menu .inner', title:'You\u2019re ready!', desc:'Explore AdapT CoCu and start learning through gameplay.', full:true }
-  ];
-  let tutorialStep = 0;
-  function lockMenuForTutorial(locked){
-    document.body.classList.toggle('tutorial-active', locked);
-  }
-  function positionTutorialStep(){
-    const step = TUTORIAL_STEPS[tutorialStep];
-    const spot = $('tutorial-spotlight');
-    const tooltip = $('tutorial-tooltip');
-    const target = step && !step.full ? document.querySelector(step.selector) : null;
-    if(target){
-      const r = target.getBoundingClientRect();
-      const pad = 8;
-      spot.classList.remove('no-target');
-      spot.style.top = Math.max(4, r.top - pad) + 'px';
-      spot.style.left = Math.max(4, r.left - pad) + 'px';
-      spot.style.width = (r.width + pad*2) + 'px';
-      spot.style.height = (r.height + pad*2) + 'px';
-      // Place the tooltip just below the highlighted element when there's room, otherwise above it.
-      const spaceBelow = window.innerHeight - r.bottom;
-      const offset = r.height/2 + pad + 26;
-      tooltip.style.marginTop = spaceBelow > 180 ? offset + 'px' : '';
-      tooltip.style.marginBottom = spaceBelow <= 180 ? offset + 'px' : '';
-      tooltip.style.transform = `translateY(${r.top + r.height/2 - window.innerHeight/2}px)`;
-    } else {
-      spot.classList.add('no-target');
-      tooltip.style.transform = '';
-      tooltip.style.marginTop = '';
-      tooltip.style.marginBottom = '';
-    }
-    $('tutorial-step-count').textContent = `Step ${tutorialStep+1} of ${TUTORIAL_STEPS.length}`;
-    $('tutorial-title').textContent = step.title;
-    $('tutorial-desc').textContent = step.desc;
-  }
-  function startTutorial(){
-    tutorialStep = 0;
-    $('tutorial-overlay').classList.remove('hidden');
-    positionTutorialStep();
-  }
-  function advanceTutorial(){
-    tutorialStep++;
-    if(tutorialStep >= TUTORIAL_STEPS.length){ finishTutorial(); return; }
-    positionTutorialStep();
-  }
-  function finishTutorial(){
-    $('tutorial-overlay').classList.add('hidden');
-    S.tutorialCompleted = true;
-    saveState();
-    lockMenuForTutorial(false);
+    showCodenameReveal();
+    // Every fresh launch/reopen lands on the Main Menu — an active gameplay
+    // screen from a previous run is never auto-restored (see loadState()).
     maybeShowDailyReward();
   }
-  $('tutorial-overlay')?.addEventListener('click', advanceTutorial);
-  window.addEventListener('resize', () => { if(!$('tutorial-overlay').classList.contains('hidden')) positionTutorialStep(); });
-
   function renderMenuAvatar(){
     let el = $('menu-avatar');
     if(!el){
@@ -4727,7 +4580,7 @@
       avEl = document.createElement('div'); avEl.id='profile-avatar'; avEl.style.marginBottom='10px';
       $('profile-name').parentNode.insertBefore(avEl, $('profile-name'));
     }
-    buildProfile3DViewer(avEl, S.avatar);
+    renderAvatarInto(avEl, S.avatar, { sizeClass:'small', showBadge:true });
     $('profile-name').textContent = S.name;
     if($('profile-name-input')) $('profile-name-input').value=S.name;
     if($('profile-section-display')) $('profile-section-display').textContent = 'Section: ' + (S.section || '—');
@@ -6641,30 +6494,10 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   /* ================= SETTINGS ================= */
   $('btn-gear').addEventListener('click', () => {
     $('set-music').value = S.settings.musicVol; $('set-sfx').value = S.settings.sfxVol;
-    $('set-motion').checked = S.settings.reducedMotion; syncTextSizeButtons();
+    $('set-motion').checked = S.settings.reducedMotion; $('set-text').checked = S.settings.largerText;
     $('set-contrast').checked = S.settings.highContrast; $('set-offline').checked = S.settings.offlineMode;
     $('modal-settings').classList.add('active');
   });
-  function syncTextSizeButtons(){
-    const size = S.settings.textSize || 'default';
-    $('set-text-small').classList.toggle('active', size==='small');
-    $('set-text-small').setAttribute('aria-pressed', size==='small');
-    $('set-text-large').classList.toggle('active', size==='large');
-    $('set-text-large').setAttribute('aria-pressed', size==='large');
-  }
-  function applyTextSize(size){
-    document.body.classList.toggle('small-text', size==='small');
-    document.body.classList.toggle('large-text', size==='large');
-  }
-  function setTextSize(size){
-    // Clicking the already-active option returns text size to the default, comfortable size.
-    S.settings.textSize = (S.settings.textSize === size) ? 'default' : size;
-    applyTextSize(S.settings.textSize);
-    syncTextSizeButtons();
-    saveState();
-  }
-  $('set-text-small').addEventListener('click', () => { setTextSize('small'); sfx('click'); });
-  $('set-text-large').addEventListener('click', () => { setTextSize('large'); sfx('click'); });
   $('set-music').addEventListener('input', e => {
     S.settings.musicVol = parseFloat(e.target.value);
     if(S.settings.musicVol <= 0){
@@ -6678,46 +6511,16 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   });
   $('set-sfx').addEventListener('input', e => { S.settings.sfxVol = parseFloat(e.target.value); sfx('click'); });
   $('set-motion').addEventListener('change', e => { S.settings.reducedMotion = e.target.checked; document.body.classList.toggle('reduced-motion', e.target.checked); saveState(); });
+  $('set-text').addEventListener('change', e => { S.settings.largerText = e.target.checked; document.body.classList.toggle('large-text', e.target.checked); saveState(); });
   $('set-contrast').addEventListener('change', e => { S.settings.highContrast = e.target.checked; document.body.classList.toggle('high-contrast', e.target.checked); saveState(); });
   $('set-offline').addEventListener('change', e => { S.settings.offlineMode = e.target.checked; saveState(); });
   $('btn-close-settings').addEventListener('click', () => { $('modal-settings').classList.remove('active'); saveState(); });
-  $('btn-replay-tutorial').addEventListener('click', () => {
-    $('modal-settings').classList.remove('active');
-    if($('screen-menu').classList.contains('active')){ lockMenuForTutorial(true); startTutorial(); }
-    else { showScreen('menu'); renderMenu(); lockMenuForTutorial(true); startTutorial(); }
-  });
 
   /* ================= PAUSE ================= */
-  $('btn-pause').addEventListener('click', () => {
-    if(!GAME_SCREENS.some(n => $('screen-'+n)?.classList.contains('active'))) return;
-    gamePaused=true; $('modal-pause').classList.add('active'); sfx('click'); pauseAllTimers();
-  });
+  $('btn-pause').addEventListener('click', () => { if(!$('screen-spec-play').classList.contains('active')) return; gamePaused=true; $('modal-pause').classList.add('active'); sfx('click'); pauseAllTimers(); });
   $('btn-resume').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); resumeAllTimers(); });
-  $('btn-playagain').addEventListener('click', () => {
-    showConfirm('Restart this round?', 'Your current progress in this round will be lost.', () => {
-      $('modal-pause').classList.remove('active'); gamePaused=false; restartCurrentFlow();
-    });
-  });
-  $('btn-mainmenu').addEventListener('click', () => {
-    showConfirm('Exit to Main Menu?', 'Your progress so far will be saved before you leave.', () => {
-      $('modal-pause').classList.remove('active'); gamePaused=false; abortToMainMenu();
-    });
-  });
-  function showConfirm(title, body, onYes){
-    $('confirm-title').textContent = title;
-    $('confirm-body').textContent = body;
-    $('modal-confirm').classList.add('active');
-    const yesBtn = $('btn-confirm-yes'), noBtn = $('btn-confirm-no');
-    const cleanup = () => {
-      yesBtn.removeEventListener('click', onYesClick);
-      noBtn.removeEventListener('click', onNoClick);
-      $('modal-confirm').classList.remove('active');
-    };
-    const onYesClick = () => { cleanup(); sfx('click'); onYes(); };
-    const onNoClick = () => { cleanup(); sfx('click'); };
-    yesBtn.addEventListener('click', onYesClick);
-    noBtn.addEventListener('click', onNoClick);
-  }
+  $('btn-playagain').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); restartCurrentFlow(); });
+  $('btn-mainmenu').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); abortToMainMenu(); });
   function pauseAllTimers(){
     if(qcTimer){ clearInterval(qcTimer); clearInterval(qcSpawnTimer); qcTimer=null; qcSpawnTimer=null; }
     stopSpecTimer();
@@ -6748,7 +6551,6 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     mpClearBotTimers();
     clearInterval(specPowerplayTimer); specPowerplayTimer=null;
     MP.active=false;
-    saveState();
     showScreen('menu'); setMusicTheme('menu'); renderMenu();
   }
 
@@ -6820,7 +6622,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
       if($('input-name')) $('input-name').value = S.name==='Player' ? '' : S.name;
       if($('input-section')) $('input-section').value = S.section || '';
       document.body.classList.toggle('reduced-motion', S.settings.reducedMotion);
-      applyTextSize(S.settings.textSize || 'default');
+      document.body.classList.toggle('large-text', S.settings.largerText);
       document.body.classList.toggle('high-contrast', S.settings.highContrast);
       setInterval(() => { S.totalPlaySeconds++; }, 1000);
       if(S.onboarded){
