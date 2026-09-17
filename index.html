@@ -47,6 +47,18 @@
     body.large-text .topt, body.large-text .question-text, body.large-text .trivia-q, body.large-text .trivia-opts{ font-size:1.08rem; }
     body.large-text .menu-card .mn{ font-size:1.05rem; }
     body.large-text input[type=text], body.large-text input[type=number]{ font-size:1.08rem; }
+    body.small-text{ font-size:0.88rem; }
+    body.small-text .btn, body.small-text .menu-card, body.small-text .tab-btn, body.small-text .hbtn{ font-size:.9rem; }
+    body.small-text .subtitle, body.small-text .card, body.small-text .lb-row, body.small-text .chat-bubble{ font-size:.92rem; }
+    body.small-text h1.display{ font-size:1.5rem; }
+    body.small-text .eyebrow, body.small-text .field-label, body.small-text .sr-label, body.small-text .sl{ font-size:.72rem; }
+    body.small-text .topt, body.small-text .question-text, body.small-text .trivia-q, body.small-text .trivia-opts{ font-size:.92rem; }
+    body.small-text .menu-card .mn{ font-size:.88rem; }
+    body.small-text input[type=text], body.small-text input[type=number]{ font-size:.92rem; }
+    .textsize-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .textsize-toggle{ display:flex; gap:6px; }
+    .textsize-btn{ all:unset; cursor:pointer; padding:6px 12px; border-radius:10px; font-weight:800; font-size:.85rem; background:rgba(0,0,0,.06); border:2px solid transparent; }
+    .textsize-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent-d,var(--accent)); }
     body.high-contrast{ --bg:#101a30; --ink:#eef2ff; }
     body.high-contrast .panel, body.high-contrast .card{ background:#1a2440 !important; color:#eef2ff !important; border-color:#4a5a8a !important; }
     h1,h2,h3,.display{ font-family:'Baloo 2',sans-serif; }
@@ -261,10 +273,6 @@
     .loading-fill{ height:100%; background:var(--accent); width:0%; transition:width .25s linear; }
     .loading-percent{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; color:var(--accent-d); min-height:1.4em; }
     .loading-tip{ font-size:0.8rem; color:#5b6b8a; font-weight:700; text-align:center; max-width:260px; }
-    .player-progress{ width:min(320px,82vw); margin-top:2px; }
-    .player-progress-label{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:.82rem; font-weight:800; color:var(--ink); }
-    .player-progress-track{ width:100%; height:14px; background:#dbe3f5; border:2px solid rgba(0,0,0,.08); border-radius:999px; overflow:hidden; }
-    .player-progress-fill{ width:0%; height:100%; background:linear-gradient(90deg,var(--accent),var(--teal)); border-radius:inherit; transition:width .45s ease; }
 
 
     /* ---- MODAL ---- */
@@ -289,21 +297,30 @@
     .title-chip{ font-size:0.68rem; font-weight:800; color:var(--accent-d); }
 
     .menu-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
-    .menu-card{ all:unset; cursor:pointer; background:#fff; border:3px solid #dbe3f5; border-radius:18px; padding:18px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; }
-    .menu-card.mc-challenge{ background:#e8faf5; border-color:var(--teal); }
-    .menu-card.mc-speculation{ background:#f3edff; border-color:var(--purple); }
-    .menu-card.mc-quickgame{ background:#fff2e6; border-color:var(--orange); }
-    .menu-card.mc-store{ background:#ffeef5; border-color:var(--pink); }
-    .menu-card.mc-customize{ background:#eaf4ff; border-color:var(--blue); }
-    .menu-card#card-lesson{ background:#f2efff; border-color:var(--purple); }
+    .menu-card{ all:unset; cursor:pointer; position:relative; background:linear-gradient(180deg,#ffffff,#f7f9ff); border:1px solid #e2e7f7; border-top:4px solid #dbe3f5; border-radius:16px; padding:20px 12px 16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; box-shadow:0 3px 0 rgba(20,30,60,.05), 0 10px 22px -14px rgba(20,30,60,.35); transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+    .menu-card:hover{ transform:translateY(-2px); box-shadow:0 4px 0 rgba(20,30,60,.06), 0 16px 28px -14px rgba(20,30,60,.4); }
+    .menu-card.mc-challenge{ border-top-color:var(--teal); }
+    .menu-card.mc-speculation{ border-top-color:var(--purple); }
+    .menu-card.mc-quickgame{ border-top-color:var(--orange); }
+    .menu-card.mc-store{ border-top-color:var(--pink); }
+    .menu-card.mc-customize{ border-top-color:var(--blue); }
+    .menu-card#card-lesson{ border-top-color:var(--purple); }
+    .menu-card#card-history{ border-top-color:var(--accent); }
     .progress-bar-wrap{ margin-top:14px; }
     .progress-bar-label{ display:flex; justify-content:space-between; align-items:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.82rem; color:var(--ink); margin-bottom:5px; }
     .progress-bar-track{ height:16px; background:#dbe3f5; border-radius:10px; overflow:hidden; border:2px solid #c7d0ea; }
     .progress-bar-fill{ height:100%; background:linear-gradient(90deg,var(--teal),var(--gold)); border-radius:10px; transition:width 0.4s ease; }
     body.high-contrast .progress-bar-track{ background:#1a2440; border-color:#5b6dae; }
     body.high-contrast .progress-bar-label{ color:#eef2ff; }
-    .menu-card .mi{ font-size:2rem; }
-    .menu-card .mn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.9rem; }
+    .menu-card .mi{ font-size:1.5rem; width:52px; height:52px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:linear-gradient(150deg,#eef2ff,#dfe6fb); box-shadow:inset 0 0 0 1px rgba(20,30,60,.06), 0 4px 10px -4px rgba(20,30,60,.25); }
+    .menu-card.mc-challenge .mi{ background:linear-gradient(150deg,#e3fbf4,#c9f3e6); }
+    .menu-card.mc-speculation .mi{ background:linear-gradient(150deg,#f2ebff,#e2d3ff); }
+    .menu-card.mc-quickgame .mi{ background:linear-gradient(150deg,#fff0df,#ffdcb3); }
+    .menu-card.mc-store .mi{ background:linear-gradient(150deg,#ffe9f2,#ffcfe3); }
+    .menu-card.mc-customize .mi{ background:linear-gradient(150deg,#e3f0ff,#c9e2ff); }
+    .menu-card#card-lesson .mi{ background:linear-gradient(150deg,#efeaff,#dccfff); }
+    .menu-card#card-history .mi{ background:linear-gradient(150deg,#fff4e0,#ffe3ad); }
+    .menu-card .mn{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:.01em; color:var(--ink); }
     .menu-card:active{ transform:scale(0.97); }
 
     /* ---- PROFILE ---- */
@@ -530,6 +547,23 @@
     .store-item.equipped{ border-color:var(--teal); }
     .swatch-item{ width:100%; aspect-ratio:1/1; border-radius:10px; margin-bottom:2px; }
 
+    /* ---- TUTORIAL ---- */
+    .tutorial-overlay{ position:fixed; inset:0; z-index:9000; background:rgba(10,14,28,.72); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:opacity .2s ease; }
+    .tutorial-overlay.hidden{ display:none; }
+    .tutorial-spotlight{ position:fixed; border-radius:16px; box-shadow:0 0 0 6px rgba(255,255,255,.9), 0 0 0 9999px rgba(10,14,28,.72), 0 0 30px 6px rgba(255,214,102,.55); pointer-events:none; transition:top .3s ease, left .3s ease, width .3s ease, height .3s ease; }
+    .tutorial-spotlight.no-target{ opacity:0; }
+    .tutorial-tooltip{ position:relative; max-width:min(360px,86vw); background:#fff; color:var(--ink); border-radius:18px; padding:18px 20px; box-shadow:0 18px 40px rgba(0,0,0,.35); text-align:center; transition:transform .3s ease, margin .3s ease; }
+    .tutorial-eyebrow{ font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-d); margin:0 0 6px; }
+    .tutorial-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.25rem; margin:0 0 6px; }
+    .tutorial-desc{ font-size:.92rem; color:#4a5675; margin:0 0 10px; line-height:1.4; }
+    .tutorial-tap-hint{ font-size:.78rem; font-weight:800; color:var(--accent-d); margin:0; opacity:.85; }
+    body.small-text .tutorial-desc{ font-size:.85rem; }
+    body.large-text .tutorial-desc{ font-size:1rem; }
+    /* First-run safety net: while the tutorial overlay is active, game-mode
+       buttons underneath it are also non-interactive (the overlay itself
+       already intercepts clicks, this just backs it up). */
+    body.tutorial-active .menu-grid button, body.tutorial-active .header-nav .hbtn{ pointer-events:none; }
+
     /* ---- SETTINGS ---- */
     .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:2px solid #eef1fb; gap:10px; }
     .setting-row .sr-label{ font-weight:700; font-size:0.88rem; }
@@ -610,7 +644,7 @@
       .menu-grid{ grid-template-columns:1fr; gap:8px; }
       .map-grid,.store-grid{ grid-template-columns:1fr 1fr; gap:7px; }
       .menu-card{ padding:13px 8px; }
-      .menu-card .mi{ font-size:1.7rem; }
+      .menu-card .mi{ font-size:1.7rem; width:44px; height:44px; }
       .map-card{ padding:12px 5px; }
       .map-card .mci{ font-size:1.5rem; }
       .pc-btn{ min-width:70px; min-height:44px; }
@@ -628,7 +662,6 @@
       .setting-row{ flex-wrap:wrap; }
       .setting-row .sr-label{ flex:1 1 60%; }
       input[type=range]{ width:110px; max-width:45%; }
-      .player-progress{ width:min(300px,88vw); }
       .day-track{ gap:5px; }
       .day-cell{ padding:6px 2px; }
       .day-cell .dlabel{ font-size:.55rem; }
@@ -775,7 +808,7 @@
   h1.display{ font-size:clamp(1.25rem, 4.5vw, 2rem); }
   .subtitle{ font-size:clamp(.78rem, 2.4vw, .95rem); }
   .btn{ font-size:clamp(.82rem, 2.4vw, 1rem); padding:clamp(9px,2vw,12px) clamp(12px,3vw,20px); }
-  .menu-card .mi{ font-size:clamp(1.55rem, 7vw, 2.3rem); }
+  .menu-card .mi{ font-size:clamp(1.2rem, 4.5vw, 1.6rem); width:clamp(40px,11vw,56px); height:clamp(40px,11vw,56px); }
   .menu-card .mn{ font-size:clamp(.78rem,2.5vw,.95rem); }
 
   /* Phone */
@@ -920,6 +953,28 @@
   @keyframes fx-float{ 0%,100%{ transform:translateY(0); opacity:0.7;} 50%{ transform:translateY(-6px); opacity:1;} }
   .av-badge{ position:absolute; top:calc(var(--av-w) * 1.18); left:calc(var(--av-w) * -0.14); font-size:calc(var(--av-w) * 0.22); z-index:7; }
   .av-name{ text-align:center; font-weight:800; font-family:'Baloo 2',sans-serif; font-size:.74rem; margin-top:8px; color:var(--ink); }
+
+  /* ---- PROFILE 3D CHARACTER VIEWER ----
+     A convincing "3D" presentation built from the existing flat character
+     art: a two-sided card (front face = normal avatar render, back face =
+     a generated back-view silhouette in the same colors) rotated in 3D
+     space with CSS. Because accessories/hat/hair are drawn as part of the
+     same single SVG that rotates as one rigid unit, they can never float,
+     detach, or drift out of sync while spinning. */
+  .avatar-3d-wrap{ display:flex; flex-direction:column; align-items:center; gap:10px; margin:4px 0 14px; }
+  .avatar-3d-scene{ width:min(240px,70vw); height:min(300px,60vh); perspective:900px; margin:0 auto; touch-action:pan-y; }
+  .avatar-3d-stage{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .45s cubic-bezier(.2,.7,.3,1); cursor:grab; }
+  .avatar-3d-stage.dragging{ transition:none; cursor:grabbing; }
+  .avatar-3d-face{ position:absolute; inset:0; backface-visibility:hidden; display:flex; align-items:flex-end; justify-content:center; }
+  .avatar-3d-face .avatar-figure{ --av-w:190px; --av-h:280px; }
+  .avatar-3d-face.avatar-3d-back{ transform:rotateY(180deg); }
+  .avatar-3d-controls{ display:flex; align-items:center; gap:14px; }
+  .avatar-3d-turn{ all:unset; cursor:pointer; width:38px; height:38px; border-radius:50%; background:#fff; border:2px solid #dbe3f5; display:flex; align-items:center; justify-content:center; font-size:1.1rem; box-shadow:0 3px 8px -3px rgba(20,30,60,.3); }
+  .avatar-3d-turn:active{ transform:scale(.92); }
+  .avatar-3d-facing{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.85rem; color:var(--accent-d); min-width:64px; text-align:center; }
+  .avatar-3d-hint{ font-size:.72rem; color:#8892b0; font-weight:700; text-align:center; }
+  body.high-contrast .avatar-3d-turn{ background:#1a2440; border-color:#4a5a8a; color:#eef2ff; }
+  body.high-contrast .avatar-3d-facing{ color:#eef2ff; }
 
   .avatar-figure.avatar-idle .char-svg .rig,
   .avatar-figure.avatar-idle .char-svg .grp-upper,
@@ -1268,7 +1323,7 @@
   <div class="header-stats">
     <span class="coin-badge">🪙 <span id="header-coins">0</span></span>
     <span class="xp-badge">⭐ <span id="header-xp">0</span> XP</span>
-    <button id="btn-pause" class="hidden" aria-label="Pause Speculation">⏸️</button>
+    <button id="btn-pause" class="hidden" aria-label="Game Menu" title="Game Menu">☰</button>
     <button id="btn-gear">⚙️</button>
   </div>
 </div>
@@ -1351,10 +1406,6 @@
       <div class="loading-bar" aria-label="Application loading progress"><div class="loading-fill" id="loading-fill"></div></div>
       <div class="loading-percent" id="loading-percent" aria-live="polite">0%</div>
       <div class="loading-tip" id="loading-tip">Loading your adventure…</div>
-      <div class="player-progress" aria-label="Player completion progress">
-        <div class="player-progress-label"><span>Progress</span><strong id="player-progress-percent">0%</strong></div>
-        <div class="player-progress-track"><div class="player-progress-fill" id="player-progress-fill"></div></div>
-      </div>
     </div>
   </section>
 
@@ -1924,22 +1975,40 @@
     <div class="setting-row"><span class="sr-label">Music Volume</span><input type="range" id="set-music" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Sound Effects</span><input type="range" id="set-sfx" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Reduced Motion</span><label class="toggle"><input type="checkbox" id="set-motion"><span class="tslider"></span></label></div>
-    <div class="setting-row"><span class="sr-label">Larger Text</span><label class="toggle"><input type="checkbox" id="set-text"><span class="tslider"></span></label></div>
+    <div class="setting-row textsize-row"><span class="sr-label">Text Size</span>
+      <div class="textsize-toggle">
+        <button type="button" class="textsize-btn" id="set-text-small" aria-pressed="false">A− Smaller</button>
+        <button type="button" class="textsize-btn" id="set-text-large" aria-pressed="false">A+ Larger</button>
+      </div>
+    </div>
     <div class="setting-row"><span class="sr-label">High Contrast</span><label class="toggle"><input type="checkbox" id="set-contrast"><span class="tslider"></span></label></div>
     <div class="setting-row" style="border-bottom:none;"><span class="sr-label">Offline Mode</span><label class="toggle"><input type="checkbox" id="set-offline"><span class="tslider"></span></label></div>
     <div class="offline-note"><strong>Offline Mode</strong>Works for features that do not need the internet. Features that require an online connection may not be available.</div>
-    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:12px;">Done</button>
+    <button class="btn btn-block" id="btn-replay-tutorial" style="margin-top:12px;">🔁 Replay Tutorial</button>
+    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:8px;">Done</button>
   </div>
 </div>
 
 <!-- PAUSE MODAL -->
 <div class="modal-overlay" id="modal-pause">
   <div class="modal-box">
-    <h1 class="display">⏸️ Paused</h1>
+    <h1 class="display">⏸️ Game Menu</h1>
     <div class="btn-row" style="flex-direction:column;">
       <button class="btn btn-primary btn-block" id="btn-resume">▶️ Resume</button>
-      <button class="btn btn-block" id="btn-playagain">🔄 Play Again</button>
-      <button class="btn btn-block" id="btn-mainmenu">🏠 Return to Main Menu</button>
+      <button class="btn btn-block" id="btn-playagain">↻ Restart</button>
+      <button class="btn btn-block" id="btn-mainmenu">✕ Exit Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL (Restart / Exit Game, etc.) -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-box">
+    <h1 class="display" id="confirm-title">Are you sure?</h1>
+    <p class="subtitle" id="confirm-body"></p>
+    <div class="btn-row" style="flex-direction:column;">
+      <button class="btn btn-primary btn-block" id="btn-confirm-yes">Yes</button>
+      <button class="btn btn-block" id="btn-confirm-no">Cancel</button>
     </div>
   </div>
 </div>
@@ -1989,6 +2058,18 @@
 <div class="modal-overlay" id="modal-convert-done">
   <div class="modal-box"><div style="font-size:3rem">🎉</div><h1 class="display">Conversion Complete!</h1><p class="subtitle">⭐ XP was converted successfully into 🪙 Coins.</p><button class="btn btn-primary btn-block" id="btn-convert-done">Done</button></div>
 </div>
+
+<!-- INTERACTIVE "KNOW THE APP" TUTORIAL -->
+<div class="tutorial-overlay hidden" id="tutorial-overlay" role="dialog" aria-label="App tutorial" aria-live="polite">
+  <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
+  <div class="tutorial-tooltip" id="tutorial-tooltip">
+    <p class="tutorial-eyebrow" id="tutorial-step-count">Step 1 of 9</p>
+    <h2 class="tutorial-title" id="tutorial-title">Welcome</h2>
+    <p class="tutorial-desc" id="tutorial-desc"></p>
+    <p class="tutorial-tap-hint">Tap anywhere to continue</p>
+  </div>
+</div>
+
 
 <script>
   (function(){
@@ -2165,13 +2246,14 @@
       achievementsCollected:{},
       dailyReward:{ lastCollectedDate:null, streakDay:0 },
       weekStart: startOfWeekISO(), weeklyScore:0,
-      settings:{ musicVol:0.5, sfxVol:0.6, reducedMotion:false, largerText:false, highContrast:false, offlineMode:false },
+      settings:{ musicVol:0.5, sfxVol:0.6, reducedMotion:false, textSize:'default', highContrast:false, offlineMode:false },
       playerColor:'blue',
       avatar: null,
       lastScreen:'menu',
       activeSession:null,
       onboarded:false,
       termsAccepted:false,
+      tutorialCompleted:false,
       mp:{ gamesPlayed:0, wins:0, bestScore:0, top3:0 }
     };
   }
@@ -2274,6 +2356,9 @@
     const merged = Object.assign(base, loaded);
     const fresh = safeDefaultState();
     merged.settings = Object.assign({}, fresh.settings||{}, loaded.settings||{});
+    // Migrate the old boolean "largerText" flag (pre text-size options) to the new textSize setting.
+    if(merged.settings.textSize === undefined){ merged.settings.textSize = merged.settings.largerText ? 'large' : 'default'; }
+    delete merged.settings.largerText;
     merged.equipped = Object.assign({}, fresh.equipped||{}, loaded.equipped||{});
     merged.completedLessons = Object.assign({}, fresh.completedLessons||{}, loaded.completedLessons||{});
     merged.achievementsCollected = Object.assign({}, fresh.achievementsCollected||{}, loaded.achievementsCollected||{});
@@ -2822,6 +2907,10 @@
   }
 
   const SCREENS = ['intro','agegate','loading','menu','lesson','lesson-modes','profile','trophies','leaders','adv-setup','adventure','trivia','quickgame','challenge','store','results','customize','spec-setup','spec-play','mp-lobby','history','history-review','teacher-gate','teacher-dashboard','teacher-report'];
+  // Screens where actual gameplay/timers are running. These get the in-game
+  // "Game Menu" (Resume / Restart / Exit) button instead of the plain Home
+  // button, so a player can never accidentally leave a game mid-round.
+  const GAME_SCREENS = ['adventure','trivia','quickgame','challenge','spec-play'];
   const SCREEN_BG = {
     intro:'bg-intro', agegate:'bg-menu', loading:'bg-menu', menu:'bg-menu', lesson:'bg-menu', 'lesson-modes':'bg-menu', profile:'bg-profile', trophies:'bg-trophies',
     leaders:'bg-leaders', 'adv-setup':'bg-adventure', adventure:'bg-adventure', trivia:'bg-menu',
@@ -2832,15 +2921,16 @@
   function showScreen(name){
     try{
       closeMobileMenu();
-      if(name!=='spec-play'){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
+      if(!GAME_SCREENS.includes(name)){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
       const previous=document.querySelector('.screen.active');
       if(previous && previous.id !== 'screen-'+name && !S.settings.reducedMotion){ previous.classList.add('screen-leaving'); setTimeout(()=>previous.classList.remove('screen-leaving'),180); }
       SCREENS.forEach(n => $('screen-'+n)?.classList.toggle('active', n===name));
-      const showPause = name === 'spec-play';
+      const showPause = GAME_SCREENS.includes(name);
       $('btn-pause')?.classList.toggle('hidden', !showPause);
       document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('active'));
-      // Home is only needed while inside another screen.
-      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu'].includes(name));
+      // Home is only needed while inside another screen, and is replaced by
+      // the Game Menu button while a game mode is actually in progress.
+      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu'].includes(name) || GAME_SCREENS.includes(name));
       if(name==='profile') $('nav-profile')?.classList.add('active');
       if(name==='trophies') $('nav-trophies')?.classList.add('active');
       if(name==='leaders') $('nav-leaders')?.classList.add('active');
@@ -3139,6 +3229,89 @@
     if(cfg.showName && opts.name){ const nm=document.createElement('div'); nm.className='av-name'; nm.textContent=opts.name; container.appendChild(nm); }
   }
   function ownedCharacters(){ return CHARACTERS.filter(c => c.price===0 || S.purchased.includes(c.id)); }
+
+  /* ---- Profile 3D character viewer ---- */
+  function av_backFaceSvg(cfg){
+    // A simplified, recognizable "view from behind" built from the same
+    // equipped colors/items as the front render, so it reads as the same
+    // character rather than a different one.
+    cfg = Object.assign(defaultAvatar(), cfg || {});
+    const back = av_backMarkup(cfg.back);
+    const hatItem = (cfg.hat && cfg.hat!=='none') ? STORE.hats.find(h=>h.id===cfg.hat) : null;
+    return `<svg viewBox="0 0 200 300" class="char-svg" preserveAspectRatio="xMidYMax meet">
+  <g>
+    <rect x="72" y="168" width="20" height="112" rx="10" fill="${cfg.clothes}"/>
+    <rect x="108" y="168" width="20" height="112" rx="10" fill="${cfg.clothes}"/>
+    <rect x="72" y="282" width="30" height="14" rx="4" fill="${cfg.shoes}"/>
+    <rect x="98" y="282" width="30" height="14" rx="4" fill="${cfg.shoes}"/>
+    <rect x="62" y="80" width="16" height="96" rx="8" fill="${cfg.skin}"/>
+    <rect x="122" y="80" width="16" height="96" rx="8" fill="${cfg.skin}"/>
+    <path d="M69,80 L131,80 Q133,120 128,150 L125,168 L75,168 L72,150 Q67,120 69,80 Z" fill="${cfg.clothes}"/>
+    ${back}
+    <rect x="92" y="64" width="16" height="16" fill="${cfg.skin}"/>
+    <circle cx="100" cy="42" r="24" fill="${cfg.hairColor||'#3a2a1e'}"/>
+    ${hatItem ? `<text x="100" y="16" font-size="28" text-anchor="middle" dominant-baseline="middle">${hatItem.icon}</text>` : ''}
+  </g>
+</svg>`;
+  }
+  function buildProfile3DViewer(container, cfg){
+    container.innerHTML = '';
+    container.classList.add('avatar-3d-wrap');
+    const scene = document.createElement('div'); scene.className = 'avatar-3d-scene';
+    const stage = document.createElement('div'); stage.className = 'avatar-3d-stage';
+    const front = document.createElement('div'); front.className = 'avatar-3d-face avatar-3d-front';
+    const frontFigure = document.createElement('div');
+    front.appendChild(frontFigure);
+    const back = document.createElement('div'); back.className = 'avatar-3d-face avatar-3d-back';
+    back.innerHTML = `<div class="avatar-figure">${av_backFaceSvg(cfg)}</div>`;
+    stage.appendChild(front); stage.appendChild(back);
+    scene.appendChild(stage);
+    const controls = document.createElement('div'); controls.className = 'avatar-3d-controls';
+    const btnLeft = document.createElement('button'); btnLeft.className='avatar-3d-turn'; btnLeft.setAttribute('aria-label','Rotate left'); btnLeft.textContent='◀';
+    const facing = document.createElement('div'); facing.className='avatar-3d-facing'; facing.textContent='Front';
+    const btnRight = document.createElement('button'); btnRight.className='avatar-3d-turn'; btnRight.setAttribute('aria-label','Rotate right'); btnRight.textContent='▶';
+    controls.appendChild(btnLeft); controls.appendChild(facing); controls.appendChild(btnRight);
+    const hint = document.createElement('p'); hint.className='avatar-3d-hint'; hint.textContent='Drag to rotate, or use the arrows';
+    container.appendChild(scene); container.appendChild(controls); container.appendChild(hint);
+
+    renderAvatarInto(frontFigure, cfg, { showBadge:true });
+
+    let angle = 0; // degrees, snaps to multiples of 90
+    const FACING_NAMES = {0:'Front', 90:'Right', 180:'Back', 270:'Left'};
+    function applyAngle(){
+      stage.style.transform = `rotateY(${angle}deg)`;
+      const snapped = ((Math.round(angle/90)*90) % 360 + 360) % 360;
+      facing.textContent = FACING_NAMES[snapped] || 'Front';
+    }
+    function snapTo(target){
+      angle = target;
+      applyAngle();
+    }
+    btnLeft.addEventListener('click', () => { sfx('click'); snapTo(angle - 90); });
+    btnRight.addEventListener('click', () => { sfx('click'); snapTo(angle + 90); });
+
+    let dragging = false, startX = 0, startAngle = 0;
+    function onDown(x){ dragging = true; startX = x; startAngle = angle; stage.classList.add('dragging'); }
+    function onMove(x){
+      if(!dragging) return;
+      const dx = x - startX;
+      stage.style.transform = `rotateY(${startAngle + dx/2}deg)`;
+    }
+    function onUp(x){
+      if(!dragging) return;
+      dragging = false; stage.classList.remove('dragging');
+      const dx = x - startX;
+      angle = Math.round((startAngle + dx/2)/90)*90;
+      applyAngle();
+    }
+    scene.addEventListener('pointerdown', e => { onDown(e.clientX); scene.setPointerCapture(e.pointerId); });
+    scene.addEventListener('pointermove', e => { if(dragging) onMove(e.clientX); });
+    scene.addEventListener('pointerup', e => onUp(e.clientX));
+    scene.addEventListener('pointercancel', () => { dragging = false; stage.classList.remove('dragging'); applyAngle(); });
+
+    applyAngle();
+    return { setCfg(newCfg){ renderAvatarInto(frontFigure, newCfg, { showBadge:true }); back.innerHTML = `<div class="avatar-figure">${av_backFaceSvg(newCfg)}</div>`; } };
+  }
 
   /* Customize screen wiring */
   let custDraft = null;
@@ -3572,25 +3745,6 @@
   const LOADING_TIPS = [
     "Loading your adventure…","Sharpening pencils and dice…","Waking up the bot players…","Polishing the leaderboard…","Fueling the rocket map…","Shuffling trivia cards…"
   ];
-  function getPlayerCompletionPercent(){
-    if(!S) return 0;
-    const achievementTotal = (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.length) ? ACHIEVEMENTS.length : 1;
-    const achievementsDone = Object.keys(S.achievementsCollected || {}).length;
-    const achievementPct = Math.min(100, (achievementsDone / achievementTotal) * 100);
-    const gamesPct = Math.min(100, ((S.gamesPlayed || 0) / 10) * 100);
-    const adventurePct = Math.min(100, ((S.adventuresCompleted || 0) / 5) * 100);
-    const correctPct = Math.min(100, ((S.totalCorrectAnswers || 0) / 20) * 100);
-    const profilePct = (S.name && S.name !== 'Player' && S.section) ? 100 : 0;
-    return Math.round((achievementPct + gamesPct + adventurePct + correctPct + profilePct) / 5);
-  }
-  function updatePlayerLoadingProgress(){
-    const pct = getPlayerCompletionPercent();
-    const fill = $('player-progress-fill');
-    const label = $('player-progress-percent');
-    if(fill) fill.style.width = pct + '%';
-    if(label) label.textContent = pct + '%';
-  }
-
   let loadingTimer=null;
   let loadingWatchdog=null;
   function runLoadingSequence(fromOnboarding=false){
@@ -3604,7 +3758,7 @@
       loadingWatchdog=null;
       if(document.getElementById('screen-loading') && document.getElementById('screen-loading').classList.contains('active')){
         if(loadingTimer){ clearInterval(loadingTimer); loadingTimer=null; }
-        enterMainMenu();
+        enterMainMenu(fromOnboarding);
       }
     }, 6000);
     let pct=0; let step=0;
@@ -3613,7 +3767,6 @@
     fill.style.width='0%';
     const percentLabel = $('loading-percent');
     if(percentLabel) percentLabel.textContent='0%';
-    updatePlayerLoadingProgress();
     loadingTimer=setInterval(() => {
       step++;
       pct=Math.min(100, pct + (step<4 ? 18 : 14));
@@ -3623,22 +3776,102 @@
       if(pct>=100){
         clearInterval(loadingTimer); loadingTimer=null;
         if(loadingWatchdog){ clearTimeout(loadingWatchdog); loadingWatchdog=null; }
-        setTimeout(enterMainMenu, S.settings.reducedMotion ? 0 : 220);
+        setTimeout(() => enterMainMenu(fromOnboarding), S.settings.reducedMotion ? 0 : 220);
       }
     }, S.settings.reducedMotion ? 40 : 150);
   }
 
-  function enterMainMenu(){
-    updatePlayerLoadingProgress();
+  function enterMainMenu(fromOnboarding=false){
     updateHeaderStats();
     showScreen('menu');
     setMusicTheme('menu');
     renderMenu();
-    showCodenameReveal();
-    // Every fresh launch/reopen lands on the Main Menu — an active gameplay
-    // screen from a previous run is never auto-restored (see loadState()).
+    // First-time players get the interactive tutorial before anything else
+    // is unlocked; returning players go straight to their normal main menu.
+    if(fromOnboarding && !S.tutorialCompleted){
+      lockMenuForTutorial(true);
+      if(pendingCodenameReveal && S.playerCodename){
+        showCodenameReveal();
+        const startAfterCodename = () => {
+          $('btn-codename-done')?.removeEventListener('click', startAfterCodename);
+          startTutorial();
+        };
+        $('btn-codename-done')?.addEventListener('click', startAfterCodename);
+      } else {
+        startTutorial();
+      }
+    } else {
+      showCodenameReveal();
+      // Every fresh launch/reopen lands on the Main Menu — an active gameplay
+      // screen from a previous run is never auto-restored (see loadState()).
+      maybeShowDailyReward();
+    }
+  }
+  /* ================= "KNOW THE APP" TUTORIAL ================= */
+  const TUTORIAL_STEPS = [
+    { selector:'#btn-gear', title:'Settings', desc:'Customize your game experience, audio, text size, accessibility, and other preferences.' },
+    { selector:'#nav-profile', title:'Profile', desc:'View your character, track your level and XP, and customize your look.' },
+    { selector:'#card-adventure', title:'Challenge Mode', desc:'Work through story-driven challenges tied to what you\u2019ve learned.' },
+    { selector:'#card-speculation', title:'Speculation', desc:'Test your reasoning by predicting outcomes and solving puzzles under pressure.' },
+    { selector:'#card-quickgame', title:'Quick Game', desc:'Jump into a short arcade challenge followed by real trivia questions.' },
+    { selector:'#card-lesson', title:'Lessons', desc:'Access bite-sized educational content whenever you want a refresher.' },
+    { selector:'#card-history', title:'History', desc:'Review your previous activities and results.' },
+    { selector:'#card-store', title:'Store', desc:'Spend coins on cosmetics and rewards for your character.' },
+    { selector:'#screen-menu .inner', title:'You\u2019re ready!', desc:'Explore AdapT CoCu and start learning through gameplay.', full:true }
+  ];
+  let tutorialStep = 0;
+  function lockMenuForTutorial(locked){
+    document.body.classList.toggle('tutorial-active', locked);
+  }
+  function positionTutorialStep(){
+    const step = TUTORIAL_STEPS[tutorialStep];
+    const spot = $('tutorial-spotlight');
+    const tooltip = $('tutorial-tooltip');
+    const target = step && !step.full ? document.querySelector(step.selector) : null;
+    if(target){
+      const r = target.getBoundingClientRect();
+      const pad = 8;
+      spot.classList.remove('no-target');
+      spot.style.top = Math.max(4, r.top - pad) + 'px';
+      spot.style.left = Math.max(4, r.left - pad) + 'px';
+      spot.style.width = (r.width + pad*2) + 'px';
+      spot.style.height = (r.height + pad*2) + 'px';
+      // Place the tooltip just below the highlighted element when there's room, otherwise above it.
+      const spaceBelow = window.innerHeight - r.bottom;
+      const offset = r.height/2 + pad + 26;
+      tooltip.style.marginTop = spaceBelow > 180 ? offset + 'px' : '';
+      tooltip.style.marginBottom = spaceBelow <= 180 ? offset + 'px' : '';
+      tooltip.style.transform = `translateY(${r.top + r.height/2 - window.innerHeight/2}px)`;
+    } else {
+      spot.classList.add('no-target');
+      tooltip.style.transform = '';
+      tooltip.style.marginTop = '';
+      tooltip.style.marginBottom = '';
+    }
+    $('tutorial-step-count').textContent = `Step ${tutorialStep+1} of ${TUTORIAL_STEPS.length}`;
+    $('tutorial-title').textContent = step.title;
+    $('tutorial-desc').textContent = step.desc;
+  }
+  function startTutorial(){
+    tutorialStep = 0;
+    $('tutorial-overlay').classList.remove('hidden');
+    positionTutorialStep();
+  }
+  function advanceTutorial(){
+    tutorialStep++;
+    if(tutorialStep >= TUTORIAL_STEPS.length){ finishTutorial(); return; }
+    positionTutorialStep();
+  }
+  function finishTutorial(){
+    $('tutorial-overlay').classList.add('hidden');
+    S.tutorialCompleted = true;
+    saveState();
+    lockMenuForTutorial(false);
     maybeShowDailyReward();
   }
+  $('tutorial-overlay')?.addEventListener('click', advanceTutorial);
+  window.addEventListener('resize', () => { if(!$('tutorial-overlay').classList.contains('hidden')) positionTutorialStep(); });
+
   function renderMenuAvatar(){
     let el = $('menu-avatar');
     if(!el){
@@ -4494,7 +4727,7 @@
       avEl = document.createElement('div'); avEl.id='profile-avatar'; avEl.style.marginBottom='10px';
       $('profile-name').parentNode.insertBefore(avEl, $('profile-name'));
     }
-    renderAvatarInto(avEl, S.avatar, { sizeClass:'small', showBadge:true });
+    buildProfile3DViewer(avEl, S.avatar);
     $('profile-name').textContent = S.name;
     if($('profile-name-input')) $('profile-name-input').value=S.name;
     if($('profile-section-display')) $('profile-section-display').textContent = 'Section: ' + (S.section || '—');
@@ -6408,10 +6641,30 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   /* ================= SETTINGS ================= */
   $('btn-gear').addEventListener('click', () => {
     $('set-music').value = S.settings.musicVol; $('set-sfx').value = S.settings.sfxVol;
-    $('set-motion').checked = S.settings.reducedMotion; $('set-text').checked = S.settings.largerText;
+    $('set-motion').checked = S.settings.reducedMotion; syncTextSizeButtons();
     $('set-contrast').checked = S.settings.highContrast; $('set-offline').checked = S.settings.offlineMode;
     $('modal-settings').classList.add('active');
   });
+  function syncTextSizeButtons(){
+    const size = S.settings.textSize || 'default';
+    $('set-text-small').classList.toggle('active', size==='small');
+    $('set-text-small').setAttribute('aria-pressed', size==='small');
+    $('set-text-large').classList.toggle('active', size==='large');
+    $('set-text-large').setAttribute('aria-pressed', size==='large');
+  }
+  function applyTextSize(size){
+    document.body.classList.toggle('small-text', size==='small');
+    document.body.classList.toggle('large-text', size==='large');
+  }
+  function setTextSize(size){
+    // Clicking the already-active option returns text size to the default, comfortable size.
+    S.settings.textSize = (S.settings.textSize === size) ? 'default' : size;
+    applyTextSize(S.settings.textSize);
+    syncTextSizeButtons();
+    saveState();
+  }
+  $('set-text-small').addEventListener('click', () => { setTextSize('small'); sfx('click'); });
+  $('set-text-large').addEventListener('click', () => { setTextSize('large'); sfx('click'); });
   $('set-music').addEventListener('input', e => {
     S.settings.musicVol = parseFloat(e.target.value);
     if(S.settings.musicVol <= 0){
@@ -6425,16 +6678,46 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   });
   $('set-sfx').addEventListener('input', e => { S.settings.sfxVol = parseFloat(e.target.value); sfx('click'); });
   $('set-motion').addEventListener('change', e => { S.settings.reducedMotion = e.target.checked; document.body.classList.toggle('reduced-motion', e.target.checked); saveState(); });
-  $('set-text').addEventListener('change', e => { S.settings.largerText = e.target.checked; document.body.classList.toggle('large-text', e.target.checked); saveState(); });
   $('set-contrast').addEventListener('change', e => { S.settings.highContrast = e.target.checked; document.body.classList.toggle('high-contrast', e.target.checked); saveState(); });
   $('set-offline').addEventListener('change', e => { S.settings.offlineMode = e.target.checked; saveState(); });
   $('btn-close-settings').addEventListener('click', () => { $('modal-settings').classList.remove('active'); saveState(); });
+  $('btn-replay-tutorial').addEventListener('click', () => {
+    $('modal-settings').classList.remove('active');
+    if($('screen-menu').classList.contains('active')){ lockMenuForTutorial(true); startTutorial(); }
+    else { showScreen('menu'); renderMenu(); lockMenuForTutorial(true); startTutorial(); }
+  });
 
   /* ================= PAUSE ================= */
-  $('btn-pause').addEventListener('click', () => { if(!$('screen-spec-play').classList.contains('active')) return; gamePaused=true; $('modal-pause').classList.add('active'); sfx('click'); pauseAllTimers(); });
+  $('btn-pause').addEventListener('click', () => {
+    if(!GAME_SCREENS.some(n => $('screen-'+n)?.classList.contains('active'))) return;
+    gamePaused=true; $('modal-pause').classList.add('active'); sfx('click'); pauseAllTimers();
+  });
   $('btn-resume').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); resumeAllTimers(); });
-  $('btn-playagain').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); restartCurrentFlow(); });
-  $('btn-mainmenu').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); abortToMainMenu(); });
+  $('btn-playagain').addEventListener('click', () => {
+    showConfirm('Restart this round?', 'Your current progress in this round will be lost.', () => {
+      $('modal-pause').classList.remove('active'); gamePaused=false; restartCurrentFlow();
+    });
+  });
+  $('btn-mainmenu').addEventListener('click', () => {
+    showConfirm('Exit to Main Menu?', 'Your progress so far will be saved before you leave.', () => {
+      $('modal-pause').classList.remove('active'); gamePaused=false; abortToMainMenu();
+    });
+  });
+  function showConfirm(title, body, onYes){
+    $('confirm-title').textContent = title;
+    $('confirm-body').textContent = body;
+    $('modal-confirm').classList.add('active');
+    const yesBtn = $('btn-confirm-yes'), noBtn = $('btn-confirm-no');
+    const cleanup = () => {
+      yesBtn.removeEventListener('click', onYesClick);
+      noBtn.removeEventListener('click', onNoClick);
+      $('modal-confirm').classList.remove('active');
+    };
+    const onYesClick = () => { cleanup(); sfx('click'); onYes(); };
+    const onNoClick = () => { cleanup(); sfx('click'); };
+    yesBtn.addEventListener('click', onYesClick);
+    noBtn.addEventListener('click', onNoClick);
+  }
   function pauseAllTimers(){
     if(qcTimer){ clearInterval(qcTimer); clearInterval(qcSpawnTimer); qcTimer=null; qcSpawnTimer=null; }
     stopSpecTimer();
@@ -6465,6 +6748,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     mpClearBotTimers();
     clearInterval(specPowerplayTimer); specPowerplayTimer=null;
     MP.active=false;
+    saveState();
     showScreen('menu'); setMusicTheme('menu'); renderMenu();
   }
 
@@ -6536,7 +6820,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
       if($('input-name')) $('input-name').value = S.name==='Player' ? '' : S.name;
       if($('input-section')) $('input-section').value = S.section || '';
       document.body.classList.toggle('reduced-motion', S.settings.reducedMotion);
-      document.body.classList.toggle('large-text', S.settings.largerText);
+      applyTextSize(S.settings.textSize || 'default');
       document.body.classList.toggle('high-contrast', S.settings.highContrast);
       setInterval(() => { S.totalPlaySeconds++; }, 1000);
       if(S.onboarded){
