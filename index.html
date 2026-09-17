@@ -1521,6 +1521,7 @@
       <div class="profile-edit-row"><input type="text" id="profile-name-input" maxlength="24" aria-label="Player name"><button class="btn" id="btn-edit-name">Edit Name</button></div>
       <p class="subtitle" id="profile-section-display">Section: —</p>
       <p class="subtitle profile-player-code" id="profile-player-code">Player Code: —</p>
+      <p class="subtitle" id="profile-sync-status" style="margin-top:-6px"></p>
       <div class="profile-edit-row"><input type="text" id="profile-section-input" maxlength="24" aria-label="Player section"><button class="btn" id="btn-edit-section">Edit Section</button></div>
       <p class="subtitle" id="profile-rank">Rank: Beginner</p>
       <h3>Personal Bests</h3>
@@ -1538,6 +1539,7 @@
         <button class="btn btn-primary btn-block" id="btn-convert-xp" style="margin-top:10px">Convert XP</button>
       </div>
       <button class="btn btn-block" id="btn-export-my-progress">📄 Export My Progress</button>
+      <button class="btn btn-block" id="btn-retry-sync">🔁 Retry Sync to Teacher</button>
       <button class="btn btn-block" id="btn-open-teacher-gate">🧑‍🏫 Teacher Dashboard</button>
       <button class="btn btn-primary btn-block screen-home-btn" data-main-menu>🏠 Back to Main Menu</button>
     </div>
@@ -2151,7 +2153,7 @@
 
   function defaultState(){
     return {
-      name:'Player', birthYear:2008, section:'', playerCodename:null, lastActiveAt:null,
+      name:'Player', birthYear:2008, section:'', playerCodename:null, deviceClaimToken:null, lastActiveAt:null, lastSyncStatus:null, lastSyncAt:null,
       coins:300, xp:0, gamesPlayed:0, adventuresCompleted:0,
       coinsSpent:0, coinsEarnedTotal:0, totalPlaySeconds:0, consecutiveAdvWins:0, hatWins:0, perfectGates:0, everScored150:false,
       correctStreak:0, bestCorrectStreak:0, totalPoints:0, bestScore:0, bestChallengeScore:0, speculationSolved:0, xpEarnedTotal:0, lessonsCompleted:0, completedLessons:{},
@@ -3458,11 +3460,41 @@
 
   /* ================= PLAYER CODENAME ================= */
   const PLAYER_CODENAME_KEY='adaptcocu_used_codenames_v1';
-  const PLAYER_CODENAMES=Array.from({length:100},(_,i)=>'ADAPT-'+String(i+1).padStart(3,'0'));
+  // 4 digits (9,999 possible codes) rather than 3 (only 100): with many
+  // students each picking independently on their own device with no
+  // cross-device coordination, a small pool made accidental collisions
+  // likely at classroom scale (birthday-paradox math: ~20 students drawing
+  // from 100 codes had a well-above-50% chance of two landing on the same
+  // code) — and a collision here silently overwrote one student's synced
+  // progress with another's, since the server keys records by this code.
+  // A 9,999-code pool makes that effectively negligible even at 50+
+  // students; pushProgressSnapshot() below adds a second, independent
+  // layer of protection that catches and self-heals a collision if one
+  // still ever happens.
+  const PLAYER_CODENAMES=Array.from({length:9999},(_,i)=>'ADAPT-'+String(i+1).padStart(4,'0'));
   let pendingCodenameReveal=false;
   function readUsedCodenames(){try{const a=JSON.parse(localStorage.getItem(PLAYER_CODENAME_KEY)||'[]');return Array.isArray(a)?a.filter(c=>PLAYER_CODENAMES.includes(c)):[];}catch(e){return [];}}
-  function writeUsedCodenames(a){try{localStorage.setItem(PLAYER_CODENAME_KEY,JSON.stringify([...new Set(a)].slice(-100)));}catch(e){}}
-  function assignPlayerCodename(){if(S.playerCodename&&PLAYER_CODENAMES.includes(S.playerCodename))return S.playerCodename;const used=readUsedCodenames(),available=PLAYER_CODENAMES.filter(c=>!used.includes(c)),pool=available.length?available:PLAYER_CODENAMES,code=pool[Math.floor(Math.random()*pool.length)];S.playerCodename=code;writeUsedCodenames([...used,code]);pendingCodenameReveal=true;return code;}
+  function writeUsedCodenames(a){try{localStorage.setItem(PLAYER_CODENAME_KEY,JSON.stringify([...new Set(a)].slice(-500)));}catch(e){}}
+  function newRandomDeviceToken(){
+    try{ if(window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); }catch(e){}
+    return 'tok-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+  }
+  function assignPlayerCodename(){if(S.playerCodename&&PLAYER_CODENAMES.includes(S.playerCodename))return S.playerCodename;const used=readUsedCodenames(),available=PLAYER_CODENAMES.filter(c=>!used.includes(c)),pool=available.length?available:PLAYER_CODENAMES,code=pool[Math.floor(Math.random()*pool.length)];S.playerCodename=code;writeUsedCodenames([...used,code]);if(!S.deviceClaimToken) S.deviceClaimToken=newRandomDeviceToken();pendingCodenameReveal=true;return code;}
+  // Called only if the server tells us our code is already recorded under a
+  // different device's ownership token — i.e. a genuine collision slipped
+  // through. Picks a fresh code (excluding the taken one) and keeps this
+  // student's device token, so their own history stays theirs.
+  function reassignPlayerCodenameDueToCollision(){
+    const used=readUsedCodenames();
+    const avoid=new Set([...used, S.playerCodename]);
+    const available=PLAYER_CODENAMES.filter(c=>!avoid.has(c));
+    const pool=available.length?available:PLAYER_CODENAMES.filter(c=>c!==S.playerCodename);
+    const code=pool[Math.floor(Math.random()*pool.length)];
+    S.playerCodename=code;
+    writeUsedCodenames([...used,code]);
+    saveState();
+    return code;
+  }
   function showCodenameReveal(){if(!pendingCodenameReveal||!S.playerCodename)return;pendingCodenameReveal=false;$('codename-title').textContent=S.playerCodename;$('codename-player-name').textContent=S.name||'Player';$('codename-player-section').textContent=S.section||'—';$('modal-codename')?.classList.add('active');}
   $('btn-codename-done')?.addEventListener('click',()=> $('modal-codename')?.classList.remove('active'));
 
@@ -3733,6 +3765,7 @@
   }
   function closeQuestionReview(){
     if(reviewReturnScreen==='history'){ openHistory(); }
+    else if(reviewReturnScreen==='teacher-report'){ showScreen('teacher-report'); }
     else { showScreen('results'); }
   }
   function renderQuestionReview(record){
@@ -3767,10 +3800,12 @@
      Data flow, offline-first:
        1. Every learner device keeps its own S.history / achievements /
           XP etc. (unchanged — this is still that learner's private
-          History & Review screens).
+          History & Review screens, including the full per-question
+          answers for each session).
        2. buildProgressSnapshot() distills that into one compact,
-          teacher-facing record (no personal data beyond what the
-          learner already entered: name, section, codename).
+          teacher-facing record — including each recent session's actual
+          question/answer/correct/result detail, not just its score, so
+          the dashboard can show what a learner actually answered.
        3. mergeSnapshotIntoRoster() writes that record into a LOCAL
           roster (adaptcocu_teacher_roster_v1) on THIS device, keyed by
           codename, newest-lastActive-wins — so re-saving, re-importing,
@@ -3778,10 +3813,33 @@
        4. If the existing online multiplayer server is reachable
           (mpHasBackend/mpStSet/mpStGet — the same key-value API used
           for online rooms), the snapshot is also pushed there under
-          "progress:<codename>", and the Teacher Dashboard pulls every
-          "progress:*" key when it refreshes. No server is required —
-          without one, Import/Export still lets a teacher collect
-          records from each device manually.
+          "progress:<codename>". Two things guard this step, because a
+          real classroom test surfaced two failure modes here:
+            a) COLLISIONS: the codename pool is 4 digits (9,999 codes)
+               rather than 3 (100) — with many students each picking one
+               independently on separate devices, a small pool made two
+               different students landing on the same code (and one
+               silently overwriting the other's synced record) likely at
+               real classroom size. pushProgressSnapshot() also checks,
+               before writing, whether the code already belongs to a
+               different device (via a per-device ownerToken); if so it
+               reassigns itself a new code instead of clobbering someone
+               else's data.
+            b) ENUMERATION: the dashboard used to rely entirely on
+               mpStListPrefix("progress:") to discover every synced
+               student. If that endpoint caps how many keys it returns,
+               students beyond the cap simply never appeared, even though
+               their record was safely stored. Every successful sync now
+               also updates a manifest key ("progress:index") listing
+               every studentId that has ever synced; the dashboard reads
+               that directly (immune to a prefix-list cap) and still
+               unions in whatever mpStListPrefix returns as a second,
+               independent signal.
+       5. localStorage is used only for: (a) this device's OWN queued
+          progress snapshot so a learner's own history is never lost
+          while offline, and (b) the teacher's local roster cache above,
+          which Import/Export can also populate by hand with no server
+          at all.
   */
   const TEACHER_ROSTER_KEY='adaptcocu_teacher_roster_v1';
   function readLocalRoster(){
@@ -3811,8 +3869,10 @@
       byMode[m].bestScore = Math.max(byMode[m].bestScore, Number(h.score)||0);
     });
     const achievementsEarned = Object.keys(S.achievementsCollected||{}).filter(k => S.achievementsCollected[k]);
+    if(!S.deviceClaimToken) S.deviceClaimToken = newRandomDeviceToken(); // legacy players who onboarded before this existed
     return {
       studentId: S.playerCodename || null,
+      ownerToken: S.deviceClaimToken,
       name: S.name || 'Player',
       section: S.section || '',
       level: level(),
@@ -3828,32 +3888,107 @@
       bestAccuracy: S.bestAccuracy||0,
       achievementsEarnedCount: achievementsEarned.length,
       achievementsTotal: ACHIEVEMENTS.length,
-      recentActivity: hist.slice(0,15).map(h => ({ mode:h.mode, label:h.label, subject:h.subject, score:h.score, correct:h.correct, total:h.total, accuracy:h.accuracy, timestamp:h.timestamp })),
+      // Full per-question detail (question / learner's answer / correct
+      // answer / result) travels with every synced session now, not just
+      // the score — the teacher dashboard needs the actual answers, not
+      // only that a session happened. Capped at the 40 most recent
+      // sessions to keep payloads reasonable; S.history itself (and this
+      // learner's own Review Questions screen) still keeps up to 100.
+      recentActivity: hist.slice(0,40).map(h => ({ id:h.id, mode:h.mode, label:h.label, subject:h.subject, score:h.score, correct:h.correct, total:h.total, accuracy:h.accuracy, timestamp:h.timestamp, questions:Array.isArray(h.questions)?h.questions:[] })),
       lastActive: S.lastActiveAt || (hist[0] ? hist[0].timestamp : null),
       updatedAt: Date.now()
     };
   }
-  let progressSyncTimer=null;
+  let progressSyncTimer=null, progressSyncInFlight=false, progressSyncRetryQueued=false;
   function queueProgressSync(){
     clearTimeout(progressSyncTimer);
     progressSyncTimer=setTimeout(()=>{ progressSyncTimer=null; pushProgressSnapshot(); }, 1500);
   }
   async function pushProgressSnapshot(){
     if(!S || !S.onboarded || !S.playerCodename) return;
-    const snap = buildProgressSnapshot();
+    let snap = buildProgressSnapshot();
     mergeSnapshotIntoRoster(snap);
-    if(!mpHasBackend()) return;
-    try{ await mpStSet('progress:'+snap.studentId, JSON.stringify(snap)); }catch(e){}
+    if(!mpHasBackend()){ S.lastSyncStatus='pending'; return; }
+    if(progressSyncInFlight){ progressSyncRetryQueued=true; return; }
+    progressSyncInFlight=true;
+    try{
+      const key='progress:'+snap.studentId;
+      // Collision guard: a 4-digit codename pool makes it very unlikely,
+      // but if the record already sitting under this code belongs to a
+      // DIFFERENT device (a different ownerToken — i.e. a different
+      // student who happened to land on the same code), do not overwrite
+      // it. Instead this device claims a fresh code for itself and
+      // retries, self-healing the collision instead of silently
+      // destroying another learner's synced progress.
+      const existingRaw = await mpStGet(key);
+      if(existingRaw){
+        let existing=null; try{ existing=JSON.parse(existingRaw); }catch(e){}
+        if(existing && existing.ownerToken && snap.ownerToken && existing.ownerToken!==snap.ownerToken){
+          reassignPlayerCodenameDueToCollision();
+          snap = buildProgressSnapshot();
+          mergeSnapshotIntoRoster(snap);
+        }
+      }
+      const ok = await mpStSet('progress:'+snap.studentId, JSON.stringify(snap));
+      if(ok){ await updateProgressRosterIndex(snap.studentId); S.lastSyncStatus='synced'; S.lastSyncAt=Date.now(); }
+      else { S.lastSyncStatus='failed'; }
+    }catch(e){ S.lastSyncStatus='failed'; }
+    finally{ progressSyncInFlight=false; if(progressSyncRetryQueued){ progressSyncRetryQueued=false; queueProgressSync(); } }
+  }
+  window.addEventListener('online', () => { if(S) queueProgressSync(); }, {passive:true});
+  // A manifest of every studentId that has ever synced, stored under one
+  // well-known key. mpStListPrefix('progress:') below is still tried too
+  // (and unioned in) in case the server's own listing is complete or gets
+  // fixed, but the dashboard no longer *depends* on it: if that endpoint
+  // caps results (the likely cause of learners silently going missing),
+  // this index is read directly by key and is not subject to the same
+  // limit. Read-merge-write on a plain key has its own small race window
+  // with truly simultaneous syncs, but losing an index entry only delays
+  // one learner appearing in a listing for a moment — never loses their
+  // actual progress:<id> record, and the very next save retries it.
+  const PROGRESS_INDEX_KEY='progress:index';
+  async function updateProgressRosterIndex(studentId){
+    try{
+      const raw = await mpStGet(PROGRESS_INDEX_KEY);
+      let ids=[]; if(raw){ try{ ids=JSON.parse(raw); }catch(e){ ids=[]; } }
+      if(!Array.isArray(ids)) ids=[];
+      if(!ids.includes(studentId)){ ids.push(studentId); await mpStSet(PROGRESS_INDEX_KEY, JSON.stringify(ids)); }
+    }catch(e){}
   }
   async function fetchRemoteRosterAndMerge(){
     if(!mpHasBackend()) return false;
     try{
-      const keys = await mpStListPrefix('progress:');
-      const values = await Promise.all(keys.map(k => mpStGet(k)));
+      const idsFromIndex = await (async () => {
+        try{ const raw=await mpStGet(PROGRESS_INDEX_KEY); const a=raw?JSON.parse(raw):[]; return Array.isArray(a)?a:[]; }catch(e){ return []; }
+      })();
+      const idsFromList = (await mpStListPrefix('progress:'))
+        .map(k => k.startsWith('progress:') ? k.slice('progress:'.length) : k)
+        .filter(id => id && id!=='index');
+      const allIds = [...new Set([...idsFromIndex, ...idsFromList])];
+      const values = await Promise.all(allIds.map(id => mpStGet('progress:'+id)));
       values.forEach(v => { if(!v) return; try{ mergeSnapshotIntoRoster(JSON.parse(v)); }catch(e){} });
       return true;
     }catch(e){ return false; }
   }
+  function renderSyncStatus(){
+    const el=$('profile-sync-status'); if(!el) return;
+    if(!S.playerCodename){ el.textContent=''; return; }
+    const map = {
+      synced: `✅ Synced to teacher${S.lastSyncAt?' · '+formatHistoryDate(S.lastSyncAt):''}`,
+      pending: '⏳ Sync pending — will retry when online',
+      failed: '⚠️ Sync failed — tap Retry Sync below'
+    };
+    el.textContent = map[S.lastSyncStatus] || (mpHasBackend() ? '⏳ Not yet synced' : '⏳ Offline — will sync when online');
+  }
+  $('btn-retry-sync')?.addEventListener('click', async () => {
+    sfx('click');
+    const btn=$('btn-retry-sync'); btn.disabled=true; btn.textContent='Syncing…';
+    await pushProgressSnapshot();
+    renderSyncStatus();
+    btn.disabled=false; btn.textContent='🔁 Retry Sync to Teacher';
+    if(S.lastSyncStatus==='synced') showInfo('🔁 Sync', 'Your progress is synced to the teacher dashboard.');
+    else showInfo('🔁 Sync', mpHasBackend() ? 'Sync did not complete — check your connection and try again.' : 'No connection to the sync server right now.');
+  });
 
   /* ---- Teacher access gate ----
      No teacher password ships in this file. The first teacher to open the
@@ -4055,8 +4190,10 @@
 
   /* ---- Student report ---- */
   let teacherReportStudentId = null;
+  let teacherReportModeFilter='all';
   function openTeacherReport(studentId){
     teacherReportStudentId = studentId;
+    teacherReportModeFilter = 'all';
     showScreen('teacher-report');
     renderTeacherReport();
   }
@@ -4065,10 +4202,24 @@
     const wrap=$('teacher-report-body');
     if(!r){ wrap.innerHTML = `<div class="card history-empty"><strong>Record not found.</strong><p>It may have been removed. Go back and refresh the dashboard.</p></div>`; return; }
     const modeRows = Object.entries(r.byMode||{}).filter(([,d])=>d.count>0).map(([,d]) => `<div class="stat-box"><div class="sv">${d.count}</div><div class="sl">${escapeHtml(d.icon)} ${escapeHtml(d.label)} · ${d.total?Math.round(d.correct/d.total*100):0}%</div></div>`).join('') || '<p class="subtitle">No completed activities yet.</p>';
-    const activityRows = (r.recentActivity||[]).map(a => {
+    const allActivity = (r.recentActivity||[]).slice().sort((a,b)=>(Number(b.timestamp)||0)-(Number(a.timestamp)||0));
+    const modesPresent = [...new Set(allActivity.map(a=>String(a.mode||'').toLowerCase()))];
+    const filterChips = ['all',...modesPresent].map(m => {
+      const label = m==='all' ? 'All Sessions' : ((HISTORY_MODE_META[m]||{}).label||m);
+      return `<button type="button" class="tab-btn${teacherReportModeFilter===m?' active':''}" data-report-mode-filter="${escapeHtml(m)}">${escapeHtml(label)}</button>`;
+    }).join('');
+    const shown = teacherReportModeFilter==='all' ? allActivity : allActivity.filter(a=>String(a.mode||'').toLowerCase()===teacherReportModeFilter);
+    const activityRows = shown.map(a => {
       const meta=HISTORY_MODE_META[String(a.mode||'').toLowerCase()]||{icon:'📘',label:a.mode};
-      return `<article class="qr-card"><div class="qr-num">${formatHistoryDate(a.timestamp)}</div><div class="qr-question">${meta.icon} ${escapeHtml(meta.label)}${a.subject?' · '+escapeHtml(a.subject):''}</div><div class="qr-answer-row"><span class="qr-label">Score:</span><span class="qr-value">${a.score||0} pts</span></div><div class="qr-answer-row"><span class="qr-label">Result:</span><span class="qr-value">${a.correct||0}/${a.total||0} · ${a.accuracy||0}%</span></div></article>`;
-    }).join('') || '<p class="subtitle">No recent activity recorded.</p>';
+      const hasQuestions = Array.isArray(a.questions) && a.questions.length>0;
+      return `<article class="qr-card">
+        <div class="qr-num">${formatHistoryDate(a.timestamp)}</div>
+        <div class="qr-question">${meta.icon} ${escapeHtml(meta.label)}${a.subject?' · '+escapeHtml(a.subject):''}</div>
+        <div class="qr-answer-row"><span class="qr-label">Score:</span><span class="qr-value">${a.score||0} pts</span></div>
+        <div class="qr-answer-row"><span class="qr-label">Result:</span><span class="qr-value">${a.correct||0}/${a.total||0} · ${a.accuracy||0}%</span></div>
+        <button type="button" class="btn btn-block history-review-btn" data-report-session-id="${escapeHtml(a.id||'')}" ${hasQuestions?'':'disabled'}>${hasQuestions?'📖 View Questions & Answers':'📖 No question detail synced'}</button>
+      </article>`;
+    }).join('') || '<p class="subtitle">No sessions in this filter.</p>';
     wrap.innerHTML = `
       <div class="card teacher-report-head">
         <h2 style="margin:0">${escapeHtml(r.name)}</h2>
@@ -4090,10 +4241,21 @@
         <div class="stat-box"><div class="sv">${r.totalActivities}</div><div class="sl">Total Activities</div></div>
         ${modeRows}
       </div>
-      <h3>Recent Activity</h3>
+      <h3>Activity History <small class="subtitle">— tap a session to see the actual questions and answers</small></h3>
+      <div class="teacher-controls no-print" style="display:flex;flex-wrap:wrap;gap:6px">${filterChips}</div>
       <div class="review-list">${activityRows}</div>
     `;
   }
+  $('teacher-report-body')?.addEventListener('click', e => {
+    const filterBtn = e.target.closest('[data-report-mode-filter]');
+    if(filterBtn){ teacherReportModeFilter=filterBtn.dataset.reportModeFilter; renderTeacherReport(); return; }
+    const sessBtn = e.target.closest('[data-report-session-id]');
+    if(sessBtn && !sessBtn.disabled){
+      const r = readLocalRoster()[teacherReportStudentId];
+      const session = (r && r.recentActivity || []).find(a => String(a.id)===sessBtn.dataset.reportSessionId);
+      if(session) openQuestionReview(session, 'teacher-report');
+    }
+  });
   $('teacher-report-back')?.addEventListener('click', () => { sfx('click'); showScreen('teacher-dashboard'); });
   $('teacher-report-print')?.addEventListener('click', () => window.print());
   $('btn-open-teacher-gate')?.addEventListener('click', () => { sfx('click'); openTeacherEntry(); });
@@ -4337,6 +4499,7 @@
     if($('profile-name-input')) $('profile-name-input').value=S.name;
     if($('profile-section-display')) $('profile-section-display').textContent = 'Section: ' + (S.section || '—');
     if($('profile-player-code')) $('profile-player-code').textContent = 'Player Code: ' + (S.playerCodename || '—');
+    renderSyncStatus();
     if($('profile-section-input')) $('profile-section-input').value=S.section || '';
     $('profile-rank').textContent = `Rank: ${rankForLevel(level())} · ${titleForLevel(level())}`;
     const secs = S.totalPlaySeconds;
