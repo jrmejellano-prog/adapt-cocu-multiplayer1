@@ -261,10 +261,6 @@
     .loading-fill{ height:100%; background:var(--accent); width:0%; transition:width .25s linear; }
     .loading-percent{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.15rem; color:var(--accent-d); min-height:1.4em; }
     .loading-tip{ font-size:0.8rem; color:#5b6b8a; font-weight:700; text-align:center; max-width:260px; }
-    .player-progress{ width:min(320px,82vw); margin-top:2px; }
-    .player-progress-label{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:.82rem; font-weight:800; color:var(--ink); }
-    .player-progress-track{ width:100%; height:14px; background:#dbe3f5; border:2px solid rgba(0,0,0,.08); border-radius:999px; overflow:hidden; }
-    .player-progress-fill{ width:0%; height:100%; background:linear-gradient(90deg,var(--accent),var(--teal)); border-radius:inherit; transition:width .45s ease; }
 
 
     /* ---- MODAL ---- */
@@ -547,9 +543,10 @@
     .result-stat-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:2px solid #eef1fb; font-weight:700; font-size:0.88rem; }
 
     /* ---- PAUSE ---- */
-    #btn-pause{ all:unset; cursor:pointer; font-size:1rem; background:rgba(255,255,255,0.18); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    #btn-pause{ all:unset; cursor:pointer; font-size:1rem; background:rgba(255,255,255,0.18); width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; }
+    #btn-pause:hover{ background:rgba(255,255,255,.28); }
 
-    .confetti{ position:fixed; top:-10px; z-index:200; pointer-events:none; border-radius:2px; }
+    .confetti{ position:fixed; top:-10px; z-index:12001; pointer-events:none; border-radius:2px; will-change:transform; }
 
     .badge-list{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
     .simplenote{ font-size:0.74rem; color:#8a97b5; font-weight:600; background:#f8faff; border:2px dashed #dbe3f5; border-radius:10px; padding:8px 10px; margin-top:10px; }
@@ -628,7 +625,6 @@
       .setting-row{ flex-wrap:wrap; }
       .setting-row .sr-label{ flex:1 1 60%; }
       input[type=range]{ width:110px; max-width:45%; }
-      .player-progress{ width:min(300px,88vw); }
       .day-track{ gap:5px; }
       .day-cell{ padding:6px 2px; }
       .day-cell .dlabel{ font-size:.55rem; }
@@ -1266,6 +1262,50 @@
   z-index: 2;
 }
 
+
+
+    /* ===== Integrated first-launch tutorial ===== */
+    #tutorial-overlay{
+      position:fixed; inset:0; z-index:12000; display:none; pointer-events:auto;
+      background:transparent;
+    }
+    #tutorial-overlay.active{ display:block; }
+    .tutorial-spotlight{
+      position:fixed; border:3px solid #fff; border-radius:16px; pointer-events:none;
+      box-shadow:0 0 0 9999px rgba(10,16,35,.70), 0 0 24px rgba(255,255,255,.75);
+      transition:all .28s ease;
+    }
+    .tutorial-card{
+      position:fixed; left:50%; width:min(420px,calc(100vw - 28px));
+      transform:translateX(-50%); background:#fff; color:var(--ink);
+      border:3px solid var(--accent); border-radius:20px; padding:16px 18px;
+      box-shadow:0 14px 34px rgba(0,0,0,.30); text-align:left;
+      pointer-events:none; animation:tutorialCardIn .25s ease both;
+    }
+    .tutorial-step{font-size:.68rem;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--accent-d);margin-bottom:4px}
+    .tutorial-card h2{font-size:1.3rem;margin:0 0 5px}
+    .tutorial-card p{font-size:.86rem;line-height:1.5;margin:0;color:#53627d;font-weight:650}
+    .tutorial-hint{margin-top:10px;font-size:.72rem;font-weight:900;color:var(--accent-d);text-align:center}
+    body.large-text .tutorial-card h2{font-size:1.4rem}
+    body.large-text .tutorial-card p{font-size:1rem}
+    body.high-contrast .tutorial-card{background:#1a2440;color:#eef2ff;border-color:#a99aff}
+    body.high-contrast .tutorial-card p{color:#dbe4ff}
+    @keyframes tutorialCardIn{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(.98)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+    body.reduced-motion .tutorial-card{animation:none}
+    @media(max-width:639px){
+      .tutorial-card{padding:14px 15px;border-radius:17px}
+      .tutorial-card h2{font-size:1.15rem}
+      .tutorial-card p{font-size:.8rem}
+    }
+    .text-size-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(260px,100%)}
+    .text-size-btn{border:2px solid #dbe3f5;background:#fff;color:var(--ink);border-radius:11px;padding:8px 7px;font:700 .75rem 'Quicksand',sans-serif;cursor:pointer}
+    .text-size-btn.active{background:var(--accent);color:#fff;border-color:var(--accent-d)}
+    body.high-contrast .text-size-btn{background:#1a2440;color:#eef2ff;border-color:#5b6dae}
+    body.high-contrast .text-size-btn.active{background:#8b5cf6;border-color:#d7ccff}
+
+
+  .profile-3d-wrap{margin:14px 0}.profile-3d-pet{position:absolute;right:12%;bottom:11%;z-index:4;pointer-events:none}.profile-3d-pet .pet-companion{font-size:2.2rem}.store-preview-wrap{margin:10px 0}.store-preview-wrap .character-3d-viewer{min-height:300px;height:360px}.profile-character-viewer{min-height:390px;height:52vh}.pet-panel{margin-top:10px}.pet-panel-main{display:flex;align-items:center;gap:14px}.pet-stage{min-width:92px;display:flex;justify-content:center}.pet-companion{display:inline-block;position:relative;filter:drop-shadow(0 6px 5px rgba(30,40,70,.15));animation:pet-float 2.2s ease-in-out infinite}.pet-normal{font-size:3.2rem}.pet-small{font-size:1.6rem}.pet-dog{animation:pet-dog 1.8s ease-in-out infinite}.pet-cat{animation:pet-cat 2.4s ease-in-out infinite}.pet-bird{animation:pet-bird 1.6s ease-in-out infinite}.pet-plant{animation:pet-plant 2.8s ease-in-out infinite}.pet-store-icon{font-size:2.4rem}.pet-actions{margin-top:7px}.avatar-pet-overlay{position:absolute;right:-22px;bottom:8px;z-index:5;pointer-events:none}.avatar-pet-overlay .pet-companion{font-size:1.25rem}.pet-fed-fx{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);font-size:1.8rem;z-index:9999;pointer-events:none;animation:pet-fed .9s ease-out forwards}.recent-performance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.recent-mode-card{margin:0}.lb-personal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.lb-personal-grid>div{background:#f7f9ff;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}.lb-personal-grid strong{font-size:.68rem;color:#6b7894}.lb-personal-grid span{font-weight:800;overflow-wrap:anywhere}@keyframes pet-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pet-dog{0%,100%{transform:translateY(0) rotate(0)}40%{transform:translateY(-2px) rotate(-4deg)}70%{transform:translateY(0) rotate(4deg)}}@keyframes pet-cat{0%,100%{transform:rotate(0)}50%{transform:translateY(-3px) rotate(3deg)}}@keyframes pet-bird{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-3deg)}}@keyframes pet-plant{0%,100%{transform:rotate(0)}50%{transform:rotate(-4deg)}}@keyframes pet-fed{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-100%) scale(1.15)}}
+  @media(max-width:640px){.recent-performance-grid{grid-template-columns:1fr}.lb-personal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-character-viewer{min-height:350px;height:50vh}}
 </style>
 </head>
 <body>
@@ -1366,11 +1406,7 @@
       <div class="loading-spinner">🎮</div>
       <div class="loading-bar" aria-label="Application loading progress"><div class="loading-fill" id="loading-fill"></div></div>
       <div class="loading-percent" id="loading-percent" aria-live="polite">0%</div>
-      <div class="loading-tip" id="loading-tip">Loading your adventure…</div>
-      <div class="player-progress" aria-label="Player completion progress">
-        <div class="player-progress-label"><span>Progress</span><strong id="player-progress-percent">0%</strong></div>
-        <div class="player-progress-track"><div class="player-progress-fill" id="player-progress-fill"></div></div>
-      </div>
+      <div class="loading-tip" id="loading-tip">Loading resources...</div>
     </div>
   </section>
 
@@ -1546,6 +1582,17 @@
       <p class="subtitle" id="profile-sync-status" style="margin-top:-6px"></p>
       <div class="profile-edit-row"><input type="text" id="profile-section-input" maxlength="24" aria-label="Player section"><button class="btn" id="btn-edit-section">Edit Section</button></div>
       <p class="subtitle" id="profile-rank">Rank: Beginner</p>
+      <div class="avatar-preview-wrap profile-3d-wrap">
+        <div class="character-3d-viewer profile-character-viewer" id="profile-3d-viewer">
+          <canvas id="profile-3d-canvas" aria-label="Interactive 3D profile character viewer"></canvas>
+          <div class="character-3d-grid" aria-hidden="true"></div>
+          <div class="character-3d-hint" id="profile-3d-hint">↔↕ Drag to inspect</div>
+          <div class="character-3d-status" id="profile-3d-status">3D Character</div>
+          <div id="profile-3d-pet" class="profile-3d-pet"></div>
+        </div>
+        <p class="subtitle">Drag left/right to turn. Drag up/down to look above and below.</p>
+        <div id="profile-pet-panel" class="card pet-panel"></div>
+      </div>
       <h3>Personal Bests</h3>
       <div class="stat-grid" id="profile-stats"></div>
       <h3>Favorite Game</h3>
@@ -1584,9 +1631,10 @@
       <p class="eyebrow">Leaders</p>
       <h1 class="display">Leaderboards</h1>
       <div class="tab-row">
-        <button class="tab-btn active" data-tab="high">🏆 High Score</button>
-        <button class="tab-btn" data-tab="leaders">🌍 Leaders</button>
-        <button class="tab-btn" data-tab="week">📅 Top of Week</button>
+        <button class="tab-btn active" data-tab="overall">🏆 Overall</button>
+        <button class="tab-btn" data-tab="challenge">🎯 Challenge</button>
+        <button class="tab-btn" data-tab="speculation">🧩 Speculation</button>
+        <button class="tab-btn" data-tab="quickgame">⚡ Quick Game</button>
       </div>
       <div class="lb-wrap" id="lb-wrap"></div>
       <p class="subtitle" id="week-meta" style="margin-top:10px;"></p>
@@ -1780,6 +1828,15 @@
         <button class="tab-btn active" data-store="hats">🎩 Hats</button>
         <button class="tab-btn" data-store="effects">✨ Effects</button>
         <button class="tab-btn" data-store="characters">🧑 Characters</button>
+        <button class="tab-btn" data-store="pets">🐾 Pet Store</button>
+      </div>
+      <div class="avatar-preview-wrap store-preview-wrap">
+        <div class="character-3d-viewer" id="store-3d-viewer">
+          <canvas id="store-3d-canvas" aria-label="Store character preview"></canvas>
+          <div class="character-3d-grid" aria-hidden="true"></div>
+          <div class="character-3d-hint" id="store-3d-hint">↔↕ Drag to inspect preview</div>
+          <div class="character-3d-status" id="store-3d-status">Store Preview</div>
+        </div>
       </div>
       <div class="store-grid" id="store-grid"></div>
       <button class="btn btn-primary btn-block screen-home-btn" data-main-menu>🏠 Back to Main Menu</button>
@@ -1946,23 +2003,36 @@
     <div class="setting-row"><span class="sr-label">Music Volume</span><input type="range" id="set-music" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Sound Effects</span><input type="range" id="set-sfx" min="0" max="1" step="0.05"></div>
     <div class="setting-row"><span class="sr-label">Reduced Motion</span><label class="toggle"><input type="checkbox" id="set-motion"><span class="tslider"></span></label></div>
-    <div class="setting-row"><span class="sr-label">Larger Text</span><label class="toggle"><input type="checkbox" id="set-text"><span class="tslider"></span></label></div>
+    <div class="setting-row" style="align-items:flex-start;"><span class="sr-label">Text Size</span><div class="text-size-options" role="group" aria-label="Text size"><button type="button" class="text-size-btn" id="set-text-small">Smaller Text</button><button type="button" class="text-size-btn" id="set-text-large">Larger Text</button></div></div>
     <div class="setting-row"><span class="sr-label">High Contrast</span><label class="toggle"><input type="checkbox" id="set-contrast"><span class="tslider"></span></label></div>
     <div class="setting-row" style="border-bottom:none;"><span class="sr-label">Offline Mode</span><label class="toggle"><input type="checkbox" id="set-offline"><span class="tslider"></span></label></div>
     <div class="offline-note"><strong>Offline Mode</strong>Works for features that do not need the internet. Features that require an online connection may not be available.</div>
-    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:12px;">Done</button>
+    <button class="btn btn-block" id="btn-replay-tutorial" style="margin-top:12px;">📖 Replay Tutorial</button>
+    <button class="btn btn-primary btn-block" id="btn-close-settings" style="margin-top:8px;">Done</button>
   </div>
 </div>
 
-<!-- PAUSE MODAL -->
+<!-- GAME CONTROL MENU -->
 <div class="modal-overlay" id="modal-pause">
   <div class="modal-box">
-    <h1 class="display">⏸️ Paused</h1>
+    <h1 class="display" id="game-menu-title">🎮 Game Menu</h1>
+    <p class="subtitle" id="game-menu-status">Your game is paused.</p>
     <div class="btn-row" style="flex-direction:column;">
       <button class="btn btn-primary btn-block" id="btn-resume">▶️ Resume</button>
-      <button class="btn btn-block" id="btn-playagain">🔄 Play Again</button>
-      <button class="btn btn-block" id="btn-mainmenu">🏠 Return to Main Menu</button>
+      <button class="btn btn-block" id="btn-playagain">↻ Restart</button>
+      <button class="btn btn-block" id="btn-mainmenu">✕ Exit Game</button>
     </div>
+  </div>
+</div>
+
+<!-- INTEGRATED KNOW THE APP TUTORIAL -->
+<div id="tutorial-overlay" aria-modal="true" role="dialog" aria-label="Know the App tutorial">
+  <div class="tutorial-spotlight" id="tutorial-spotlight"></div>
+  <div class="tutorial-card" id="tutorial-card">
+    <div class="tutorial-step" id="tutorial-step">Step 1 of 9</div>
+    <h2 id="tutorial-title">Settings</h2>
+    <p id="tutorial-body">Customize your game experience, audio, text size, accessibility, and other preferences.</p>
+    <div class="tutorial-hint">Tap anywhere to continue</div>
   </div>
 </div>
 
@@ -2152,6 +2222,41 @@
     {key:'challengelegend',icon:'🏆',name:'Challenge Legend',coins:300,xp:600,desc:'Reach 2,500 points in Challenge Mode.',target:2500,get:s=>s.bestChallengeScore||0,cat:'Challenge'}
   ];
 
+  /* ================= PET DATA ================= */
+  const PETS = [
+    {id:'pet:plant', name:'Little Plant', price:0, icon:'🪴', type:'plant', free:true},
+    {id:'pet:dog', name:'Happy Dog', price:500, icon:'🐶', type:'dog'},
+    {id:'pet:cat', name:'Curious Cat', price:500, icon:'🐱', type:'cat'},
+    {id:'pet:bird', name:'Sky Bird', price:450, icon:'🐦', type:'bird'}
+  ];
+  function currentPet(){ return PETS.find(p=>p.id===S?.pets?.equipped) || PETS[0]; }
+  function ensurePetState(){
+    if(!S.pets) S.pets={owned:['pet:plant'],equipped:'pet:plant',happiness:{},feedCount:{},lastFedAt:null};
+    if(!Array.isArray(S.pets.owned)) S.pets.owned=[];
+    if(!S.pets.owned.includes('pet:plant')) S.pets.owned.unshift('pet:plant');
+    S.pets.happiness ||= {}; S.pets.feedCount ||= {};
+    if(!S.pets.equipped || !S.pets.owned.includes(S.pets.equipped)) S.pets.equipped='pet:plant';
+  }
+  function petMarkup(pet, small=false){
+    const p=pet||PETS[0], size=small?'pet-small':'pet-normal';
+    return `<div class="pet-companion ${size} pet-${p.type}" data-pet-type="${p.type}" aria-label="${escapeHtml(p.name)}">${p.icon}</div>`;
+  }
+  function renderPetPanel(){
+    ensurePetState(); const p=currentPet(), count=S.pets.feedCount[p.id]||0, happy=S.pets.happiness[p.id]||0;
+    const el=$('profile-pet-panel'); if(!el) return;
+    el.innerHTML=`<div class="pet-panel-main"><div class="pet-stage">${petMarkup(p)}</div><div><strong>${escapeHtml(p.name)}</strong><div class="subtitle">Happiness: ${happy}% · Fed ${count} time${count===1?'':'s'}</div><div class="pet-actions"><button class="btn" id="btn-feed-profile">🍎 Feed</button></div></div></div>`;
+    $('btn-feed-profile')?.addEventListener('click',()=>feedPet());
+  }
+  function feedPet(){
+    ensurePetState(); const p=currentPet(); const now=Date.now();
+    S.pets.feedCount[p.id]=(S.pets.feedCount[p.id]||0)+1;
+    S.pets.happiness[p.id]=Math.min(100,(S.pets.happiness[p.id]||0)+10); S.pets.lastFedAt=now;
+    saveState(); sfx('correct');
+    const el=document.createElement('div'); el.className='pet-fed-fx'; el.textContent='💖 ✨ 💖'; document.body.appendChild(el); setTimeout(()=>el.remove(),900);
+    showInfo('🐾 Pet Fed!','Your pet enjoyed the treat. Feeding is optional and your pet will never disappear or die.');
+    renderPetPanel();
+  }
+
   /* ================= STORE DATA ================= */
   const STORE = {
     hats: [
@@ -2184,6 +2289,7 @@
       favoriteGame:null, favoriteGameScore:0,
       history:[],
       purchased:[], equipped:{ color:null, hat:null, effect:null },
+      pets:{ owned:['pet:plant'], equipped:'pet:plant', happiness:{'pet:plant':0}, feedCount:{'pet:plant':0}, lastFedAt:null },
       achievementsCollected:{},
       dailyReward:{ lastCollectedDate:null, streakDay:0 },
       weekStart: startOfWeekISO(), weeklyScore:0,
@@ -2192,6 +2298,7 @@
       avatar: null,
       lastScreen:'menu',
       activeSession:null,
+      tutorialCompleted:false,
       onboarded:false,
       termsAccepted:false,
       mp:{ gamesPlayed:0, wins:0, bestScore:0, top3:0 }
@@ -2301,7 +2408,16 @@
     merged.achievementsCollected = Object.assign({}, fresh.achievementsCollected||{}, loaded.achievementsCollected||{});
     merged.dailyReward = Object.assign({}, fresh.dailyReward||{}, loaded.dailyReward||{});
     merged.mp = Object.assign({}, fresh.mp||{}, loaded.mp||{});
+    merged.pets = Object.assign({}, fresh.pets||{}, loaded.pets||{});
+    merged.pets.owned = Array.isArray(merged.pets.owned) && merged.pets.owned.length ? [...new Set(merged.pets.owned)] : ['pet:plant'];
+    if(!merged.pets.owned.includes('pet:plant')) merged.pets.owned.unshift('pet:plant');
+    merged.pets.happiness = Object.assign({}, fresh.pets.happiness||{}, loaded.pets?.happiness||{});
+    merged.pets.feedCount = Object.assign({}, fresh.pets.feedCount||{}, loaded.pets?.feedCount||{});
+    if(!merged.pets.equipped || !merged.pets.owned.includes(merged.pets.equipped)) merged.pets.equipped='pet:plant';
     merged.avatar = Object.assign({}, fresh.avatar||{}, loaded.avatar||{});
+    // Retired Dinosaur character: keep legacy saved purchase data intact, but
+    // never expose or select the retired model in the current UI.
+    if(merged.avatar.character==='char:dino') merged.avatar.character='char:student_m';
     // The currently-active gameplay screen (mode/phase/game state) is
     // intentionally NOT restored across a real app close/reopen — only the
     // player's progress/profile/settings should survive that. A fresh
@@ -2728,8 +2844,28 @@
   function spendCoins(n){ n=Math.max(0,Math.floor(Number(n)||0)); if(S.coins<n) return false; S.coins -= n; S.coinsSpent += n; updateHeaderStats(); saveState(); return true; }
   function addXP(n){ n=Math.max(0,Math.floor(Number(n)||0)); S.xp += n; S.xpEarnedTotal = (S.xpEarnedTotal||0) + n; updateHeaderStats(); saveState(); }
   function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  /* Confetti gets its own dedicated fixed-position layer (created once,
+     lazily) instead of appending particles straight into <body>. This keeps
+     it immune to stacking-context surprises from other overlays and gives
+     one place to reason about cleanup, so bursts from several reward events
+     firing back-to-back (daily reward + achievement + coin pickup) can never
+     pile up unbounded. */
+  let confettiLayer=null;
+  function getConfettiLayer(){
+    if(confettiLayer && confettiLayer.isConnected) return confettiLayer;
+    confettiLayer=document.createElement('div');
+    confettiLayer.id='confetti-layer';
+    confettiLayer.style.cssText='position:fixed;inset:0;z-index:12001;pointer-events:none;overflow:hidden;';
+    document.body.appendChild(confettiLayer);
+    return confettiLayer;
+  }
+  const CONFETTI_MAX_PARTICLES=180; // hard ceiling so rapid repeated reward events can't accumulate forever
   function launchConfetti(){
     if(!effectsEnabled()) return;
+    const layer=getConfettiLayer();
+    while(layer.children.length>CONFETTI_MAX_PARTICLES-36 && layer.firstChild){
+      layer.removeChild(layer.firstChild);
+    }
     const colors=['#ff6fa5','#ffd94a','#37c9b0','#9b6bff','#ff9d4d'];
     for(let i=0;i<36;i++){
       const p=document.createElement('div'); p.className='confetti';
@@ -2738,9 +2874,14 @@
       p.style.background=colors[i%colors.length];
       p.style.left=(Math.random()*100)+'vw';
       p.style.transform=`rotate(${Math.random()*360}deg)`;
-      p.style.animation=`confetti-fall ${2.3+Math.random()*1.8}s ease-in ${Math.random()*0.5}s forwards`;
-      document.body.appendChild(p);
-      setTimeout(()=>p.remove(),4600);
+      const dur=2.3+Math.random()*1.8, delay=Math.random()*0.5;
+      p.style.animation=`confetti-fall ${dur}s ease-in ${delay}s forwards`;
+      layer.appendChild(p);
+      // Each particle cleans up strictly after its own animation ends
+      // (duration + its own delay), instead of one shared timeout, so a
+      // longer-running particle from an earlier burst is never removed
+      // early by a later one.
+      setTimeout(()=>{ if(p.isConnected) p.remove(); },(dur+delay)*1000+300);
     }
   }
   const confettiStyle=document.createElement('style');
@@ -2858,11 +2999,18 @@
       const previous=document.querySelector('.screen.active');
       if(previous && previous.id !== 'screen-'+name && !S.settings.reducedMotion){ previous.classList.add('screen-leaving'); setTimeout(()=>previous.classList.remove('screen-leaving'),180); }
       SCREENS.forEach(n => $('screen-'+n)?.classList.toggle('active', n===name));
-      const showPause = name === 'spec-play';
-      $('btn-pause')?.classList.toggle('hidden', !showPause);
+      const gameScreens = ['adventure','trivia','quickgame','challenge','spec-play'];
+      const showGameMenu = gameScreens.includes(name);
+      $('btn-pause')?.classList.toggle('hidden', !showGameMenu);
+      if(showGameMenu){
+        $('btn-pause')?.setAttribute('aria-label','Open Game Menu');
+        $('btn-pause')?.setAttribute('title','Game Menu');
+        $('btn-pause').textContent='☰';
+      }
       document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('active'));
-      // Home is only needed while inside another screen.
-      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu'].includes(name));
+      // The regular Home button is hidden during actual gameplay. Game Menu
+      // is the safe way to pause, restart, or exit a running mode.
+      $('btn-home')?.classList.toggle('hidden', ['intro','agegate','loading','menu',...gameScreens].includes(name));
       if(name==='profile') $('nav-profile')?.classList.add('active');
       if(name==='trophies') $('nav-trophies')?.classList.add('active');
       if(name==='leaders') $('nav-leaders')?.classList.add('active');
@@ -2991,7 +3139,6 @@
     { id:'char:detective', name:'Detective', cat:'Fun', icon:'🕵️', price:600, skin:'#ffcd94', hair:'#2b1b0e', clothes:'#8a97b5' },
     { id:'char:santa', name:'Santa Claus', cat:'Fun', icon:'🎅', price:750, skin:'#ffe0bd', hair:'#eaeaea', clothes:'#ff5a5a' },
     { id:'char:clown', name:'Clown', cat:'Fun', icon:'🤡', price:600, skin:'#ffe0bd', hair:'#ff6fa5', clothes:'#ffd94a' },
-    { id:'char:dino', name:'Dinosaur', cat:'Fun', icon:'🦖', price:750, skin:'#4dcf7a', hair:'#1f8f7a', clothes:'#37c9b0' }
   ];
   function defaultAvatar(){
     return { character:'char:student_m', skin:AV_SKINS[2], hairStyle:'short', hairColor:AV_HAIR_COLORS[1], eyes:'normal', expression:'smile',
@@ -3159,6 +3306,7 @@
     const charDef = CHARACTERS.find(c=>c.id===cfg.character);
     if(charDef && opts.showBadge){ const badge=document.createElement('div'); badge.className='av-badge'; badge.textContent=charDef.icon; container.appendChild(badge); }
     if(cfg.showName && opts.name){ const nm=document.createElement('div'); nm.className='av-name'; nm.textContent=opts.name; container.appendChild(nm); }
+    if(opts.showPet!==false && typeof currentPet==='function'){ try{ ensurePetState(); const pet=document.createElement('div'); pet.className='avatar-pet-overlay'; pet.innerHTML=petMarkup(currentPet(), !!opts.smallPet); container.appendChild(pet); }catch(_){} }
   }
   function ownedCharacters(){ return CHARACTERS.filter(c => c.price===0 || S.purchased.includes(c.id)); }
 
@@ -3178,7 +3326,8 @@
    */
   const Avatar3D = (() => {
     let gl=null, program=null, canvas=null, viewer=null, raf=0;
-    let cfg=null, mode='idle', modeStarted=0, rotation=0;
+    let cfg=null, mode='idle', modeStarted=0, rotation=0, pitch=0;
+    let targetCanvasId='cust-3d-canvas', targetViewerId='cust-3d-viewer', targetHintId='cust-3d-hint', targetStatusId='cust-3d-status';
     let dragging=false, lastX=0, pointerId=null, hintHidden=false;
     let buffers={};
 
@@ -3306,9 +3455,10 @@
       mesh('capsule',v,n,i);
     }
 
-    function init(){
+    function init(canvasId='cust-3d-canvas', viewerId='cust-3d-viewer', hintId='cust-3d-hint', statusId='cust-3d-status'){
       try{
-        canvas=$('cust-3d-canvas');viewer=$('cust-3d-viewer');
+        targetCanvasId=canvasId; targetViewerId=viewerId; targetHintId=hintId; targetStatusId=statusId; hintHidden=false;
+        canvas=$(targetCanvasId);viewer=$(targetViewerId);
         gl=canvas.getContext('webgl',{alpha:true,antialias:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});
         if(!gl)throw Error('WebGL unavailable');
         program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,F));gl.linkProgram(program);
@@ -3317,20 +3467,20 @@
         gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);bind();resize();
         window.addEventListener('resize',resize,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(resize,60),{passive:true});
         canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;},{passive:false});
-        canvas.addEventListener('webglcontextrestored',()=>{gl=null;buffers={};init();});
+        canvas.addEventListener('webglcontextrestored',()=>{gl=null;buffers={};init(targetCanvasId,targetViewerId,targetHintId,targetStatusId);});
         if(!raf)raf=requestAnimationFrame(loop);
-        const st=$('cust-3d-status');if(st)st.textContent='3D Block Avatar • Drag to rotate';
+        const st=$(targetStatusId);if(st)st.textContent='3D Block Avatar • Drag up/down and left/right';
         return true;
       }catch(e){console.warn('3D character viewer fallback:',e);return false;}
     }
     function bind(){
       if(!viewer||viewer.dataset.avatar3dBound)return;viewer.dataset.avatar3dBound='1';
-      viewer.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;dragging=true;pointerId=e.pointerId;lastX=e.clientX;viewer.classList.add('dragging');hideHint();try{viewer.setPointerCapture(e.pointerId);}catch(_){} });
-      viewer.addEventListener('pointermove',e=>{if(!dragging||(pointerId!==null&&e.pointerId!==pointerId))return;rotation+=(e.clientX-lastX)*.010;lastX=e.clientX;});
+      viewer.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;dragging=true;pointerId=e.pointerId;lastX=e.clientX;lastY=e.clientY;viewer.classList.add('dragging');hideHint();try{viewer.setPointerCapture(e.pointerId);}catch(_){} });
+      viewer.addEventListener('pointermove',e=>{if(!dragging||(pointerId!==null&&e.pointerId!==pointerId))return;rotation+=(e.clientX-lastX)*.010;pitch=Math.max(-0.72,Math.min(0.72,pitch-(e.clientY-lastY)*.008));lastX=e.clientX;lastY=e.clientY;});
       const end=e=>{if(pointerId!==null&&e&&e.pointerId!==undefined&&e.pointerId!==pointerId)return;dragging=false;pointerId=null;viewer.classList.remove('dragging');if(e){try{viewer.releasePointerCapture(e.pointerId);}catch(_){}}};
       viewer.addEventListener('pointerup',end);viewer.addEventListener('pointercancel',end);viewer.addEventListener('lostpointercapture',()=>{dragging=false;pointerId=null;viewer.classList.remove('dragging');});
     }
-    function hideHint(){if(hintHidden)return;hintHidden=true;const h=$('cust-3d-hint');if(h)h.classList.add('hidden-hint');}
+    function hideHint(){if(hintHidden)return;hintHidden=true;const h=$(targetHintId);if(h)h.classList.add('hidden-hint');}
     function resize(){if(!canvas||!gl)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.floor(r.width*d)),h=Math.max(1,Math.floor(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,canvas.width,canvas.height);}
     function setCfg(c){cfg=Object.assign(defaultAvatar(),c||{});}
     function color(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return[.65,.7,.8];const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
@@ -3399,26 +3549,64 @@
       if(c.hairStyle==='bald')return;
 
       /*
-       * Hair is completely Head-local.  The scalp volume is deliberately
-       * shifted a little toward the back so it wraps the crown without
-       * covering the face.  The front hairline then meets the forehead.
+       * FULL HEAD HAIR SHELL
+       * Hair is entirely head-local. The side shell is continuous from
+       * crown to lower head, preventing the profile view from exposing
+       * a large skin-colored strip. Every piece inherits the head transform.
        */
-      out.push(node(head,0,.30,-.08,0,0,0,.92,.30,.88,'sphere',hc));
-      out.push(box(head,0,.25,.80,0,0,0,.78,.13,.12,hc));
+      const capY=.27, capZ=-.08;
+
+      /* Opaque crown/scalp volume. */
+      out.push(node(head,0,capY,capZ,0,0,0,.98,.36,.94,'sphere',hc));
+
+      /* Front hairline: visible above the face without covering the eyes. */
+      out.push(box(head,0,.36,.73,0,0,0,.77,.15,.17,hc));
+
+      /*
+       * CONTINUOUS LEFT/RIGHT SIDE COVERAGE.
+       * These overlap the head and extend nearly its full vertical height.
+       * The front edge stops around z=.48 while facial features sit near
+       * z=.95, keeping the eyes and mouth clearly visible.
+       */
+      [-1,1].forEach(side=>{
+        out.push(box(head,side*.84,-.01,-.12,0,0,0,.20,.58,.64,hc));
+        out.push(box(head,side*.73,.30,-.08,0,0,0,.20,.30,.60,hc));
+        out.push(box(head,side*.74,-.34,-.14,0,0,0,.19,.30,.58,hc));
+      });
+
+      /* Full rear coverage, widened so the back cannot show an exposed gap. */
+      out.push(box(head,0,.05,-.78,0,0,0,.82,.54,.19,hc));
+      out.push(box(head,0,-.28,-.70,0,0,0,.80,.30,.20,hc));
 
       if(c.hairStyle==='long'){
-        out.push(box(head,-.82,-.03,-.02,0,0,0,.15,.52,.16,hc));
-        out.push(box(head,.82,-.03,-.02,0,0,0,.15,.52,.16,hc));
-        out.push(box(head,0,-.02,-.72,0,0,0,.72,.50,.14,hc));
+        /* Long hair continues below both sides and across the back. */
+        out.push(box(head,-.84,-.52,-.10,0,0,0,.19,.55,.30,hc));
+        out.push(box(head,.84,-.52,-.10,0,0,0,.19,.55,.30,hc));
+        out.push(box(head,0,-.55,-.73,0,0,0,.80,.55,.20,hc));
       }else if(c.hairStyle==='ponytail'){
-        out.push(node(head,.72,.12,-.42,.12,0,.18,.16,.36,.16,'capsule',hc));
+        /* Ponytail remains a child of the head and grows from the rear scalp. */
+        out.push(node(head,.72,.08,-.56,.10,0,.12,.20,.46,.20,'capsule',hc));
+        out.push(node(head,.74,-.28,-.78,.10,0,.10,.17,.34,.17,'capsule',hc));
       }else if(c.hairStyle==='curly'){
-        [-.62,-.31,0,.31,.62].forEach(x=>{
-          out.push(node(head,x,.34,-.02,0,0,0,.27,.24,.27,'sphere',hc));
+        /* Curls sit over the continuous side/back shell. */
+        [-.68,-.34,0,.34,.68].forEach(x=>{
+          out.push(node(head,x,.44,-.08,0,0,0,.27,.25,.28,'sphere',hc));
+        });
+        [-.82,.82].forEach(x=>{
+          out.push(node(head,x,.10,-.10,0,0,0,.23,.30,.26,'sphere',hc));
+        });
+        [-.52,0,.52].forEach(x=>{
+          out.push(node(head,x,.20,-.74,0,0,0,.27,.27,.20,'sphere',hc));
         });
       }else if(c.hairStyle==='mohawk'){
-        out.push(box(head,0,.55,-.03,0,0,0,.18,.30,.18,hc));
-        out.push(box(head,0,.56,.22,0,0,0,.17,.25,.17,hc));
+        /* Keep the raised center while retaining solid side coverage. */
+        out.push(box(head,0,.58,-.03,0,0,0,.20,.30,.20,hc));
+        out.push(box(head,0,.59,.20,0,0,0,.18,.25,.18,hc));
+        out.push(box(head,0,.47,-.31,0,0,0,.18,.22,.18,hc));
+      }else{
+        /* Short style: fuller side/back blocks complete the profile silhouette. */
+        out.push(box(head,-.72,.10,-.13,0,0,0,.18,.34,.58,hc));
+        out.push(box(head,.72,.10,-.13,0,0,0,.18,.34,.58,hc));
       }
     }
 
@@ -3471,9 +3659,19 @@
         out.push(box(handL,0,0,.16,0,0,0,.11,.07,.07,gold));
       }
       if(c.hat&&c.hat!=='none'){
-        /* Hat is Head-local and sits over the hair/scalp anchor. */
-        out.push(box(head,0,.52,0,0,0,0,.88,.13,.82,'#273b67'));
-        out.push(box(head,0,.43,.28,0,0,0,1.05,.055,.28,'#334f86'));
+        /* Store hats are real head-local 3D geometry. Each style has its own
+           silhouette so a purchased item is visibly different on the model. */
+        const hn=String(c.hat).toLowerCase();
+        if(hn.includes('wizard')){ out.push(box(head,0,.72,0,0,0,0,.48,.65,.48,'#4b2a83')); out.push(box(head,0,.48,.02,0,0,0,1.02,.07,.84,'#6c43a5')); }
+        else if(hn.includes('cowboy')){ out.push(box(head,0,.57,0,.08,0,0,.62,.24,.54,'#9a6b32')); out.push(box(head,0,.43,.16,0,0,0,1.18,.06,.38,'#b88947')); }
+        else if(hn.includes('helmet')||hn.includes('astronaut')||hn.includes('knight')||hn.includes('viking')||hn.includes('construction')||hn.includes('military')){ out.push(box(head,0,.50,0,0,0,0,.92,.30,.86,'#6d778a')); out.push(box(head,0,.32,.58,0,0,0,.66,.10,.20,'#aab5c8')); }
+        else if(hn.includes('crown')||hn.includes('tiara')){ out.push(box(head,0,.64,0,0,0,0,.66,.22,.66,'#d9a92f')); out.push(box(head,0,.77,0,0,0,0,.48,.18,.48,'#f0c94a')); }
+        else if(hn.includes('pirate')){ out.push(box(head,0,.58,0,0,0,0,.90,.24,.72,'#1e2433')); out.push(box(head,0,.43,.20,0,0,0,1.08,.06,.34,'#2d354a')); }
+        else if(hn.includes('beret')||hn.includes('fez')){ out.push(box(head,0,.57,0,0,0,0,.58,.20,.58,'#b83b4b')); out.push(box(head,0,.45,.12,0,0,0,.92,.06,.40,'#d0505e')); }
+        else if(hn.includes('sombrero')){ out.push(box(head,0,.57,0,0,0,0,.55,.22,.55,'#d7b25a')); out.push(box(head,0,.44,.02,0,0,0,1.28,.055,.98,'#e5c979')); }
+        else if(hn.includes('top hat')){ out.push(box(head,0,.70,0,0,0,0,.50,.45,.50,'#202638')); out.push(box(head,0,.43,.05,0,0,0,1.02,.07,.82,'#202638')); }
+        else if(hn.includes('headphones')){ out.push(box(head,-.92,.04,.02,0,0,0,.08,.45,.10,'#2e6be6')); out.push(box(head,.92,.04,.02,0,0,0,.08,.45,.10,'#2e6be6')); out.push(box(head,0,.47,-.02,0,0,0,.86,.07,.16,'#2e6be6')); }
+        else { out.push(box(head,0,.54,0,0,0,0,.78,.18,.70,'#273b67')); out.push(box(head,0,.42,.24,0,0,0,1.04,.055,.28,'#334f86')); }
       }
       if(c.back==='backpack'){
         out.push(box(torso,0,.02,-.43,0,0,0,.50,.62,.16,'#5c3a1e'));
@@ -3512,7 +3710,7 @@
       }
 
       /* One world-space root. Everything else is local to a parent anchor. */
-      const root=TRS(0,jump+bob,0,0,rotation+bodyRy,0,1,1,1),out=[];
+      const root=TRS(0,jump+bob,0,pitch,rotation+bodyRy,0,1,1,1),out=[];
       const pelvis=child(root,0,1.55,0,0,0,0,1,1,1);
       const torso=child(pelvis,0,.91,0,0,0,0,1,1,1);
       const neck=child(torso,0,.83,0,0,0,0,1,1,1);
@@ -3547,8 +3745,24 @@
       if(mode==='victory'&&now-modeStarted>1500)mode='idle';
     }
     function show(c,m,anim){if(!gl||!canvas)return;setCfg(c);mode=m||'idle';modeStarted=performance.now();if(anim){if(m==='walk')cfg.walkAnim=anim;if(m==='victory')cfg.victoryAnim=anim;}resize();}
+    function mount(canvasId,viewerId,hintId,statusId){
+      // If we're already mounted on this exact canvas (e.g. clicking Preview
+      // on a different Store item, or re-opening the same screen), reuse the
+      // live WebGL context instead of tearing it down and rebuilding it.
+      // Destroying and recreating the context on every Preview click is what
+      // made the Store preview flaky: WEBGL_lose_context's loseContext() is
+      // asynchronous, so immediately calling getContext('webgl', ...) again
+      // could return null before the old context had actually finished being
+      // torn down, silently dropping the viewer into its 2D fallback.
+      if(ready() && targetCanvasId===canvasId && targetViewerId===viewerId){
+        return true;
+      }
+      try{ if(gl){gl.getExtension('WEBGL_lose_context')?.loseContext();} }catch(_){}
+      gl=null; program=null; canvas=null; viewer=null; buffers={}; dragging=false; pointerId=null;
+      return init(canvasId,viewerId,hintId,statusId);
+    }
     function ready(){return!!gl;}
-    return{init,show,ready};
+    return{init,mount,show,ready};
   })();
 
   /* Customize screen wiring */
@@ -3560,7 +3774,8 @@
   let custActiveCat = 'character';
   function openCustomize(){
     showScreen('customize');
-    if(!Avatar3D.ready()){ const ok=Avatar3D.init(); const fb=$('cust-3d-fallback'); if(fb && !ok) fb.classList.remove('hidden'); }
+    const ok = Avatar3D.mount('cust-3d-canvas','cust-3d-viewer','cust-3d-hint','cust-3d-status');
+    if(!ok){ const fb=$('cust-3d-fallback'); if(fb && !ok) fb.classList.remove('hidden'); }
     custDraft = Object.assign(defaultAvatar(), JSON.parse(JSON.stringify(S.avatar||{})));
     renderCustCatNav();
     renderCustomizeScreen();
@@ -3987,25 +4202,6 @@
   const LOADING_TIPS = [
     "Loading your adventure…","Sharpening pencils and dice…","Waking up the bot players…","Polishing the leaderboard…","Fueling the rocket map…","Shuffling trivia cards…"
   ];
-  function getPlayerCompletionPercent(){
-    if(!S) return 0;
-    const achievementTotal = (typeof ACHIEVEMENTS !== 'undefined' && ACHIEVEMENTS.length) ? ACHIEVEMENTS.length : 1;
-    const achievementsDone = Object.keys(S.achievementsCollected || {}).length;
-    const achievementPct = Math.min(100, (achievementsDone / achievementTotal) * 100);
-    const gamesPct = Math.min(100, ((S.gamesPlayed || 0) / 10) * 100);
-    const adventurePct = Math.min(100, ((S.adventuresCompleted || 0) / 5) * 100);
-    const correctPct = Math.min(100, ((S.totalCorrectAnswers || 0) / 20) * 100);
-    const profilePct = (S.name && S.name !== 'Player' && S.section) ? 100 : 0;
-    return Math.round((achievementPct + gamesPct + adventurePct + correctPct + profilePct) / 5);
-  }
-  function updatePlayerLoadingProgress(){
-    const pct = getPlayerCompletionPercent();
-    const fill = $('player-progress-fill');
-    const label = $('player-progress-percent');
-    if(fill) fill.style.width = pct + '%';
-    if(label) label.textContent = pct + '%';
-  }
-
   let loadingTimer=null;
   let loadingWatchdog=null;
   function runLoadingSequence(fromOnboarding=false){
@@ -4028,7 +4224,6 @@
     fill.style.width='0%';
     const percentLabel = $('loading-percent');
     if(percentLabel) percentLabel.textContent='0%';
-    updatePlayerLoadingProgress();
     loadingTimer=setInterval(() => {
       step++;
       pct=Math.min(100, pct + (step<4 ? 18 : 14));
@@ -4044,15 +4239,18 @@
   }
 
   function enterMainMenu(){
-    updatePlayerLoadingProgress();
     updateHeaderStats();
     showScreen('menu');
     setMusicTheme('menu');
     renderMenu();
-    showCodenameReveal();
     // Every fresh launch/reopen lands on the Main Menu — an active gameplay
     // screen from a previous run is never auto-restored (see loadState()).
     maybeShowDailyReward();
+    if(!S.tutorialCompleted){
+      startAppTutorial(false);
+    }else{
+      showCodenameReveal();
+    }
   }
   function renderMenuAvatar(){
     let el = $('menu-avatar');
@@ -4901,6 +5099,16 @@
   }
   if($('btn-edit-section')) $('btn-edit-section').addEventListener('click', editPlayerSection);
   if($('profile-section-input')) $('profile-section-input').addEventListener('keydown', e => { if(e.key==='Enter') editPlayerSection(); });
+  function initProfileAvatar3D(){
+    try{
+      if(!S) return;
+      ensurePetState();
+      const ok=Avatar3D.mount('profile-3d-canvas','profile-3d-viewer','profile-3d-hint','profile-3d-status');
+      if(ok) Avatar3D.show(S.avatar||defaultAvatar(),'idle');
+      const pe=$('profile-3d-pet'); if(pe){pe.innerHTML=petMarkup(currentPet(),true);}
+    }catch(e){ console.warn('Profile 3D viewer unavailable:',e); }
+  }
+
   function openProfile(){
     showScreen('profile');
     updateHeaderStats();
@@ -4929,6 +5137,8 @@
     $('profile-stats').innerHTML = stats.map(([l,v]) => `<div class="stat-box"><div class="sv">${v}</div><div class="sl">${l}</div></div>`).join('');
     $('profile-favorite').textContent = S.favoriteGame ? `🎮 ${S.favoriteGame} — high score ${S.favoriteGameScore}` : 'Play a few games to find your favorite!';
     updateXPConversionUI();
+    ensurePetState(); renderPetPanel();
+    initProfileAvatar3D();
   }
 
   /* ================= TROPHIES ================= */
@@ -4959,70 +5169,45 @@
   function showAchievementToast(a){ $('ach-toast-icon').textContent=a.icon; $('ach-toast-title').textContent=a.name; $('ach-toast-name').textContent=a.desc; $('ach-toast-reward').textContent=`⭐ +${a.xp} XP · 🪙 +${a.coins} Coins`; $('modal-achievement').classList.add('active'); sfx('achieve'); launchConfetti(); }
   $('btn-ach-toast-close').addEventListener('click',()=>{ $('modal-achievement').classList.remove('active'); achievementToastOpen=false; setTimeout(processAchievementToastQueue,120); });
 
+  /* Legacy score-sharing helpers remain for existing gameplay synchronization.
+     They are NOT used as the player leaderboard source anymore. */
+  const BOT_NAMES = ['StarPuff','MangoJet','BrainyBee','QuizNinja','LuckyFox','PixelFox','ZoomCat','TrivioMax','SunnySkye','CleverKuya','WitWolf','RizalRunner','MapleAce','TurboTin','GigglyGoo'];
+  async function fetchSharedLeaderboard(){ try{ if(!window.storage) return null; const r=await window.storage.get(LB_KEY,true); return r?JSON.parse(r.value):[]; }catch(e){ return []; } }
+  async function pushSharedScore(entry){ try{ if(!window.storage)return; let arr=await fetchSharedLeaderboard(); if(!arr)arr=[]; arr.push(entry); arr.sort((a,b)=>b.score-a.score); arr=arr.slice(0,60); await window.storage.set(LB_KEY,JSON.stringify(arr),true); }catch(e){} }
+
   /* ================= LEADERS ================= */
-  const BOT_NAMES = ['StarPuff','MangoJet','BrainyBee','QuizNinja','LuckyFox','PixelPia','ZoomCat','TrivioMax','SunnySkye','CleverKuya','WitWolf','RizalRunner','MapleAce','TurboTin','GigglyGoo'];
-  function seededBots(seedKey, count, maxScore){
-    let seed = 0; for(let i=0;i<seedKey.length;i++) seed = (seed*31 + seedKey.charCodeAt(i)) % 100000;
-    function rnd(){ seed = (seed*1103515245+12345) % 2147483648; return (seed/2147483648); }
-    const bots = [];
-    for(let i=0;i<count;i++){
-      bots.push({ name: BOT_NAMES[Math.floor(rnd()*BOT_NAMES.length)] + (Math.floor(rnd()*90)+10), score: Math.floor(rnd()*maxScore) });
-    }
-    return bots;
-  }
   let activeLbTab='high';
-  function openLeaders(){
-    showScreen('leaders');
-    document.querySelectorAll('#screen-leaders .tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===activeLbTab));
-    renderLeaders();
+  function openLeaders(){ showScreen('leaders'); document.querySelectorAll('#screen-leaders .tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeLbTab)); renderLeaders(); fetchRemoteRosterAndMerge().then(ok=>{if(ok && $('screen-leaders')?.classList.contains('active')) renderLeaders();}); }
+  document.querySelectorAll('#screen-leaders .tab-btn').forEach(btn=>btn.addEventListener('click',()=>{activeLbTab=btn.dataset.tab;sfx('click');openLeaders();}));
+  function leaderboardRecords(){
+    const roster=readLocalRoster();
+    const byId={};
+    Object.values(roster||{}).forEach(r=>{if(r&&r.studentId)byId[r.studentId]=r;});
+    const mine=buildProgressSnapshot(); if(mine.studentId) byId[mine.studentId]=mine;
+    return Object.values(byId).filter(r=>r&&r.studentId);
   }
-  document.querySelectorAll('#screen-leaders .tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => { activeLbTab = btn.dataset.tab; sfx('click'); openLeaders(); });
-  });
-  async function fetchSharedLeaderboard(){
-    try{
-      if(!window.storage) return null;
-      const r = await window.storage.get(LB_KEY, true);
-      return r ? JSON.parse(r.value) : [];
-    }catch(e){ return []; }
-  }
-  async function pushSharedScore(entry){
-    try{
-      if(!window.storage) return;
-      let arr = await fetchSharedLeaderboard(); if(!arr) arr=[];
-      arr.push(entry); arr.sort((a,b)=>b.score-a.score); arr = arr.slice(0,60);
-      await window.storage.set(LB_KEY, JSON.stringify(arr), true);
-    }catch(e){}
-  }
-  function seededMpBots(count){
-    // Local practice/local-ranking rows only (item 12) — these never touch
-    // the real-player global 'high'/'leaders'/'week' tabs above, and are
-    // clearly tagged 🤖 so they can't be mistaken for real-player ranks.
-    const bots = seededBots('mp'+S.mp.gamesPlayed, count, Math.max(200, S.mp.bestScore));
-    return bots.map(b => {
-      const games = 6 + Math.floor(Math.random()*24);
-      const wins = Math.floor(games * (0.25 + Math.random()*0.4));
-      return { name:b.name, isBot:true, games, wins, winRate: games? Math.round(wins/games*100):0 };
+  function overallRecordScore(r){ return Math.max(0,Number(r.bestScore)||0)+Math.max(0,Number(r.xp)||0)+Math.max(0,Number(r.achievementsEarnedCount)||0)*50; }
+  function modeRecordScore(r,m){ return Number(r.byMode?.[m]?.bestScore)||0; }
+  function recentMode(r){ const a=Array.isArray(r.recentActivity)?r.recentActivity:[]; return a[0] ? (HISTORY_MODE_META[a[0].mode]?.label||a[0].mode) : '—'; }
+  function renderLeaders(){
+    const wrap=$('lb-wrap'); wrap.innerHTML='<div class="lb-row"><span>Loading facilitator records…</span></div>';
+    const records=leaderboardRecords();
+    const mode=activeLbTab;
+    if(!records.length){ wrap.innerHTML='<div class="card history-empty"><div class="history-empty-icon">📊</div><strong>No facilitator records available yet.</strong><p>Play a game and sync your progress, or have the facilitator import student records.</p></div>'; $('week-meta').textContent=''; return; }
+    const sorted=[...records].sort((a,b)=>{
+      if(mode==='challenge') return modeRecordScore(b,'adventure')-modeRecordScore(a,'adventure');
+      if(mode==='speculation') return modeRecordScore(b,'speculation')-modeRecordScore(a,'speculation');
+      if(mode==='quickgame') return modeRecordScore(b,'quickgame')-modeRecordScore(a,'quickgame');
+      return overallRecordScore(b)-overallRecordScore(a);
     });
-  }
-  async function renderLeaders(){
-    const wrap = $('lb-wrap'); wrap.innerHTML = `<div class="lb-row"><span>Loading…</span></div>`;
-    $('week-meta').textContent = '';
-    const shared = await fetchSharedLeaderboard();
-    let rows = [];
-    if(activeLbTab==='high'){
-      rows = [{ name:S.name, score:S.favoriteGameScore||S.coinsEarnedTotal, mine:true }, ...seededBots('high', 9, 2000)];
-      if(shared) shared.forEach(e => rows.push({ name:e.name, score:e.score, mine:false }));
-    } else if(activeLbTab==='leaders'){
-      rows = [{ name:S.name, score:S.gamesPlayed*37 + S.coinsEarnedTotal, mine:true }, ...seededBots('current', 9, 1500)];
-      if(shared) shared.forEach(e => rows.push({ name:e.name, score:e.score, mine:false }));
-    } else {
-      rows = [{ name:S.name, score:S.weeklyScore, mine:true }, ...seededBots('week'+S.weekStart, 9, 800)];
-      const daysPlayed = Math.min(7, Math.floor((Date.now() - new Date(S.weekStart).getTime())/86400000)+1);
-      $('week-meta').textContent = `Days Played This Week: ${daysPlayed} · Resets in ${7-((Date.now()-new Date(S.weekStart).getTime())/86400000|0)} day(s)`;
-    }
-    rows.sort((a,b)=>b.score-a.score);
-    wrap.innerHTML = rows.slice(0,12).map((r,i) => `<div class="lb-row${r.mine?' me':''}"><span class="lb-rank">#${i+1}</span>${r.mine?'<span class="dot" style="background:'+(S.avatar?S.avatar.clothes:'#4d9dff')+'; display:inline-block;"></span>':''}<span class="lb-name">${r.name}${r.mine?' (You)':''}</span><span class="lb-score">${r.score}</span></div>`).join('');
+    const meId=S.playerCodename; const me=records.find(r=>r.studentId===meId); const myRank=me?sorted.findIndex(r=>r.studentId===meId)+1:0;
+    const scoreFor=r=>mode==='challenge'?modeRecordScore(r,'adventure'):mode==='speculation'?modeRecordScore(r,'speculation'):mode==='quickgame'?modeRecordScore(r,'quickgame'):overallRecordScore(r);
+    const recentRows = me ? Object.keys(HISTORY_MODE_META).map(m=>{const d=me.byMode?.[m]; const last=(me.recentActivity||[]).find(a=>a.mode===m); return {m,d,last};}).map(x=>`<div class="card recent-mode-card"><strong>${escapeHtml(HISTORY_MODE_META[x.m].label)}</strong>${x.d?.count?`<div>Score: <b>${Number(x.d.bestScore)||0}</b> · Accuracy: <b>${x.d.total?Math.round(x.d.correct/x.d.total*100):0}%</b></div><div class="subtitle">Recent score: ${x.last?Number(x.last.score)||0:'—'}</div>`:'<div class="subtitle">No activity recorded yet.</div>'}</div>`).join('') : '';
+    wrap.innerHTML=`<div class="lb-personal card"><h3 style="margin-top:0">YOUR RANKING</h3>${me?`<div class="lb-personal-grid"><div><strong>Rank</strong><span>#${myRank}</span></div><div><strong>Codename</strong><span>${escapeHtml(me.studentId)}</span></div><div><strong>Overall Score</strong><span>${scoreFor(me)}</span></div><div><strong>Level</strong><span>${Number(me.level)||1}</span></div><div><strong>XP</strong><span>${Number(me.xp)||0}</span></div><div><strong>Accuracy</strong><span>${Number(me.overallAccuracy)||0}%</span></div><div><strong>Recent Mode</strong><span>${escapeHtml(recentMode(me))}</span></div><div><strong>Recent Score</strong><span>${me.recentActivity?.[0]?.score??'—'}</span></div></div>`:'<p>No synchronized record for the current player yet.</p>'}</div>
+      <h3 style="margin:14px 0 8px">RECENT PERFORMANCE</h3><div class="recent-performance-grid">${recentRows||'<div class="card">No activity recorded yet.</div>'}</div>
+      <h3 style="margin:14px 0 8px">${mode==='overall'?'OVERALL RANKING':mode==='challenge'?'CHALLENGE MODE RANKING':mode==='speculation'?'SPECULATION RANKING':'QUICK GAME RANKING'}</h3>`+
+      sorted.map((r,i)=>`<div class="lb-row${r.studentId===meId?' me':''}"><span class="lb-rank">#${i+1}</span><span class="lb-name">${escapeHtml(r.name||r.studentId)}${r.studentId===meId?' (You)':''}</span><span class="lb-score">${scoreFor(r)}</span></div>`).join('');
+    $('week-meta').textContent=`${sorted.length} facilitator record${sorted.length===1?'':'s'} loaded · complete available dataset`;
   }
 
   /* ================= GENERIC INFO MODAL ================= */
@@ -6737,17 +6922,32 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     $('store-coins').textContent = S.coins;
     document.querySelectorAll('#screen-store .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.store===activeStoreTab));
     renderStoreGrid();
+    showStorePreview(S.avatar||defaultAvatar());
   }
   document.querySelectorAll('#screen-store .tab-btn').forEach(btn => btn.addEventListener('click', () => { activeStoreTab = btn.dataset.store; sfx('click'); openStore(); }));
+  let storePreviewCfg=null;
+  function showStorePreview(cfg){
+    storePreviewCfg=Object.assign(defaultAvatar(),JSON.parse(JSON.stringify(cfg||S.avatar||defaultAvatar())));
+    const ok=Avatar3D.mount('store-3d-canvas','store-3d-viewer','store-3d-hint','store-3d-status');
+    if(ok) Avatar3D.show(storePreviewCfg,'idle');
+  }
+
   function renderStoreGrid(){
     const grid = $('store-grid'); grid.innerHTML='';
     if(activeStoreTab==='characters'){ renderCharacterStoreGrid(grid); return; }
+    if(activeStoreTab==='pets'){ renderPetStoreGrid(grid); return; }
     const slot = activeStoreTab.slice(0,-1);
     STORE[activeStoreTab].forEach(item => {
       const owned = S.purchased.includes(item.id);
       const equipped = S.equipped[slot] === item.id;
       const div=document.createElement('div'); div.className='store-item'+(owned?' owned':'')+(equipped?' equipped':'');
-      const visual = item.hex ? `<div class="swatch-item" style="background:${item.hex};"></div>` : `<div class="sii">${item.icon}</div>`;
+      const capIcons={
+        'Baseball Cap':'🧢','Sombrero':'🤠','Fez':'🧿','Cowboy Hat':'🤠','Beret':'🧢','Top Hat':'🎩','Wizard Hat':'🧙',
+        'Knight Helmet':'🛡️','Viking Helmet':'🪓','Astronaut Helmet':'🚀','Construction Helmet':'⛑️','Military Helmet':'🪖',
+        "King's Crown":'👑','Tiara':'👸','Headphones':'🎧','Pirate Tricorne':'🏴‍☠️','Halo':'😇','Cat Ears':'🐱','Pumpkin Head':'🎃','Chef Hat':'👨‍🍳','Shark Head':'🦈','Santa Hat':'🎅'
+      };
+      const icon = activeStoreTab==='hats' ? (capIcons[item.name]||item.icon) : item.icon;
+      const visual = item.hex ? `<div class="swatch-item" style="background:${item.hex};"></div>` : `<div class="sii">${icon}</div>`;
       div.innerHTML = `${visual}<div class="sname">${item.name}</div><div class="sprice">🪙${item.price}</div>`;
       const btn=document.createElement('button'); btn.className='btn';
       if(!owned){
@@ -6764,9 +6964,11 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
           if(slot==='effect') S.avatar.effect = item.id;
           sfx('open'); saveState(); renderStoreGrid();
           if($('screen-customize')?.classList.contains('active')) renderCustomizeScreen();
+          if($('screen-profile')?.classList.contains('active')) initProfileAvatar3D();
         });
       }
       div.appendChild(btn);
+      const pv=document.createElement('button'); pv.className='btn'; pv.textContent='Preview'; pv.addEventListener('click',()=>{ const draft=Object.assign(defaultAvatar(),JSON.parse(JSON.stringify(S.avatar||{}))); if(slot==='hat')draft.hat=item.id; if(slot==='effect')draft.effect=item.id; showStorePreview(draft); }); div.appendChild(pv);
       grid.appendChild(div);
     });
   }
@@ -6794,7 +6996,22 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
         });
       }
       div.appendChild(btn);
+      const pv=document.createElement('button'); pv.className='btn'; pv.textContent='Preview'; pv.addEventListener('click',()=>{ const draft=Object.assign(defaultAvatar(),JSON.parse(JSON.stringify(S.avatar||{}))); draft.character=item.id; draft.skin=item.skin; draft.hairColor=item.hair; draft.clothes=item.clothes; showStorePreview(draft); }); div.appendChild(pv);
       grid.appendChild(div);
+    });
+  }
+
+  function renderPetStoreGrid(grid){
+    ensurePetState();
+    PETS.forEach(item=>{
+      const owned=S.pets.owned.includes(item.id), equipped=S.pets.equipped===item.id;
+      const div=document.createElement('div'); div.className='store-item'+(owned?' owned':'')+(equipped?' equipped':'');
+      div.innerHTML=`<div class="sii pet-store-icon pet-${item.type}">${item.icon}</div><div class="sname">${escapeHtml(item.name)}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div><p class="subtitle">Animated ${item.type} companion</p>`;
+      const btn=document.createElement('button'); btn.className='btn';
+      if(!owned){ btn.textContent='Buy'; btn.disabled=S.coins<item.price; btn.onclick=()=>{ if(S.coins<item.price)return; spendCoins(item.price); S.pets.owned.push(item.id); saveState(); renderStoreGrid(); }; }
+      else if(equipped){ btn.textContent='Equipped'; btn.disabled=true; }
+      else { btn.textContent='Equip'; btn.onclick=()=>{ S.pets.equipped=item.id; saveState(); sfx('open'); renderStoreGrid(); renderPetPanel(); }; }
+      div.appendChild(btn); const pv=document.createElement('button'); pv.className='btn'; pv.textContent='Preview'; pv.onclick=()=>showStorePreview(S.avatar||defaultAvatar()); div.appendChild(pv); grid.appendChild(div);
     });
   }
 
@@ -6823,7 +7040,9 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   /* ================= SETTINGS ================= */
   $('btn-gear').addEventListener('click', () => {
     $('set-music').value = S.settings.musicVol; $('set-sfx').value = S.settings.sfxVol;
-    $('set-motion').checked = S.settings.reducedMotion; $('set-text').checked = S.settings.largerText;
+    $('set-motion').checked = S.settings.reducedMotion;
+    $('set-text-small').classList.toggle('active', !S.settings.largerText);
+    $('set-text-large').classList.toggle('active', !!S.settings.largerText);
     $('set-contrast').checked = S.settings.highContrast; $('set-offline').checked = S.settings.offlineMode;
     $('modal-settings').classList.add('active');
   });
@@ -6840,16 +7059,45 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   });
   $('set-sfx').addEventListener('input', e => { S.settings.sfxVol = parseFloat(e.target.value); sfx('click'); });
   $('set-motion').addEventListener('change', e => { S.settings.reducedMotion = e.target.checked; document.body.classList.toggle('reduced-motion', e.target.checked); saveState(); });
-  $('set-text').addEventListener('change', e => { S.settings.largerText = e.target.checked; document.body.classList.toggle('large-text', e.target.checked); saveState(); });
+  function applyTextSize(larger){
+    S.settings.largerText = !!larger;
+    document.body.classList.toggle('large-text', !!larger);
+    $('set-text-small')?.classList.toggle('active', !larger);
+    $('set-text-large')?.classList.toggle('active', !!larger);
+    saveState();
+  }
+  $('set-text-small').addEventListener('click', () => applyTextSize(false));
+  $('set-text-large').addEventListener('click', () => applyTextSize(true));
   $('set-contrast').addEventListener('change', e => { S.settings.highContrast = e.target.checked; document.body.classList.toggle('high-contrast', e.target.checked); saveState(); });
   $('set-offline').addEventListener('change', e => { S.settings.offlineMode = e.target.checked; saveState(); });
   $('btn-close-settings').addEventListener('click', () => { $('modal-settings').classList.remove('active'); saveState(); });
+  $('btn-replay-tutorial').addEventListener('click', () => {
+    $('modal-settings').classList.remove('active');
+    setTimeout(() => startAppTutorial(true), 80);
+  });
 
   /* ================= PAUSE ================= */
-  $('btn-pause').addEventListener('click', () => { if(!$('screen-spec-play').classList.contains('active')) return; gamePaused=true; $('modal-pause').classList.add('active'); sfx('click'); pauseAllTimers(); });
-  $('btn-resume').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); resumeAllTimers(); });
-  $('btn-playagain').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); restartCurrentFlow(); });
-  $('btn-mainmenu').addEventListener('click', () => { gamePaused=false; $('modal-pause').classList.remove('active'); abortToMainMenu(); });
+  $('btn-pause').addEventListener('click', () => {
+    const gameScreens=['screen-adventure','screen-trivia','screen-quickgame','screen-challenge','screen-spec-play'];
+    if(!gameScreens.some(id => $(id)?.classList.contains('active'))) return;
+    gamePaused=true;
+    $('game-menu-title').textContent='🎮 Game Menu';
+    $('game-menu-status').textContent='Your game is paused.';
+    $('modal-pause').classList.add('active');
+    sfx('click');
+    pauseAllTimers();
+  });
+  $('btn-resume').addEventListener('click', () => {
+    gamePaused=false; $('modal-pause').classList.remove('active'); resumeAllTimers(); saveState();
+  });
+  $('btn-playagain').addEventListener('click', () => {
+    if(!confirm('Restart this game session? Your current round will be reset.')) return;
+    gamePaused=false; $('modal-pause').classList.remove('active'); restartCurrentFlow(); saveState();
+  });
+  $('btn-mainmenu').addEventListener('click', () => {
+    if(!confirm('Exit this game and return to the Main Interface? Your relevant progress and history will be saved.')) return;
+    gamePaused=false; $('modal-pause').classList.remove('active'); abortToMainMenu(); saveState();
+  });
   function pauseAllTimers(){
     if(qcTimer){ clearInterval(qcTimer); clearInterval(qcSpawnTimer); qcTimer=null; qcSpawnTimer=null; }
     stopSpecTimer();
@@ -6880,7 +7128,14 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     mpClearBotTimers();
     clearInterval(specPowerplayTimer); specPowerplayTimer=null;
     MP.active=false;
-    showScreen('menu'); setMusicTheme('menu'); renderMenu();
+    // End the active game's audio loop cleanly before returning to the Main Interface.
+    cancelMusicLoop();
+    try{ if(audioCtx && audioCtx.state === 'running') audioCtx.suspend(); }catch(e){}
+    showScreen('menu');
+    setMusicTheme('menu');
+    renderMenu();
+    // Resume only the normal Main Interface music, if the user has music enabled.
+    if(S.settings.musicVol > 0 && !appIsInactive) startMusic();
   }
 
   /* ================= ANTI-COPY PROTECTION ================= */
@@ -6914,6 +7169,93 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
       if(activeInQuestion || selectionInQuestion) e.preventDefault();
     });
   }
+
+  /* ================= KNOW THE APP TUTORIAL ================= */
+  const APP_TUTORIAL_STEPS = [
+    { target:'btn-gear', title:'Settings', body:'Customize your game experience, audio, text size, accessibility, and other preferences.' },
+    { target:'nav-profile', title:'Profile', body:'View and manage your player profile, character, statistics, and personal information.' },
+    { target:'card-adventure', title:'Challenge Mode', body:'Test your Life & Career Skills through a longer game session with questions, turns, and challenges.' },
+    { target:'card-speculation', title:'Speculation', body:'Solve clue-based activities and use your reasoning to complete the word puzzle.' },
+    { target:'card-quickgame', title:'Quick Game', body:'Play a short, focused activity when you want a faster learning session.' },
+    { target:'card-lesson', title:'Lessons', body:'Open the educational lessons and review learning content before or between games.' },
+    { target:'card-history', title:'History', body:'Review your previous activities, results, and question history.' },
+    { target:'card-store', title:'Store', body:'Use your earned coins to browse available items and customize your character.' },
+    { target:'app-main', title:"You're ready!", body:'Explore AdapT CoCu and start learning through gameplay. You now know where the main features are.' }
+  ];
+  let tutorialActive=false, tutorialIndex=0, tutorialReplay=false;
+
+  function positionTutorialStep(){
+    const step=APP_TUTORIAL_STEPS[tutorialIndex];
+    const overlay=$('tutorial-overlay'), spot=$('tutorial-spotlight'), card=$('tutorial-card');
+    if(!overlay||!spot||!card||!step) return;
+    const target=$(step.target) || $('app-main');
+    const r=target.getBoundingClientRect();
+    const pad=step.target==='app-main'?8:7;
+    const left=Math.max(8,r.left-pad), top=Math.max(8,r.top-pad);
+    const right=Math.min(window.innerWidth-8,r.right+pad), bottom=Math.min(window.innerHeight-8,r.bottom+pad);
+    spot.style.left=left+'px'; spot.style.top=top+'px';
+    spot.style.width=Math.max(40,right-left)+'px'; spot.style.height=Math.max(40,bottom-top)+'px';
+    card.style.top = (bottom + 16 < window.innerHeight - 150 ? bottom + 16 : Math.max(12, top - 150))+'px';
+    if(card.offsetHeight){
+      const cardH=card.offsetHeight;
+      const preferred=bottom+16;
+      const y=preferred+cardH<=window.innerHeight-10 ? preferred : Math.max(10,top-cardH-16);
+      card.style.top=y+'px';
+    }
+  }
+
+  function renderAppTutorialStep(){
+    const step=APP_TUTORIAL_STEPS[tutorialIndex];
+    if(!step) return finishAppTutorial();
+    $('tutorial-step').textContent=`Step ${tutorialIndex+1} of ${APP_TUTORIAL_STEPS.length}`;
+    $('tutorial-title').textContent=step.title;
+    $('tutorial-body').textContent=step.body;
+    const card=$('tutorial-card');
+    card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+    positionTutorialStep();
+  }
+
+  function startAppTutorial(replay){
+    if(tutorialActive) return;
+    if(!S || !document.getElementById('screen-menu')?.classList.contains('active')) return;
+    tutorialReplay=!!replay;
+    tutorialActive=true; tutorialIndex=0;
+    $('modal-pause')?.classList.remove('active');
+    $('modal-settings')?.classList.remove('active');
+    $('tutorial-overlay').classList.add('active');
+    renderAppTutorialStep();
+    setTimeout(positionTutorialStep,60);
+  }
+
+  function finishAppTutorial(){
+    tutorialActive=false;
+    $('tutorial-overlay')?.classList.remove('active');
+    if(!tutorialReplay){
+      S.tutorialCompleted=true;
+      saveState();
+      showCodenameReveal();
+    }
+    tutorialReplay=false;
+  }
+
+  function advanceAppTutorial(){
+    if(!tutorialActive) return;
+    tutorialIndex++;
+    if(tutorialIndex>=APP_TUTORIAL_STEPS.length){ finishAppTutorial(); return; }
+    renderAppTutorialStep();
+  }
+
+  $('tutorial-overlay')?.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation(); advanceAppTutorial();
+  });
+  document.addEventListener('keydown', e => {
+    if(!tutorialActive) return;
+    if(e.key==='Enter' || e.key===' '){
+      e.preventDefault(); e.stopPropagation(); advanceAppTutorial();
+    }
+  }, true);
+  window.addEventListener('resize', () => { if(tutorialActive) positionTutorialStep(); }, {passive:true});
+  window.addEventListener('orientationchange', () => { if(tutorialActive) setTimeout(positionTutorialStep,100); }, {passive:true});
 
   /* ================= BOOT ================= */
   async function boot(){
@@ -6969,9 +7311,12 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
           runLoadingSequence(false);
         }
       } else {
-        showScreen('intro');
-        renderScreenBackground('bg-intro','intro');
-        startIntroPresentation();
+        // Registration is now the first user-facing screen. The old
+        // promotional intro remains in the DOM for compatibility, but is no
+        // longer inserted into the startup flow.
+        showScreen('agegate');
+        renderScreenBackground('bg-menu','agegate');
+        checkAgeReady();
       }
     }catch(err){
       console.error('Adapt CoCu boot UI setup failed, falling back to a safe screen:', err);
