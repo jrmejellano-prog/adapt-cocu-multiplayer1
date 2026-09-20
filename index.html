@@ -1042,9 +1042,15 @@
   .character-3d-viewer{ position:relative; isolation:isolate; display:block; width:100%; height:clamp(270px,42vh,410px); min-height:270px; max-height:410px; overflow:hidden; box-sizing:border-box; flex:0 0 auto; border-radius:20px; background:radial-gradient(circle at 50% 25%,#ffffff 0%,#eef3ff 58%,#dfe7f8 100%); border:2px solid #dbe3f5; box-shadow:inset 0 -80px 100px rgba(61,83,130,.08),0 12px 30px rgba(34,50,90,.08); touch-action:none; user-select:none; -webkit-user-select:none; }
   .character-3d-viewer canvas{ position:absolute; inset:0; z-index:1; width:100%; height:100%; display:block; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }
   .character-3d-viewer .character-3d-grid,.character-3d-viewer .character-3d-hint,.character-3d-viewer .character-3d-status{ z-index:2; }
-  .profile-3d-wrap,.store-preview-wrap{ position:relative; overflow:visible; }
-  .profile-character-viewer{ height:clamp(320px,44vh,400px); min-height:320px; max-height:400px; }
-  .store-preview-wrap .character-3d-viewer{ height:clamp(260px,36vh,340px); min-height:260px; max-height:340px; }
+  .profile-3d-wrap,.store-preview-wrap{ position:relative; overflow:hidden; width:100%; box-sizing:border-box; isolation:isolate; }
+  .profile-character-viewer{ position:relative; width:100%; height:clamp(300px,42vh,400px); min-height:300px; max-height:400px; overflow:hidden; box-sizing:border-box; contain:layout paint size; }
+  .store-preview-wrap .character-3d-viewer{ position:relative; width:100%; height:clamp(250px,34vh,340px); min-height:250px; max-height:340px; overflow:hidden; box-sizing:border-box; contain:layout paint size; }
+  .character-3d-viewer canvas{position:absolute;inset:0;width:100%;height:100%;display:block;max-width:100%;max-height:100%;touch-action:none;}
+  .profile-3d-wrap > .subtitle{position:relative;z-index:2;margin:8px 0;}
+  #profile-pet-panel{position:relative;z-index:2;clear:both;}
+  #menu-avatar{position:relative;z-index:1;overflow:hidden;}
+  #menu-avatar .character-3d-viewer{position:relative;overflow:hidden;contain:layout paint size;}
+  #store-3d-viewer.hidden,#store-pet-stage.hidden{display:none!important;}
   #menu-avatar{ width:100%; max-width:420px; box-sizing:border-box; overflow:hidden; }
   #menu-avatar .character-3d-viewer{ height:280px; min-height:280px; max-height:280px; }
   .character-3d-viewer.dragging canvas{ cursor:grabbing; }
@@ -1316,6 +1322,19 @@
 .recent-performance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.recent-mode-card{margin:0}.lb-personal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.lb-personal-grid>div{background:#f7f9ff;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}.lb-personal-grid strong{font-size:.68rem;color:#6b7894}.lb-personal-grid span{font-weight:800;overflow-wrap:anywhere}@keyframes pet-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pet-dog{0%,100%{transform:translateY(0) rotate(0)}40%{transform:translateY(-2px) rotate(-4deg)}70%{transform:translateY(0) rotate(4deg)}}@keyframes pet-cat{0%,100%{transform:rotate(0)}50%{transform:translateY(-3px) rotate(3deg)}}@keyframes pet-bird{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-3deg)}}@keyframes pet-plant{0%,100%{transform:rotate(0)}50%{transform:rotate(-4deg)}}@keyframes pet-fed{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-100%) scale(1.15)}}
 @media(max-width:420px){.pet-3d-stage{width:76px;height:76px;flex-basis:76px}.pet-3d-card .pet-companion{font-size:2.1rem}}
   @media(max-width:640px){.recent-performance-grid{grid-template-columns:1fr}.lb-personal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-character-viewer{min-height:350px;height:50vh}}
+
+  .header-refresh{border:0;background:transparent;border-radius:10px;padding:5px 8px;min-width:34px;min-height:34px;font-size:1.05rem;cursor:pointer;touch-action:manipulation}
+  .header-refresh:hover{background:rgba(255,255,255,.16)}
+  .header-refresh:active{transform:scale(.96)}
+  @media(max-width:640px){
+    .profile-character-viewer{height:clamp(270px,55vw,340px);min-height:270px;max-height:340px}
+    .store-preview-wrap .character-3d-viewer{height:clamp(230px,58vw,300px);min-height:230px;max-height:300px}
+    .profile-3d-wrap,.store-preview-wrap{overflow:hidden}
+  }
+  @media(orientation:landscape) and (max-height:520px){
+    .profile-character-viewer{height:280px;min-height:280px;max-height:280px}
+    .store-preview-wrap .character-3d-viewer{height:240px;min-height:240px;max-height:240px}
+  }
 </style>
 </head>
 <body>
@@ -1332,7 +1351,7 @@
     </div>
   </div>
   <div class="header-stats">
-    <span class="coin-badge">🪙 <span id="header-coins">0</span></span>
+    <span class="coin-badge">🪙 <span id="header-coins">0</span></span><button id="btn-refresh-app" class="header-refresh" aria-label="Refresh current screen" title="Refresh current screen">↻</button>
     <span class="xp-badge">⭐ <span id="header-xp">0</span> XP</span>
     <button id="btn-pause" class="hidden" aria-label="Pause Speculation">⏸️</button>
     <button id="btn-gear">⚙️</button>
@@ -1611,8 +1630,8 @@
           <div id="profile-3d-pet" class="profile-3d-pet"></div>
         </div>
         <p class="subtitle">Drag left/right to turn. Drag up/down to look above and below.</p>
-        <div id="profile-pet-panel" class="card pet-panel"></div>
       </div>
+      <div id="profile-pet-panel" class="card pet-panel"></div>
       <h3>Personal Bests</h3>
       <div class="stat-grid" id="profile-stats"></div>
       <h3>Favorite Game</h3>
@@ -3110,6 +3129,25 @@
 
   function todayStr(){ return new Date().toISOString().slice(0,10); }
   function updateHeaderStats(){ if($('header-coins')) $('header-coins').textContent = Math.max(0,Math.floor(S.coins)); if($('header-xp')) $('header-xp').textContent = Math.max(0,Math.floor(S.xp)); }
+  function refreshCurrentScreen(){
+    /* Safe re-render only: never replace S, never reset progress, and never
+       recreate the player's saved customization. */
+    updateHeaderStats();
+    const active=document.querySelector('.screen.active')?.id || '';
+    if(active==='screen-profile'){
+      openProfile();
+    } else if(active==='screen-store'){
+      openStore();
+    } else if(active==='screen-menu'){
+      renderMenu();
+    } else if(active==='screen-customize'){
+      renderCustomizeScreen();
+    } else {
+      window.dispatchEvent(new Event('resize'));
+    }
+    sfx('click');
+  }
+  $('btn-refresh-app')?.addEventListener('click',refreshCurrentScreen);
   function addCoins(n){ n=Math.max(0,Math.floor(Number(n)||0)); S.coins += n; if(n>0) S.coinsEarnedTotal += n; updateHeaderStats(); saveState(); }
   function spendCoins(n){ n=Math.max(0,Math.floor(Number(n)||0)); if(S.coins<n) return false; S.coins -= n; S.coinsSpent += n; updateHeaderStats(); saveState(); return true; }
   function addXP(n){ n=Math.max(0,Math.floor(Number(n)||0)); S.xp += n; S.xpEarnedTotal = (S.xpEarnedTotal||0) + n; updateHeaderStats(); saveState(); }
@@ -3595,7 +3633,7 @@
    *         Pelvis -> Hip -> Thigh -> Shin -> Foot -> Shoe
    */
   const Avatar3D = (() => {
-    let gl=null, program=null, canvas=null, viewer=null, raf=0;
+    let gl=null, program=null, canvas=null, viewer=null, raf=0, resizeObserver=null;
     let cfg=null, mode='idle', modeStarted=0, rotation=0, pitch=0;
     let targetCanvasId='cust-3d-canvas', targetViewerId='cust-3d-viewer', targetHintId='cust-3d-hint', targetStatusId='cust-3d-status';
     let dragging=false, lastX=0, pointerId=null, hintHidden=false;
@@ -3735,7 +3773,9 @@
         if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program)||'Program link failed');
         gl.useProgram(program);buffers={};makeBox();makeHead();makeSphere();makeCapsule();
         gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);bind();resize();
-        window.addEventListener('resize',resize,{passive:true});window.addEventListener('orientationchange',()=>setTimeout(resize,60),{passive:true});
+        window.addEventListener('resize',resize,{passive:true});
+        window.addEventListener('orientationchange',()=>setTimeout(resize,80),{passive:true});
+        try{ if(resizeObserver) resizeObserver.disconnect(); resizeObserver=new ResizeObserver(()=>resize()); resizeObserver.observe(viewer); }catch(_){}
         canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;},{passive:false});
         canvas.addEventListener('webglcontextrestored',()=>{gl=null;buffers={};init(targetCanvasId,targetViewerId,targetHintId,targetStatusId);});
         if(!raf)raf=requestAnimationFrame(loop);
@@ -4201,12 +4241,18 @@
       if(ready() && targetCanvasId===canvasId && targetViewerId===viewerId){
         return true;
       }
-      try{ if(gl){gl.getExtension('WEBGL_lose_context')?.loseContext();} }catch(_){}
+      /* Do NOT call WEBGL_lose_context here. It is asynchronous and can leave
+         the next getContext() call with a permanently-lost context, which was
+         the main cause of intermittent blank Store/Profile previews. Each
+         screen keeps its own canvas/context; only the active one is rendered. */
+      cancelAnimationFrame(raf); raf=0;
       gl=null; program=null; canvas=null; viewer=null; buffers={}; dragging=false; pointerId=null;
+      if(resizeObserver){try{resizeObserver.disconnect();}catch(_){} resizeObserver=null;}
       return init(canvasId,viewerId,hintId,statusId);
     }
     function ready(){return!!gl;}
-    return{init,mount,show,ready};
+    function refresh(){ if(!canvas||!gl) return false; resize(); if(cfg) show(cfg,mode); return true; }
+    return{init,mount,show,ready,refresh};
   })();
 
   /* Customize screen wiring */
@@ -4700,7 +4746,7 @@
     let el = $('menu-avatar');
     if(!el){
       el = document.createElement('div'); el.id='menu-avatar'; el.className='avatar-preview-wrap';
-      el.style.cssText='margin:4px auto 12px;max-width:420px;padding:8px;';
+      el.style.cssText='margin:4px auto 12px;max-width:420px;width:100%;padding:8px;box-sizing:border-box;overflow:hidden;position:relative;';
       el.innerHTML='<div class="character-3d-viewer" id="menu-3d-viewer"><canvas id="menu-3d-canvas" aria-label="Interactive 3D main menu character"></canvas><div class="character-3d-grid" aria-hidden="true"></div><div class="character-3d-hint" id="menu-3d-hint">↔↕ Drag to inspect</div><div class="character-3d-status" id="menu-3d-status">3D Character</div></div><p class="subtitle" style="margin:6px 0 0">Your saved character • drag to inspect</p>';
       $('menu-welcome').parentNode.insertBefore(el, $('menu-welcome'));
     }
