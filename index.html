@@ -517,7 +517,26 @@
     /* ---- STORE ---- */
     .store-tabs{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
     .store-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    .store-item{ background:#fff; border:3px solid #dbe3f5; border-radius:14px; padding:10px 6px; text-align:center; }
+    .store-item{ background:#fff; border:3px solid #dbe3f5; border-radius:14px; padding:10px 6px; text-align:center; position:relative; }
+    .rarity-badge{ position:absolute; top:6px; left:6px; padding:2px 7px; border-radius:999px; font-size:.55rem; font-weight:900; text-transform:uppercase; letter-spacing:.4px; color:#fff; z-index:1; }
+    /*
+     * STORE SPLIT LAYOUT
+     * -------------------
+     * On mobile the preview must come first (a player expects to see what
+     * they tapped without scrolling down), so the DOM order is
+     * catalog-then-preview but a mobile-only flex order flips them visually.
+     * On desktop/tablet the two sit side by side, with the preview pinned
+     * via `position:sticky` so it stays in view while the list scrolls.
+     */
+    .store-split{ display:flex; flex-direction:column-reverse; gap:14px; width:100%; }
+    .store-catalog-col{ min-width:0; }
+    .store-preview-col{ min-width:0; }
+    @media (min-width:860px){
+      .store-split{ flex-direction:row; align-items:flex-start; }
+      .store-catalog-col{ flex:1 1 58%; }
+      .store-preview-col{ flex:1 1 38%; position:sticky; top:14px; }
+      .store-preview-col .character-3d-viewer{ height:clamp(320px,38vh,420px); min-height:320px; max-height:420px; }
+    }
     .store-item .sii{ font-size:1.6rem; }
     .store-item .sname{ font-size:0.68rem; font-weight:700; margin:4px 0; min-height:2.2em; }
     .store-item .sprice{ font-size:0.72rem; font-weight:800; color:var(--accent-d); }
@@ -526,7 +545,22 @@
     .store-item.equipped{ border-color:var(--teal); }
     .swatch-item{ width:100%; aspect-ratio:1/1; border-radius:10px; margin-bottom:2px; }
 
-    /* ---- SETTINGS ---- */
+    /* ===== ADAPT CoCu ecosystem upgrade ===== */
+  .pet-care-card{margin-top:10px;border:3px solid #dbe3f5;border-radius:18px;background:linear-gradient(135deg,#fff,#f4fbff);padding:12px}
+  .pet-care-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .pet-care-title{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1rem}.pet-status-pill{padding:4px 9px;border-radius:999px;background:#eefdf8;color:#16856e;font-size:.68rem;font-weight:900}
+  .pet-status-pill.hungry{background:#fff5df;color:#9a6410}.pet-status-pill.sad{background:#fff0f3;color:#a33c62}.pet-status-pill.sleepy{background:#eef0ff;color:#5b4ba5}
+  .pet-meter{margin:7px 0}.pet-meter-label{display:flex;justify-content:space-between;font-size:.68rem;font-weight:800;color:#687795;margin-bottom:3px}.pet-meter-track{height:9px;background:#e8edf8;border-radius:99px;overflow:hidden}.pet-meter-fill{height:100%;border-radius:99px;transition:width .35s ease}
+  .pet-meter-fill.hunger{background:linear-gradient(90deg,#ff9d4d,#ffd94a)}.pet-meter-fill.happy{background:linear-gradient(90deg,#ff6fa5,#9b6bff)}.pet-meter-fill.petxp{background:linear-gradient(90deg,#2dd4b8,#4d9dff)}
+  .pet-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.pet-meta{background:#f8faff;border:2px solid #dbe3f5;border-radius:10px;padding:7px;text-align:center}.pet-meta strong{display:block;font-family:'Baloo 2',sans-serif;font-size:.9rem}.pet-meta span{font-size:.58rem;color:#8490ab;font-weight:800;text-transform:uppercase}
+  .pet-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.pet-actions .btn{flex:1 1 120px}
+  .pet-collection{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:10px 0}.pet-chip{width:100%;justify-content:flex-start;position:relative}.pet-chip .pc-detail{margin-left:auto;text-align:right;font-size:.58rem;color:#7b88a6}.pet-chip.active{background:linear-gradient(135deg,#fff,#f3fffb)}.pet-chip .pc-state{display:block;font-size:.58rem;color:#16856e;font-weight:900}
+  .pet-3d-stage{position:relative;isolation:isolate;overflow:hidden;contain:layout paint size;border-radius:16px;background:radial-gradient(circle at 50% 25%,#fff,#edf3ff 70%,#e2e9f8);border:2px solid #dbe3f5;touch-action:none}.pet-3d-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.pet-3d-label{position:absolute;top:8px;left:8px;z-index:2;background:rgba(255,255,255,.82);padding:4px 7px;border-radius:8px;font-size:.62rem;font-weight:900;pointer-events:none}.pet-3d-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:2;background:rgba(20,32,57,.72);color:#fff;padding:4px 8px;border-radius:99px;font-size:.58rem;font-weight:800;pointer-events:none;opacity:.9}
+  .pet-fed-fx{position:fixed;left:50%;top:42%;z-index:10000;pointer-events:none;font-size:1.8rem;animation:petCareFx .9s ease forwards}@keyframes petCareFx{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}25%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-55px) scale(1)}}
+  .egg-card{overflow:hidden}.egg-visual-3d{height:150px;margin:-2px -2px 8px}.egg-mini-stage{height:100%;border:0;border-radius:12px}.egg-reveal-stage{height:210px;border:0}
+  .reward-banner{margin:10px 0;padding:11px 13px;border-radius:15px;background:linear-gradient(135deg,#fff7da,#f3efff);border:2px solid var(--gold);font-size:.78rem;font-weight:800}
+  @media(max-width:720px){.pet-collection{grid-template-columns:1fr 1fr}}@media(max-width:430px){.pet-collection{grid-template-columns:1fr}}
+  /* ---- SETTINGS ---- */
     .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:2px solid #eef1fb; gap:10px; }
     .setting-row .sr-label{ font-weight:700; font-size:0.88rem; }
     input[type=range]{ width:120px; }
@@ -1053,6 +1087,55 @@
   #store-3d-viewer.hidden,#store-pet-stage.hidden{display:none!important;}
   #menu-avatar{ width:100%; max-width:420px; box-sizing:border-box; overflow:hidden; }
   #menu-avatar .character-3d-viewer{ height:280px; min-height:280px; max-height:280px; }
+  /*
+   * COMPANION SHOWCASE — character and pet presented as one unit on a shared
+   * ground platform. Both panels are independently contained (overflow and
+   * `contain` are set on the viewers themselves), so neither model can ever
+   * paint outside the showcase and over the menu buttons or stats below it.
+   */
+  .companion-showcase{ position:relative; display:flex; align-items:flex-end; gap:12px; width:100%; max-width:560px; margin:4px auto 10px; padding:10px 10px 18px; box-sizing:border-box; isolation:isolate; overflow:hidden; border-radius:22px; }
+  .companion-showcase .showcase-char{ flex:1 1 62%; min-width:0; }
+  .companion-showcase .showcase-pet{ flex:0 1 34%; min-width:0; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .companion-showcase .showcase-pet .pet-3d-stage{ width:100%; height:180px; flex:0 0 auto; }
+  .companion-showcase .character-3d-viewer{ height:250px; min-height:250px; max-height:250px; contain:layout paint size; }
+  /* Shared ground line so the two models read as standing together. */
+  .showcase-ground{ position:absolute; left:6%; right:6%; bottom:6px; height:10px; border-radius:50%; background:radial-gradient(ellipse at 50% 50%, rgba(61,83,130,.20) 0%, rgba(61,83,130,.06) 60%, transparent 100%); pointer-events:none; z-index:0; }
+  .showcase-caption{ font-size:.68rem; font-weight:800; color:#5b6b8a; text-align:center; }
+  /* Mobile portrait: character above, pet tucked below-right. */
+  @media (max-width:520px) and (orientation:portrait){
+    .companion-showcase{ flex-direction:column; align-items:center; gap:6px; }
+    .companion-showcase .showcase-char{ width:100%; flex:0 0 auto; }
+    .companion-showcase .showcase-pet{ width:58%; flex:0 0 auto; align-self:flex-end; }
+    .companion-showcase .character-3d-viewer{ height:220px; min-height:220px; max-height:220px; }
+    .companion-showcase .showcase-pet .pet-3d-stage{ height:130px; }
+  }
+  /* Mobile landscape: keep them side by side but shorter. */
+  @media (max-height:480px) and (orientation:landscape){
+    .companion-showcase .character-3d-viewer{ height:170px; min-height:170px; max-height:170px; }
+    .companion-showcase .showcase-pet .pet-3d-stage{ height:140px; }
+  }
+  @media (min-width:900px){
+    .companion-showcase{ max-width:640px; gap:18px; }
+    .companion-showcase .character-3d-viewer{ height:300px; min-height:300px; max-height:300px; }
+    .companion-showcase .showcase-pet .pet-3d-stage{ height:210px; }
+  }
+  /* Pet collection strip */
+  .pet-collection{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 2px; }
+  .pet-chip{ all:unset; cursor:pointer; display:flex; align-items:center; gap:6px; padding:7px 11px; border-radius:12px; background:#f0f2fa; border:2px solid #dbe3f5; font-weight:800; font-size:.78rem; }
+  .pet-chip.active{ border-color:var(--ink); box-shadow:0 0 0 2px var(--gold); background:#fff; }
+  .pet-chip.inactive-pet{ opacity:.55; }
+  .pet-chip .pc-icon{ font-size:1.1rem; }
+  .pet-chip .pc-rarity{ font-size:.62rem; font-weight:900; text-transform:uppercase; letter-spacing:.5px; color:#7b88a6; }
+  /* Emote bar */
+  .emote-row{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin:6px 0 0; }
+  .emote-btn{ all:unset; cursor:pointer; padding:6px 10px; border-radius:11px; background:#f0f2fa; border:2px solid #dbe3f5; font-weight:800; font-size:.76rem; }
+  .emote-btn.active{ border-color:var(--ink); box-shadow:0 0 0 2px var(--gold); background:#fff; }
+  .emote-btn[disabled]{ opacity:.45; cursor:not-allowed; }
+  /* Results screen keeps the celebration compact so the stats and buttons
+     underneath stay on screen without scrolling on a phone. */
+  #result-avatar{ width:100%; max-width:380px; margin:0 auto 8px; }
+  .result-character-viewer{ height:230px; min-height:230px; max-height:230px; contain:layout paint size; }
+  @media (max-width:639px){ .result-character-viewer{ height:200px; min-height:200px; max-height:200px; } }
   .character-3d-viewer.dragging canvas{ cursor:grabbing; }
   .character-3d-grid{ position:absolute; left:7%; right:7%; bottom:8%; height:30%; opacity:.42; pointer-events:none; background:linear-gradient(rgba(77,101,150,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(77,101,150,.12) 1px,transparent 1px); background-size:34px 34px; transform:perspective(320px) rotateX(62deg); transform-origin:center bottom; mask-image:linear-gradient(to top,rgba(0,0,0,.85),transparent); }
   .character-3d-hint{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); padding:7px 12px; border-radius:999px; background:rgba(20,32,57,.78); color:#fff; font-size:.75rem; font-weight:800; letter-spacing:.02em; pointer-events:none; transition:opacity .25s ease,transform .25s ease; white-space:nowrap; }
@@ -1318,7 +1401,7 @@
     body.high-contrast .text-size-btn.active{background:#8b5cf6;border-color:#d7ccff}
 
 
-  .profile-3d-wrap{margin:14px 0;overflow:visible}.profile-3d-wrap .character-3d-viewer{contain:layout paint;overflow:hidden}.profile-3d-pet{display:none}.store-preview-wrap{margin:10px 0;overflow:hidden}.store-preview-wrap .character-3d-viewer{min-height:300px;height:360px}.profile-character-viewer{min-height:390px;height:52vh}.pet-panel{margin-top:10px}.pet-panel-main{display:flex;align-items:center;gap:14px}.pet-stage{min-width:92px;display:flex;justify-content:center}.pet-companion{display:inline-block;position:relative;filter:drop-shadow(0 6px 5px rgba(30,40,70,.15))}.pet-normal{font-size:3.2rem}.pet-small{font-size:1.6rem}.pet-store-icon{font-size:2.4rem}.pet-actions{margin-top:7px}.pet-fed-fx{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);font-size:1.8rem;z-index:9999;pointer-events:none;animation:pet-fed .9s ease-out forwards}.pet-companion.pet-inactive{filter:grayscale(1) opacity(.6)}.store-item.inactive{opacity:.7}.menu-pet-status{display:flex;align-items:center;gap:8px;justify-content:center;font-size:.72rem;font-weight:800;color:#5b6b8a;margin:2px 0 8px}.menu-pet-card{margin-top:14px}.menu-pet-row{display:flex;align-items:center;gap:14px}.menu-pet-name{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.05rem}.pet-3d-stage{position:relative;width:140px;height:140px;flex:0 0 140px;touch-action:none;user-select:none;cursor:grab;background:radial-gradient(circle at 50% 35%,#f3f6ff 0%,#e6ecfb 70%);border-radius:16px;border:2px solid #dbe3f5;overflow:hidden}.pet-3d-stage.dragging{cursor:grabbing}.pet-3d-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.pet-3d-stage .pet-3d-hint{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);background:rgba(20,32,57,.75);color:#fff;border-radius:999px;padding:3px 7px;font-size:.58rem;font-weight:800;pointer-events:none;white-space:nowrap}.pet-3d-stage .pet-3d-label{position:absolute;top:5px;left:5px;background:rgba(255,255,255,.8);border-radius:7px;padding:3px 5px;font-size:.58rem;font-weight:800;pointer-events:none}.pet-3d-stage .pet-3d-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem}.egg-card{position:relative;overflow:hidden}.egg-visual{height:120px;display:flex;align-items:center;justify-content:center;font-size:4.3rem;background:radial-gradient(circle,#fff 0,#f7f2ff 65%,#ebe4ff 100%);border-radius:12px;margin-bottom:6px}.egg-visual.shaking{animation:eggShake .16s linear infinite}.egg-crack{animation:eggCrack .55s ease forwards}.egg-reveal-modal .modal-box{max-width:520px}.egg-stage{min-height:280px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:18px;background:radial-gradient(circle,#fff,#eeeaff 72%,#e2ddff)}.egg-big{font-size:7rem;filter:drop-shadow(0 14px 12px rgba(60,40,120,.18))}.egg-big.shake{animation:eggShake .13s linear infinite}.egg-big.crack{animation:eggCrack .7s ease forwards}.egg-burst{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0;pointer-events:none}.egg-burst.active{animation:eggBurst .8s ease forwards}.egg-result{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transform:scale(.7)}.egg-result.show{animation:eggResult .65s cubic-bezier(.2,1.4,.4,1) forwards}.egg-result .egg-pet-icon{font-size:4.5rem}.egg-result strong{font-family:'Baloo 2',sans-serif;font-size:1.4rem;margin-top:6px}.egg-rarity{font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--accent-d)}@keyframes eggShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-5px) rotate(-4deg)}75%{transform:translateX(5px) rotate(4deg)}}@keyframes eggCrack{0%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-6deg)}100%{transform:scale(.2) rotate(18deg);opacity:0}}@keyframes eggBurst{0%{opacity:0;transform:scale(.4)}30%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(1.6)}}@keyframes eggResult{to{opacity:1;transform:scale(1)}}@media(max-width:420px){.pet-3d-stage{width:104px;height:104px;flex-basis:104px}.pet-3d-stage .pet-3d-hint{display:none}}
+  .profile-3d-wrap{margin:14px 0;overflow:visible}.profile-3d-wrap .character-3d-viewer{contain:layout paint;overflow:hidden}.profile-3d-pet{display:none}.store-preview-wrap{margin:10px 0;overflow:hidden}.store-preview-wrap .character-3d-viewer{min-height:300px;height:360px}.profile-character-viewer{min-height:390px;height:52vh}.pet-panel{margin-top:10px}.pet-panel-main{display:flex;align-items:center;gap:14px}.pet-stage{min-width:92px;display:flex;justify-content:center}.pet-companion{display:inline-block;position:relative;filter:drop-shadow(0 6px 5px rgba(30,40,70,.15))}.pet-normal{font-size:3.2rem}.pet-small{font-size:1.6rem}.pet-store-icon{font-size:2.4rem}.pet-actions{margin-top:7px}.pet-fed-fx{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);font-size:1.8rem;z-index:9999;pointer-events:none;animation:pet-fed .9s ease-out forwards}.pet-companion.pet-inactive{filter:grayscale(1) opacity(.6)}.store-item.inactive{opacity:.7}.menu-pet-status{display:flex;align-items:center;gap:8px;justify-content:center;font-size:.72rem;font-weight:800;color:#5b6b8a;margin:2px 0 8px}.menu-pet-card{margin-top:14px}.menu-pet-row{display:flex;align-items:center;gap:14px}.menu-pet-name{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.05rem}.pet-3d-stage{position:relative;width:140px;height:140px;flex:0 0 140px;touch-action:none;user-select:none;cursor:grab;background:radial-gradient(circle at 50% 35%,#f3f6ff 0%,#e6ecfb 70%);border-radius:16px;border:2px solid #dbe3f5;overflow:hidden}.pet-3d-stage.dragging{cursor:grabbing}.pet-3d-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.pet-3d-stage .pet-3d-hint{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);background:rgba(20,32,57,.75);color:#fff;border-radius:999px;padding:3px 7px;font-size:.58rem;font-weight:800;pointer-events:none;white-space:nowrap}.pet-3d-stage .pet-3d-label{position:absolute;top:5px;left:5px;background:rgba(255,255,255,.8);border-radius:7px;padding:3px 5px;font-size:.58rem;font-weight:800;pointer-events:none}.pet-3d-stage .pet-3d-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3rem}.egg-card{position:relative;overflow:hidden}.egg-visual{height:120px;display:flex;align-items:center;justify-content:center;font-size:4.3rem;background:radial-gradient(circle,#fff 0,#f7f2ff 65%,#ebe4ff 100%);border-radius:12px;margin-bottom:6px}.egg-visual-3d{padding:0;background:radial-gradient(circle,#fff 0,#f7f2ff 65%,#ebe4ff 100%)}.egg-mini-stage{width:100%!important;height:120px!important;flex:0 0 120px!important;border:none!important;background:transparent!important;border-radius:12px!important}.egg-mini-stage .pet-3d-hint{display:none}.egg-visual.shaking{animation:eggShake .16s linear infinite}.egg-crack{animation:eggCrack .55s ease forwards}.egg-reveal-modal .modal-box{max-width:520px}.egg-stage{min-height:280px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:18px;background:radial-gradient(circle,#fff,#eeeaff 72%,#e2ddff)}.egg-big{font-size:7rem;filter:drop-shadow(0 14px 12px rgba(60,40,120,.18));width:190px;height:190px;display:flex;align-items:center;justify-content:center}.egg-reveal-stage{width:190px!important;height:190px!important;flex:0 0 190px!important;border:none!important;background:transparent!important;cursor:default!important}.egg-reveal-stage .pet-3d-hint{display:none}.egg-big.shake{animation:eggShake .13s linear infinite}.egg-big.crack{animation:eggCrack .7s ease forwards}.egg-burst{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0;pointer-events:none}.egg-burst.active{animation:eggBurst .8s ease forwards}.egg-result{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transform:scale(.7)}.egg-result.show{animation:eggResult .65s cubic-bezier(.2,1.4,.4,1) forwards}.egg-result .egg-pet-icon{font-size:4.5rem}.egg-result strong{font-family:'Baloo 2',sans-serif;font-size:1.4rem;margin-top:6px}.egg-rarity{font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--accent-d)}@keyframes eggShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-5px) rotate(-4deg)}75%{transform:translateX(5px) rotate(4deg)}}@keyframes eggCrack{0%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-6deg)}100%{transform:scale(.2) rotate(18deg);opacity:0}}@keyframes eggBurst{0%{opacity:0;transform:scale(.4)}30%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(1.6)}}@keyframes eggResult{to{opacity:1;transform:scale(1)}}@media(max-width:420px){.pet-3d-stage{width:104px;height:104px;flex-basis:104px}.pet-3d-stage .pet-3d-hint{display:none}}
 .recent-performance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.recent-mode-card{margin:0}.lb-personal-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.lb-personal-grid>div{background:#f7f9ff;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}.lb-personal-grid strong{font-size:.68rem;color:#6b7894}.lb-personal-grid span{font-weight:800;overflow-wrap:anywhere}@keyframes pet-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pet-dog{0%,100%{transform:translateY(0) rotate(0)}40%{transform:translateY(-2px) rotate(-4deg)}70%{transform:translateY(0) rotate(4deg)}}@keyframes pet-cat{0%,100%{transform:rotate(0)}50%{transform:translateY(-3px) rotate(3deg)}}@keyframes pet-bird{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-3deg)}}@keyframes pet-plant{0%,100%{transform:rotate(0)}50%{transform:rotate(-4deg)}}@keyframes pet-fed{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-100%) scale(1.15)}}
 @media(max-width:420px){.pet-3d-stage{width:76px;height:76px;flex-basis:76px}.pet-3d-card .pet-companion{font-size:2.1rem}}
   @media(max-width:640px){.recent-performance-grid{grid-template-columns:1fr}.lb-personal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-character-viewer{min-height:350px;height:50vh}}
@@ -1461,14 +1544,14 @@
         <button class="menu-card mc-customize" id="card-customize"><span class="mi">🧑‍🎨</span><span class="mn">Customize</span></button>
       </div>
       <div class="card menu-pet-card" id="menu-pet-card">
-        <p class="eyebrow" style="margin:0 0 6px">🐾 Your Pet</p>
+        <p class="eyebrow" style="margin:0 0 6px">🐾 Your Pets</p>
         <div class="menu-pet-row">
-          <div class="pet-3d-stage" id="menu-pet-stage"></div>
           <div class="menu-pet-info">
             <div class="menu-pet-name" id="menu-pet-name">Your Pet</div>
             <div class="subtitle" id="menu-pet-status"></div>
           </div>
         </div>
+        <div class="pet-collection" id="menu-pet-collection"></div>
       </div>
       <div class="progress-bar-wrap">
         <div class="progress-bar-label"><span>🏆 Achievements Progress</span><span id="menu-progress-pct">0%</span></div>
@@ -1622,14 +1705,24 @@
       <div class="profile-edit-row"><input type="text" id="profile-section-input" maxlength="24" aria-label="Player section"><button class="btn" id="btn-edit-section">Edit Section</button></div>
       <p class="subtitle" id="profile-rank">Rank: Beginner</p>
       <div class="avatar-preview-wrap profile-3d-wrap">
-        <div class="character-3d-viewer profile-character-viewer" id="profile-3d-viewer">
-          <canvas id="profile-3d-canvas" aria-label="Interactive 3D profile character viewer"></canvas>
-          <div class="character-3d-grid" aria-hidden="true"></div>
-          <div class="character-3d-hint" id="profile-3d-hint">↔↕ Drag to inspect</div>
-          <div class="character-3d-status" id="profile-3d-status">3D Character</div>
-          <div id="profile-3d-pet" class="profile-3d-pet"></div>
+        <div class="companion-showcase" id="profile-showcase">
+          <div class="showcase-ground" aria-hidden="true"></div>
+          <div class="showcase-char">
+            <div class="character-3d-viewer profile-character-viewer" id="profile-3d-viewer">
+              <canvas id="profile-3d-canvas" aria-label="Interactive 3D profile character viewer"></canvas>
+              <div class="character-3d-grid" aria-hidden="true"></div>
+              <div class="character-3d-hint" id="profile-3d-hint">↔↕ Drag to inspect</div>
+              <div class="character-3d-status" id="profile-3d-status">3D Character</div>
+              <div id="profile-3d-pet" class="profile-3d-pet"></div>
+            </div>
+          </div>
+          <div class="showcase-pet">
+            <div class="pet-3d-stage" id="profile-showcase-pet-stage"></div>
+            <div class="showcase-caption" id="profile-showcase-pet-name">Your Pet</div>
+          </div>
         </div>
-        <p class="subtitle">Drag left/right to turn. Drag up/down to look above and below.</p>
+        <div class="emote-row" id="profile-emote-row"></div>
+        <p class="subtitle">Drag left/right to turn. Drag up/down to look above and below. Double-tap to reset.</p>
       </div>
       <div id="profile-pet-panel" class="card pet-panel"></div>
       <h3>Personal Bests</h3>
@@ -1870,16 +1963,22 @@
         <button class="tab-btn" data-store="pets">🐾 Pet Store</button>
          <button class="tab-btn" data-store="eggs">🥚 Egg Store</button>
       </div>
-      <div class="avatar-preview-wrap store-preview-wrap">
-        <div class="character-3d-viewer" id="store-3d-viewer">
-          <canvas id="store-3d-canvas" aria-label="Store character preview"></canvas>
-          <div class="character-3d-grid" aria-hidden="true"></div>
-          <div class="character-3d-hint" id="store-3d-hint">↔↕ Drag to inspect preview</div>
-          <div class="character-3d-status" id="store-3d-status">Store Preview</div>
+      <div class="store-split">
+        <div class="store-catalog-col">
+          <div class="store-grid" id="store-grid"></div>
         </div>
-        <div class="pet-3d-stage hidden" id="store-pet-stage" style="width:100%;height:220px;"></div>
+        <div class="store-preview-col">
+          <div class="avatar-preview-wrap store-preview-wrap">
+            <div class="character-3d-viewer" id="store-3d-viewer">
+              <canvas id="store-3d-canvas" aria-label="Store character preview"></canvas>
+              <div class="character-3d-grid" aria-hidden="true"></div>
+              <div class="character-3d-hint" id="store-3d-hint">↔↕ Drag to inspect preview</div>
+              <div class="character-3d-status" id="store-3d-status">Store Preview</div>
+            </div>
+            <div class="pet-3d-stage hidden" id="store-pet-stage" style="width:100%;height:220px;"></div>
+          </div>
+        </div>
       </div>
-      <div class="store-grid" id="store-grid"></div>
       <button class="btn btn-primary btn-block screen-home-btn" data-main-menu>🏠 Back to Main Menu</button>
     </div>
   </section>
@@ -2274,93 +2373,45 @@
     {id:'pet:dragon', name:'Pocket Dragon', price:1200, icon:'🐲', type:'dragon', rarity:'epic'},
     {id:'pet:fox', name:'Clever Fox', price:750, icon:'🦊', type:'fox', rarity:'rare'},
     {id:'pet:penguin', name:'Cool Penguin', price:700, icon:'🐧', type:'penguin', rarity:'rare'},
-    {id:'pet:fairy', name:'Star Fairy', price:1000, icon:'🧚', type:'fairy', rarity:'epic'}
+    {id:'pet:fairy', name:'Star Fairy', price:1000, icon:'🧚', type:'fairy', rarity:'epic'},
+    /* Each of these gets its own real anatomy in Pet3D.build/behaviour below —
+       none of them reuse an existing rig with a colour swap. */
+    {id:'pet:panda', name:'Lazy Panda', price:650, icon:'🐼', type:'panda', rarity:'rare'},
+    {id:'pet:elephant', name:'Gentle Elephant', price:1100, icon:'🐘', type:'elephant', rarity:'epic'},
+    {id:'pet:croc', name:'Swamp Crocodile', price:900, icon:'🐊', type:'croc', rarity:'rare'},
+    {id:'pet:snake', name:'Garden Snake', price:600, icon:'🐍', type:'snake', rarity:'common'}
   ];
   const PET_FOOD_PACK = { id:'food:pack', name:'Pet Food Pack', price:150, amount:3, icon:'🍖' };
   const PET_EGGS = [
-    {id:'egg:basic', name:'Basic Egg', price:300, icon:'🥚', rarity:'Common', pool:['pet:plant','pet:dog','pet:cat','pet:bird'], weights:[38,24,24,14]},
-    {id:'egg:rare', name:'Rare Egg', price:650, icon:'🥚', rarity:'Rare', pool:['pet:dog','pet:cat','pet:bird','pet:rabbit','pet:fox','pet:penguin'], weights:[14,14,12,24,20,16]},
-    {id:'egg:special', name:'Special Egg', price:1000, icon:'🥚', rarity:'Epic', pool:['pet:rabbit','pet:dino','pet:fox','pet:penguin','pet:dragon'], weights:[18,20,18,16,28]},
-    {id:'egg:premium', name:'Premium Egg', price:1600, icon:'🥚', rarity:'Legendary', pool:['pet:dino','pet:dragon','pet:fairy'], weights:[28,42,30]}
+    {id:'egg:normal', name:'Normal Egg', price:250, icon:'🥚', rarity:'Common', pattern:'speckled', pool:['pet:plant','pet:dog','pet:cat','pet:bird','pet:snake'], weights:[30,20,20,12,18]},
+    {id:'egg:rare', name:'Rare Egg', price:600, icon:'🥚', rarity:'Rare', pattern:'striped', pool:['pet:dog','pet:cat','pet:bird','pet:rabbit','pet:fox','pet:penguin','pet:panda','pet:croc'], weights:[10,10,10,18,16,12,14,10]},
+    {id:'egg:epic', name:'Epic Egg', price:1000, icon:'🥚', rarity:'Epic', pattern:'gem', pool:['pet:rabbit','pet:dino','pet:fox','pet:penguin','pet:panda','pet:croc'], weights:[16,22,15,14,18,15]},
+    {id:'egg:legendary', name:'Legendary Egg', price:1800, icon:'🥚', rarity:'Legendary', pattern:'crystal', pool:['pet:dino','pet:dragon','pet:fairy','pet:elephant'], weights:[24,36,26,14]},
+    {id:'egg:mythic', name:'Mythic Egg', price:3000, icon:'🥚', rarity:'Mythic', pattern:'crystal', pool:['pet:dragon','pet:fairy','pet:elephant','pet:croc'], weights:[38,30,20,12]},
+    {id:'egg:special', name:'Special Egg', price:4500, icon:'🥚', rarity:'Special', pattern:'gem', pool:['pet:dragon','pet:fairy','pet:elephant','pet:panda'], weights:[32,28,25,15]}
   ];
+  const PET_XP_PER_LEVEL=100;
+  const PET_HUNGER_DECAY_HOURS=24;
+  const PET_HAPPINESS_DECAY_HOURS=36;
   const XP_TO_FOOD_RATE = 100; // 100 XP converts into 1 Pet Food
-  // Hunger stages, in hours since the pet was last fed (or born, if never
-  // fed). A missed feeding never kills the pet instantly — there's always a
-  // multi-day warning window before a pet becomes inactive.
-  const PET_HUNGER_HOURS = { low:48, critical:96, dead:144 };
-  function currentPet(){ return PETS.find(p=>p.id===S?.pets?.equipped) || PETS[0]; }
-  function petIsActive(id){ return (S.pets.life[id]?.status || 'active') !== 'inactive'; }
+  // Light companion-care system: needs change over time, but pets are never deleted or killed.
+  const PET_HUNGER_HOURS={low:24,critical:48};
+  function currentPet(){return PETS.find(p=>p.id===S?.pets?.equipped)||PETS.find(p=>S?.pets?.owned?.includes(p.id))||PETS[0];}
+  function petIsActive(id){return true;}
   function ensurePetState(){
-    if(!S.pets) S.pets={owned:['pet:plant'],equipped:'pet:plant',happiness:{},feedCount:{},lastFedAt:null,food:{current:5,max:10},lastFedByPet:{},life:{},history:[]};
-    if(!Array.isArray(S.pets.owned)) S.pets.owned=[];
-    if(!S.pets.owned.includes('pet:plant')) S.pets.owned.unshift('pet:plant');
-    S.pets.happiness ||= {}; S.pets.feedCount ||= {}; S.pets.lastFedByPet ||= {}; S.pets.life ||= {};
-    S.pets.history ||= []; S.pets.food ||= {current:5, max:10};
-    S.pets.food.max = Math.max(1, Math.floor(Number(S.pets.food.max)||10));
-    S.pets.food.current = Math.max(0, Math.min(S.pets.food.max, Math.floor(Number(S.pets.food.current)??5)));
-    const now = Date.now();
-    // Every owned pet gets a birth/adoption record the first time we see it,
-    // so age can always be computed from a persisted timestamp instead of a
-    // running timer.
-    S.pets.owned.forEach(id => { if(!S.pets.life[id]) S.pets.life[id] = { bornAt: now, status:'active', diedAt:null }; });
-    if(!S.pets.equipped || !S.pets.owned.includes(S.pets.equipped) || !petIsActive(S.pets.equipped)){
-      const nextActive = S.pets.owned.find(id => petIsActive(id));
-      S.pets.equipped = nextActive || S.pets.equipped || 'pet:plant';
-    }
+    if(!S.pets)S.pets={owned:['pet:plant'],equipped:'pet:plant',happiness:{},hunger:{},level:{},xp:{},feedCount:{},lastFedAt:null,lastInteraction:{},food:{current:5,max:10},lastFedByPet:{},life:{},history:[],careCount:0};
+    if(!Array.isArray(S.pets.owned))S.pets.owned=[]; if(!S.pets.owned.includes('pet:plant'))S.pets.owned.unshift('pet:plant');
+    S.pets.happiness||={};S.pets.hunger||={};S.pets.level||={};S.pets.xp||={};S.pets.feedCount||={};S.pets.lastInteraction||={};S.pets.lastFedByPet||={};S.pets.life||={};S.pets.history||=[];S.pets.food||={current:5,max:10};
+    S.pets.food.max=Math.max(1,Math.floor(Number(S.pets.food.max)||10));S.pets.food.current=Math.max(0,Math.min(S.pets.food.max,Math.floor(Number(S.pets.food.current)||0)));
+    const now=Date.now(); S.pets.owned.forEach(id=>{if(!S.pets.life[id])S.pets.life[id]={bornAt:now,status:'active',diedAt:null};if(!Number.isFinite(Number(S.pets.happiness[id])))S.pets.happiness[id]=70;if(!Number.isFinite(Number(S.pets.hunger[id])))S.pets.hunger[id]=100;if(!Number.isFinite(Number(S.pets.level[id])))S.pets.level[id]=1;if(!Number.isFinite(Number(S.pets.xp[id])))S.pets.xp[id]=0;if(!S.pets.lastInteraction[id])S.pets.lastInteraction[id]=now;});
+    if(!S.pets.equipped||!S.pets.owned.includes(S.pets.equipped))S.pets.equipped=S.pets.owned[0]||'pet:plant';
   }
-  // Converts a millisecond duration into the friendly, decreasing-precision
-  // format the pet age/lifetime display uses (seconds → minutes → hours →
-  // days → months → years), per the spec examples.
-  function formatPetAge(ms){
-    const s = Math.max(0, Math.floor(ms/1000));
-    if(s < 60) return `${s} second${s===1?'':'s'}`;
-    const m = Math.floor(s/60);
-    if(m < 60) return `${m} minute${m===1?'':'s'}`;
-    const h = Math.floor(m/60), remM = m%60;
-    if(h < 24) return remM ? `${h} hour${h===1?'':'s'}, ${remM} minute${remM===1?'':'s'}` : `${h} hour${h===1?'':'s'}`;
-    const d = Math.floor(h/24), remH = h%24;
-    if(d < 60) return remH ? `${d} day${d===1?'':'s'}, ${remH} hour${remH===1?'':'s'}` : `${d} day${d===1?'':'s'}`;
-    const mo = Math.floor(d/30), remD = d%30;
-    if(mo < 12) return remD ? `${mo} month${mo===1?'':'s'}, ${remD} day${remD===1?'':'s'}` : `${mo} month${mo===1?'':'s'}`;
-    const y = Math.floor(mo/12), remMo = mo%12;
-    return remMo ? `${y} year${y===1?'':'s'}, ${remMo} month${remMo===1?'':'s'}` : `${y} year${y===1?'':'s'}`;
-  }
-  function petBornLabel(id){
-    const life=S.pets.life[id]; if(!life) return '';
-    return new Date(life.bornAt).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
-  }
-  // Returns the pet's current hunger stage ('normal'|'low'|'critical'|'dead')
-  // based on real elapsed time since it was last fed (or since it was
-  // born/adopted, if it's never been fed) — never a session-only timer.
-  function petHungerStage(id){
-    const life=S.pets.life[id]; if(!life) return 'normal';
-    const since = S.pets.lastFedByPet[id] || life.bornAt;
-    const hours = (Date.now()-since)/3600000;
-    if(hours >= PET_HUNGER_HOURS.dead) return 'dead';
-    if(hours >= PET_HUNGER_HOURS.critical) return 'critical';
-    if(hours >= PET_HUNGER_HOURS.low) return 'low';
-    return 'normal';
-  }
-  // Checks every owned pet for starvation and, only past the full grace
-  // period (PET_HUNGER_HOURS.dead), marks it inactive. Nothing is deleted —
-  // the pet's record and history are preserved, and other pets are untouched.
-  function tickPetLifecycle(){
-    ensurePetState(); let changed=false;
-    S.pets.owned.forEach(id => {
-      const life=S.pets.life[id]; if(!life || life.status==='inactive') return;
-      if(petHungerStage(id)==='dead'){
-        life.status='inactive'; life.diedAt=Date.now();
-        const def=PETS.find(p=>p.id===id);
-        S.pets.history.push({ id, name:def?def.name:id, bornAt:life.bornAt, diedAt:life.diedAt });
-        changed=true;
-      }
-    });
-    if(changed){
-      if(!petIsActive(S.pets.equipped)){ const nextActive=S.pets.owned.find(pid=>petIsActive(pid)); if(nextActive) S.pets.equipped=nextActive; }
-      saveState();
-    }
-    return changed;
-  }
+  function formatPetAge(ms){const s=Math.max(0,Math.floor(ms/1000));if(s<60)return `${s} second${s===1?'':'s'}`;const m=Math.floor(s/60);if(m<60)return `${m} minute${m===1?'':'s'}`;const h=Math.floor(m/60);if(h<24)return `${h} hour${h===1?'':'s'}`;const d=Math.floor(h/24);if(d<60)return `${d} day${d===1?'':'s'}`;const mo=Math.floor(d/30);if(mo<12)return `${mo} month${mo===1?'':'s'}`;const y=Math.floor(mo/12);return `${y} year${y===1?'':'s'}`;}
+  function petBornLabel(id){const life=S.pets.life[id];return life?new Date(life.bornAt).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'}):'';}
+  function tickPetLifecycle(){ensurePetState();const now=Date.now();let changed=false;S.pets.owned.forEach(id=>{const last=Number(S.pets.lastInteraction[id]||now),hours=Math.max(0,(now-last)/3600000);if(hours>0.05){const h=Math.max(0,100-hours*100/PET_HUNGER_DECAY_HOURS),happy=Math.max(20,100-hours*100/PET_HAPPINESS_DECAY_HOURS);if(Math.abs((S.pets.hunger[id]??100)-h)>.5){S.pets.hunger[id]=Math.round(h);changed=true;}if(Math.abs((S.pets.happiness[id]??70)-happy)>.5){S.pets.happiness[id]=Math.round(happy);changed=true;}S.pets.lastInteraction[id]=now;}});if(changed)saveState();return changed;}
+  function petHungerStage(id){ensurePetState();const h=Number(S.pets.hunger[id]??100);return h<25?'critical':h<60?'low':'normal';}
+  function petMoodLabel(id){const h=Number(S.pets.hunger[id]??100),happy=Number(S.pets.happiness[id]??70);if(h<25)return '🍖 Very Hungry';if(h<60)return '😟 Hungry';if(happy>=80)return '✨ Happy';if(happy<45)return '💙 Sad';return '😊 Content';}
+  function addPetXP(id,amount){ensurePetState();let xp=(Number(S.pets.xp[id])||0)+Math.max(0,Number(amount)||0),lv=Math.max(1,Number(S.pets.level[id])||1);while(xp>=PET_XP_PER_LEVEL&&lv<50){xp-=PET_XP_PER_LEVEL;lv++;}S.pets.xp[id]=xp;S.pets.level[id]=lv;}
   function petMarkup(pet, small=false){
     const p=pet||PETS[0], size=small?'pet-small':'pet-normal', inactive = !petIsActive(p.id) ? ' pet-inactive' : '';
     return `<div class="pet-companion ${size} pet-${p.type}${inactive}" data-pet-type="${p.type}" aria-label="${escapeHtml(p.name)}">${inactive?'🪦':p.icon}</div>`;
@@ -2370,6 +2421,63 @@
   // animation loop. Pointer Events make mouse and touch behave identically.
   const Pet3D = (() => {
     const instances=new WeakMap();
+    /*
+     * LIVE-INSTANCE REGISTRY + DISPOSAL
+     * ---------------------------------
+     * Pet stages are recreated whenever a panel re-renders (renderPetPanel
+     * rewrites its container's innerHTML). Each new stage element created a
+     * fresh WebGL context and a fresh requestAnimationFrame loop, and the old
+     * ones were never released — the detached canvas kept a live context and
+     * its loop kept rescheduling forever. Browsers cap the number of
+     * simultaneous WebGL contexts and silently drop the OLDEST one when the
+     * cap is hit, which is exactly how a working preview suddenly goes blank
+     * after moving between Profile and Store a few times.
+     *
+     * sweep() disposes any instance whose stage has left the document.
+     */
+    const liveStages=new Set();
+    /*
+     * INTERACTION REACTIONS (§5)
+     * --------------------------
+     * A transient override on top of the normal idle-behaviour cycle,
+     * keyed by pet id so it applies wherever that pet is currently rendered
+     * (Main Menu, Profile, Store all read the same map). react() is the
+     * only way to set one; it always carries an expiry, so a reaction can
+     * never get the pet stuck outside its regular idle cycle.
+     */
+    const reactions=new Map();
+    function react(petId, type, durationMs){
+      if(!petId) return;
+      reactions.set(petId, { type, start: performance.now(), until: performance.now()+(durationMs||2000) });
+    }
+    function reactionPose(type, nowMs, since){
+      const q=(nowMs-since)/1000;
+      const b={ headYaw:0, headPitch:0, sit:0, hop:0, tailWag:.5, flap:0, perk:0, breathe:0, bark:0, peck:0 };
+      if(type==='feed'){
+        /* Head dips toward a bowl on a steady beat, tail wags happily. */
+        b.headPitch=Math.max(0,Math.sin(q*6))*.55;
+        b.peck=Math.max(0,Math.sin(q*6));
+        b.tailWag=1.3;
+      }else if(type==='play'){
+        /* Excited bouncing with a wagging head turn. */
+        b.hop=Math.max(0,Math.sin(q*8))*.30;
+        b.headYaw=Math.sin(q*5)*.42;
+        b.tailWag=1.6;
+        b.flap=.7;
+      }
+      return b;
+    }
+    function disposeStage(stage){
+      const st=instances.get(stage); if(!st) return;
+      if(st.raf) cancelAnimationFrame(st.raf);
+      st.raf=0; st.disposed=true;
+      try{ const ext=st.gl.getExtension('WEBGL_lose_context'); if(ext) ext.loseContext(); }catch(_){}
+      instances.delete(stage);
+      liveStages.delete(stage);
+    }
+    function sweep(){
+      liveStages.forEach(stage=>{ if(!stage.isConnected) disposeStage(stage); });
+    }
     function I(){const m=new Float32Array(16);m[0]=m[5]=m[10]=m[15]=1;return m;}
     function mm(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o;}
     function T(x,y,z){const m=I();m[12]=x;m[13]=y;m[14]=z;return m;}
@@ -2380,61 +2488,384 @@
     function child(p,x,y,z,rx,ry,rz,sx,sy,sz){return mm(p,trs(x,y,z,rx,ry,rz,sx,sy,sz));}
     function perspective(f,a,n,far){const t=1/Math.tan(f/2),m=new Float32Array(16);m[0]=t/a;m[5]=t;m[10]=(far+n)/(n-far);m[11]=-1;m[14]=2*far*n/(n-far);return m;}
     function lookAt(e,c,u){let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2],zl=Math.hypot(zx,zy,zz);zx/=zl;zy/=zl;zz/=zl;let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx,xl=Math.hypot(xx,xy,xz);xx/=xl;xy/=xl;xz/=xl;const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx,m=I();m[0]=xx;m[1]=yx;m[2]=zx;m[4]=xy;m[5]=yy;m[6]=zy;m[8]=xz;m[9]=yz;m[10]=zz;m[12]=-(xx*e[0]+xy*e[1]+xz*e[2]);m[13]=-(yx*e[0]+yy*e[1]+yz*e[2]);m[14]=-(zx*e[0]+zy*e[1]+zz*e[2]);return m;}
-    function color(h){const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return[.7,.75,.85];const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+    /* Accepts #abc as well as #aabbcc. The 6-digit-only version silently
+       fell back to a grey-blue for any shorthand colour. */
+    function color(h){let v=String(h||'').replace('#','');if(/^[0-9a-f]{3}$/i.test(v))v=v[0]+v[0]+v[1]+v[1]+v[2]+v[2];if(!/^[0-9a-f]{6}$/i.test(v))return[.7,.75,.85];const n=parseInt(v,16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
     function shader(gl,type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s)||'Pet shader error');return s;}
     function mesh(gl,buffers,name,v,n,idx){const b={v:gl.createBuffer(),n:gl.createBuffer(),i:gl.createBuffer(),count:idx.length};gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(n),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),gl.STATIC_DRAW);buffers[name]=b;}
     function makeBox(gl,b){const p=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]],f=[[0,1,2,3,[0,0,1]],[5,4,7,6,[0,0,-1]],[1,5,6,2,[1,0,0]],[4,0,3,7,[-1,0,0]],[3,2,6,7,[0,1,0]],[4,5,1,0,[0,-1,0]]],v=[],n=[],i=[];f.forEach(q=>{const base=v.length/3;for(let k=0;k<4;k++){v.push(...p[q[k]]);n.push(...q[4]);}i.push(base,base+1,base+2,base,base+2,base+3)});mesh(gl,b,'box',v,n,i);}
     function makeSphere(gl,b){const v=[],n=[],i=[],la=14,lo=9;for(let y=0;y<=lo;y++){const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,c=Math.cos(q),s=Math.sin(q);v.push(sp*c,cp,sp*s);n.push(sp*c,cp,sp*s)}}for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,bb=a+la+1;i.push(a,bb,a+1,bb,bb+1,a+1)}mesh(gl,b,'sphere',v,n,i);}
     function draw(st,o,vp){const gl=st.gl,b=st.buffers[o.shape];if(!b)return;const ap=gl.getAttribLocation(st.program,'aPos'),an=gl.getAttribLocation(st.program,'aNormal');gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.enableVertexAttribArray(ap);gl.vertexAttribPointer(ap,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.enableVertexAttribArray(an);gl.vertexAttribPointer(an,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.uniformMatrix4fv(gl.getUniformLocation(st.program,'uModel'),false,o.m);gl.uniformMatrix4fv(gl.getUniformLocation(st.program,'uMVP'),false,mm(vp,o.m));gl.uniform3fv(gl.getUniformLocation(st.program,'uColor'),new Float32Array(color(o.col)));gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);}
     function part(out,p,x,y,z,sx,sy,sz,col,rx=0,ry=0,rz=0,shape='box'){out.push({m:child(p,x,y,z,rx,ry,rz,sx,sy,sz),shape,col});}
+    /*
+     * IDLE BEHAVIOUR DRIVER
+     * ---------------------
+     * A pet that only bobs looks like a static model with a sine wave on it.
+     * Instead, each pet runs a slow behaviour cycle: every few seconds it
+     * picks a new action (look around, sit, perk up, hop, bark, flap) and
+     * eases in and out of it. The driver below returns plain numbers that the
+     * rig then applies to REAL joints — head yaw, hip rotation, tail base —
+     * so nothing ever detaches or stretches the way a fake scale-tween would.
+     */
+    function hash(n){ const s=Math.sin(n*127.1)*43758.5453; return s-Math.floor(s); }
+    function easeInOut(x){ return x<.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
+    function behaviour(st,type,t,petId){
+      const nowMs=t*1000;
+      const active = petId && reactions.get(petId);
+      if(active){
+        if(nowMs < active.until) return reactionPose(active.type, nowMs, active.start);
+        reactions.delete(petId); /* expired — fall through to the idle cycle */
+      }
+      const slot=6.0;                       /* seconds per behaviour slot */
+      const seed=st.seed||0;
+      const idx=Math.floor(t/slot);
+      const local=(t%slot)/slot;            /* 0..1 through the current slot */
+      const pick=hash(idx+seed);
+      const b={ headYaw:0, headPitch:0, sit:0, hop:0, tailWag:.5, flap:0, perk:0, breathe:Math.sin(t*1.9)*.022 };
+
+      /* The action occupies the middle of the slot, so the pet always
+         returns to a clean neutral pose before the next one starts. */
+      const act=local>.18&&local<.82 ? easeInOut(Math.sin((local-.18)/.64*Math.PI)) : 0;
+
+      if(type==='dog'||type==='fox'){
+        if(pick<.28){ b.headYaw=act*(hash(idx+seed+1)<.5?-.7:.7); b.tailWag=.5+act*.6; }       /* look around */
+        else if(pick<.50){ b.sit=act; b.tailWag=.35; }                                          /* sit down */
+        else if(pick<.70){ b.hop=Math.max(0,Math.sin(local*Math.PI*6))*act*.30; b.tailWag=1.3; }/* excited hops */
+        else if(pick<.86){ b.headPitch=-act*.35; b.tailWag=1.5; b.bark=act; }                   /* bark */
+        else { b.tailWag=.5+Math.sin(t*3)*.3; }                                                 /* relaxed wag */
+      }else if(type==='cat'){
+        if(pick<.30){ b.headYaw=act*(hash(idx+seed+2)<.5?-.8:.8); }
+        else if(pick<.58){ b.sit=act; }
+        else if(pick<.74){ b.hop=Math.max(0,Math.sin(local*Math.PI*3))*act*.26; }
+        else if(pick<.88){ b.headPitch=act*.30; b.perk=act; }                                   /* ear twitch + groom */
+        else { b.headYaw=Math.sin(t*.7)*.18; }
+      }else if(type==='bird'||type==='penguin'){
+        if(pick<.34){ b.headYaw=act*(hash(idx+seed+3)<.5?-.9:.9); }                             /* scan around */
+        else if(pick<.58){ b.flap=act; }                                                        /* flap wings */
+        else if(pick<.80){ b.headPitch=Math.max(0,Math.sin(local*Math.PI*7))*act*.75; b.peck=act; } /* peck at food */
+        else { b.hop=Math.max(0,Math.sin(local*Math.PI*4))*act*.16; }
+      }else if(type==='rabbit'){
+        if(pick<.40){ b.hop=Math.max(0,Math.sin(local*Math.PI*3))*act*.34; }
+        else if(pick<.66){ b.headYaw=act*(hash(idx+seed+4)<.5?-.6:.6); b.perk=act; }
+        else if(pick<.84){ b.sit=act*.6; }
+        else { b.headPitch=act*.28; }
+      }else if(type==='dino'||type==='dragon'){
+        if(pick<.34){ b.headYaw=act*(hash(idx+seed+5)<.5?-.6:.6); b.tailWag=.5+act*.7; }
+        else if(pick<.58){ b.headPitch=-act*.40; b.tailWag=1.1; }                               /* roar */
+        else if(pick<.78){ b.hop=Math.max(0,Math.sin(local*Math.PI*3))*act*.22; b.flap=act*.7; }
+        else { b.tailWag=.5+Math.sin(t*1.6)*.35; }
+      }else if(type==='fairy'){
+        b.flap=1;                                                                               /* wings never stop */
+        b.hop=Math.sin(t*1.4)*.10;
+        if(pick<.4) b.headYaw=act*.6;
+      }else if(type==='panda'){
+        if(pick<.35){ b.sit=act*.85; }                                                          /* pandas sit A LOT */
+        else if(pick<.60){ b.headYaw=act*(hash(idx+seed+6)<.5?-.5:.5); b.perk=act; }             /* "grooming" beat */
+        else if(pick<.80){ b.headPitch=act*.30; }
+        else { b.hop=Math.max(0,Math.sin(local*Math.PI*2))*act*.10; }
+      }else if(type==='elephant'){
+        if(pick<.30){ b.headYaw=act*(hash(idx+seed+7)<.5?-.45:.45); }
+        else if(pick<.55){ b.headPitch=-act*.60; b.perk=act; }                                  /* trunk raise + ear flap */
+        else if(pick<.78){ b.perk=act*.7; }                                                     /* ear flap only */
+        else { b.hop=Math.max(0,Math.sin(local*Math.PI*2))*act*.06; }                           /* weight shift */
+      }else if(type==='croc'){
+        if(pick<.32){ b.headYaw=act*(hash(idx+seed+8)<.5?-.5:.5); }
+        else if(pick<.58){ b.headPitch=-act*.20; b.bark=act; }                                  /* jaw snap */
+        else if(pick<.80){ b.tailWag=.4+act*.8; }
+        else { b.tailWag=.4+Math.sin(t*.6)*.15; }
+      }else if(type==='snake'){
+        /* The slither in build() runs continuously; the only thing the
+           behaviour cycle adds is an occasional head-raise/look. */
+        if(pick<.5){ b.headPitch=act*-.3; }
+      }
+      return b;
+    }
+
+    /* Rarity-coded egg shell colours + decoration style, referenced by the
+       'egg' branch of build() below and shared with the Store card render. */
+    const EGG_PALETTES = {
+      speckled: {base:'#f2e9d8', spot:'#c9a25a'},
+      striped:  {base:'#dcebff', spot:'#4d9dff'},
+      gem:      {base:'#e6d9ff', spot:'#9b6bff'},
+      crystal:  {base:'#fff6d8', spot:'#e6bd43'}
+    };
     function build(st,pet,now){
       const t=now/1000, type=pet?.type||'plant', out=[], root=trs(0,0,0,st.pitch,st.rotation,0,1,1,1);
-      const bob=Math.sin(t*2.4)*.035, main=child(root,0,bob,0,0,0,0,1,1,1);
-      const addLegs=(body,col,feet='#4b3a2a')=>[-1,1].forEach(side=>{part(out,body,side*.42,-.48,0,.18,.45,.18,col);part(out,body,side*.42,-.90,.10,.24,.12,.32,feet);});
+      const b=behaviour(st,type,t,pet?.id);
+      const bob=Math.sin(t*2.4)*.035+b.breathe+b.hop;
+      /* `main` carries the whole pet. A sit lowers and tilts the WHOLE rig
+         together, so the body, legs and tail stay attached. */
+      const main=child(root,0,bob-b.sit*.28,0,b.sit*.16,0,0,1,1,1);
+      const addLegs=(body,col,feet='#4b3a2a',tuck=0)=>[-1,1].forEach(side=>{
+        const hip=child(body,side*.42,-.48,0,-tuck*.9,0,0,1,1,1);
+        part(out,hip,0,0,0,.18,.45*(1-tuck*.35),.18,col);
+        part(out,hip,0,-.42+tuck*.10,.10+tuck*.14,.24,.12,.32,feet);
+      });
+
       if(type==='plant'){
-        part(out,main,0,.35,0,.62,.38,.62,'#b9d9b0',0,0,0,'sphere');
-        for(let i=0;i<5;i++){const a=i*1.25+t*.25;part(out,main,Math.cos(a)*.38,.78+Math.sin(a)*.08,Math.sin(a)*.38,.18,.52,.08,'#4caf63',0,a*.15,a*.1);}
-        part(out,main,0,.82,0,.10,.72,.10,'#4f9b57');
+        /* Plants do not hop or sit — they sway in a breeze and shed a leaf. */
+        const breeze=Math.sin(t*.9)*.10+Math.sin(t*2.3)*.03;
+        const pot=child(root,0,0,0,0,0,0,1,1,1);
+        part(out,pot,0,.35,0,.62,.38,.62,'#b9d9b0',0,0,0,'sphere');
+        part(out,pot,0,.10,0,.66,.16,.66,'#a2c79a',0,0,0,'sphere');
+        const stem=child(pot,0,.55,0,breeze*.5,0,breeze,1,1,1);
+        part(out,stem,0,.30,0,.10,.72,.10,'#4f9b57');
+        for(let i=0;i<5;i++){
+          const a=i*1.25;
+          const leafSway=breeze+Math.sin(t*1.7+i)*.07;
+          const leaf=child(stem,0,.30+((i%3)*.16),0,leafSway*.6,a,leafSway,1,1,1);
+          part(out,leaf,.30,.14,0,.20,.05,.40,'#4caf63',0,0,.18,'sphere');
+        }
+        /* Two leaves drift down and loop, plus a few floating motes. */
+        for(let i=0;i<2;i++){
+          const fall=((t*.22+i*.5)%1);
+          const lx=Math.sin(t*.8+i*2)*.55;
+          part(out,root,lx,1.55-fall*1.45,Math.cos(t*.6+i)*.35,.10,.03,.18,'#6fbf5a',0,fall*6+i,fall*4,'sphere');
+        }
+        for(let i=0;i<5;i++){
+          const a=t*.35+i*1.3;
+          part(out,root,Math.cos(a)*.75,.70+Math.sin(a*1.4+i)*.45,Math.sin(a)*.75,.028,.028,.028,'#d8f0c8',0,0,0,'sphere');
+        }
       }else if(type==='dog'||type==='fox'){
-        part(out,main,0,.72,0,.78,.58,.58,type==='fox'?'#d86b2f':'#b87845',0,0,0,'sphere');addLegs(main,type==='fox'?'#c95c2b':'#a66d3e',type==='fox'?'#3a2a20':'#4b3526');
-        const head=child(main,0,.72,.42,0,0,0,1,1,1);part(out,head,0,0,0,.52,.46,.52,type==='fox'?'#e07a38':'#c98b5b',0,0,0,'sphere');
+        const coat=type==='fox'?'#d86b2f':'#b87845', face=type==='fox'?'#e07a38':'#c98b5b', ear=type==='fox'?'#9f4f27':'#9a633b';
+        part(out,main,0,.72,0,.78,.58,.58,coat,0,0,0,'sphere');
+        addLegs(main,type==='fox'?'#c95c2b':'#a66d3e',type==='fox'?'#3a2a20':'#4b3526',b.sit);
+        /* Head is a real joint, so yaw/pitch turn the ears, snout and eyes
+           together instead of sliding the face across the skull. */
+        const head=child(main,0,.72,.42,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.52,.46,.52,face,0,0,0,'sphere');
         part(out,head,-.18,.05,.46,.07,.08,.04,'#171717',0,0,0,'sphere');part(out,head,.18,.05,.46,.07,.08,.04,'#171717',0,0,0,'sphere');
-        part(out,head,0,-.08,.52,.12,.09,.08,'#2d211c',0,0,0,'sphere');
-        part(out,head,-.32,.35,.02,.18,.22,.12,type==='fox'?'#9f4f27':'#9a633b');part(out,head,.32,.35,.02,.18,.22,.12,type==='fox'?'#9f4f27':'#9a633b');
-        const tail=child(main,.0,.48,-.62,0,0,Math.sin(t*2)*.35,1,1,1);part(out,tail,0,0,0,.16,.16,.72,type==='fox'?'#e07a38':'#a66d3e',0,0,0,'sphere');
+        const jaw=child(head,0,-.08,.44,(b.bark||0)*.45,0,0,1,1,1);
+        part(out,jaw,0,-.02,.10,.12,.09,.08,'#2d211c',0,0,0,'sphere');
+        part(out,head,-.32,.35,.02,.18,.22,.12,ear,(b.perk||0)*-.3,0,0);
+        part(out,head,.32,.35,.02,.18,.22,.12,ear,(b.perk||0)*-.3,0,0);
+        const tail=child(main,0,.48,-.62,0,0,Math.sin(t*2*(1+b.tailWag))*.35*b.tailWag*1.4,1,1,1);
+        part(out,tail,0,.10,-.10,.16,.16,.72,coat,0,0,0,'sphere');
       }else if(type==='cat'){
-        part(out,main,0,.65,0,.70,.52,.52,'#a6a7ad',0,0,0,'sphere');addLegs(main,'#92939a','#4b4d55');
-        const head=child(main,0,.62,.38,0,0,0,1,1,1);part(out,head,0,0,0,.50,.44,.48,'#b6b7bc',0,0,0,'sphere');
-        part(out,head,-.28,.35,.02,.22,.30,.12,'#8d8e95',0,0,.15);part(out,head,.28,.35,.02,.22,.30,.12,'#8d8e95',0,0,-.15);
+        part(out,main,0,.65,0,.70,.52,.52,'#a6a7ad',0,0,0,'sphere');
+        addLegs(main,'#92939a','#4b4d55',b.sit);
+        const head=child(main,0,.62,.38,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.50,.44,.48,'#b6b7bc',0,0,0,'sphere');
+        part(out,head,-.28,.35,.02,.22,.30,.12,'#8d8e95',(b.perk||0)*-.4,0,.15);
+        part(out,head,.28,.35,.02,.22,.30,.12,'#8d8e95',(b.perk||0)*-.4,0,-.15);
         part(out,head,-.18,.04,.44,.07,.08,.04,'#1a1a1a',0,0,0,'sphere');part(out,head,.18,.04,.44,.07,.08,.04,'#1a1a1a',0,0,0,'sphere');
-        const tail=child(main,.48,.55,-.48,0,0,.5+Math.sin(t*1.8)*.15,1,1,1);part(out,tail,0,.12,0,.13,.13,.65,'#8d8e95',0,0,0,'sphere');
+        part(out,head,0,-.06,.48,.06,.05,.05,'#f0a0b0',0,0,0,'sphere');
+        /* Two-segment tail: the classic slow cat flick. */
+        const tailBase=child(main,0,.55,-.48,-.5-Math.sin(t*1.3)*.12,0,Math.sin(t*1.1)*.22,1,1,1);
+        part(out,tailBase,0,.22,0,.12,.30,.12,'#8d8e95',0,0,0,'sphere');
+        const tailTip=child(tailBase,0,.46,0,Math.sin(t*1.3+1)*.35,0,0,1,1,1);
+        part(out,tailTip,0,.20,0,.10,.26,.10,'#8d8e95',0,0,0,'sphere');
       }else if(type==='bird'||type==='penguin'){
-        const body=type==='penguin'?'#303846':'#4c9fe8';part(out,main,0,.72,0,.55,.78,.55,body,0,0,0,'sphere');
+        const body=type==='penguin'?'#303846':'#4c9fe8';
+        part(out,main,0,.72,0,.55,.78,.55,body,0,0,0,'sphere');
         part(out,main,0,.25,.46,.34,.42,.10,type==='penguin'?'#f5f5f2':'#f6d34a',0,0,0,'sphere');
-        const head=child(main,0,.85,.04,0,0,0,1,1,1);part(out,head,0,0,0,.46,.44,.46,body,0,0,0,'sphere');
+        const head=child(main,0,.85,.04,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.46,.44,.46,body,0,0,0,'sphere');
         part(out,head,-.17,.02,.40,.06,.08,.04,'#151515',0,0,0,'sphere');part(out,head,.17,.02,.40,.06,.08,.04,'#151515',0,0,0,'sphere');
         part(out,head,0,-.04,.46,.10,.07,.18,'#f2b134',0,0,0,'sphere');
-        const wing=Math.sin(t*6)*.20;part(out,main,-.54,.68,0,.12,.42,.35,body,0,0,wing);part(out,main,.54,.68,0,.12,.42,.35,body,0,0,-wing);
+        /* Wings flap only during the flap behaviour, plus a small settle. */
+        const flap=Math.sin(t*9)*.55*b.flap + Math.sin(t*1.6)*.05;
+        part(out,main,-.54,.68,0,.12,.42,.35,body,0,0,flap);
+        part(out,main,.54,.68,0,.12,.42,.35,body,0,0,-flap);
+        /* Feet grip a perch so the bird is standing on something. */
+        [-1,1].forEach(s=>part(out,main,s*.18,.02,.06,.09,.06,.22,'#e08f2a'));
+        part(out,root,0,-.08,0,.70,.07,.14,'#7b5a3a');
+        if(b.peck) part(out,root,0,-.02,.42,.10,.07,.10,'#c9a227',0,0,0,'sphere');
       }else if(type==='rabbit'){
-        part(out,main,0,.68,0,.62,.58,.55,'#eee8df',0,0,0,'sphere');addLegs(main,'#e2d8ca','#7b6658');
-        const head=child(main,0,.72,.35,0,0,0,1,1,1);part(out,head,0,0,0,.48,.44,.48,'#f3eee7',0,0,0,'sphere');
-        part(out,head,-.20,.58,0,.12,.52,.12,'#e4d4c5',0,0,-.06,'sphere');part(out,head,.20,.58,0,.12,.52,.12,'#e4d4c5',0,0,.06,'sphere');
+        part(out,main,0,.68,0,.62,.58,.55,'#eee8df',0,0,0,'sphere');
+        addLegs(main,'#e2d8ca','#7b6658',b.sit);
+        const head=child(main,0,.72,.35,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.48,.44,.48,'#f3eee7',0,0,0,'sphere');
+        /* Ears are joints, so the perk behaviour actually rotates them. */
+        const earL=child(head,-.20,.30,0,(b.perk||0)*-.35,0,-.06,1,1,1);
+        part(out,earL,0,.30,0,.12,.52,.12,'#e4d4c5',0,0,0,'sphere');
+        const earR=child(head,.20,.30,0,(b.perk||0)*-.35,0,.06,1,1,1);
+        part(out,earR,0,.30,0,.12,.52,.12,'#e4d4c5',0,0,0,'sphere');
         part(out,head,-.18,.05,.43,.06,.08,.04,'#171717',0,0,0,'sphere');part(out,head,.18,.05,.43,.06,.08,.04,'#171717',0,0,0,'sphere');
+        part(out,main,0,.55,-.55,.16,.16,.16,'#fbf7f2',0,0,0,'sphere');
       }else if(type==='dino'){
-        const body=child(main,0,.62,0,0,0,0,1,1,1);part(out,body,0,0,0,.82,.52,.52,'#68b85b',0,0,0,'sphere');addLegs(body,'#579c4d','#3f6d38');
-        const head=child(body,0,.62,.42,-.08,0,0,1,1,1);part(out,head,0,0,0,.48,.40,.60,'#72c766',0,0,0,'sphere');part(out,head,-.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');
+        const body=child(main,0,.62,0,0,0,0,1,1,1);
+        part(out,body,0,0,0,.82,.52,.52,'#68b85b',0,0,0,'sphere');
+        addLegs(body,'#579c4d','#3f6d38',b.sit);
+        const head=child(body,0,.62,.42,-.08+b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.48,.40,.60,'#72c766',0,0,0,'sphere');
+        part(out,head,-.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');
         for(let i=0;i<4;i++)part(out,body,(i-1.5)*.22,.46,-.35-(i%2)*.02,.10,.18,.08,'#3f7f39',0,0,0,'sphere');
-        const tail=child(body,0,.05,-.62,0,0,0,1,1,1);part(out,tail,0,0,0,.22,.22,.85,'#4b963f',0,0,0,'sphere');
+        const tailBase=child(body,0,.05,-.50,0,Math.sin(t*1.4)*.22*b.tailWag*1.6,0,1,1,1);
+        part(out,tailBase,0,0,-.28,.22,.22,.50,'#4b963f',0,0,0,'sphere');
+        const tailTip=child(tailBase,0,0,-.62,0,Math.sin(t*1.4+.8)*.26*b.tailWag*1.6,0,1,1,1);
+        part(out,tailTip,0,0,-.24,.14,.14,.40,'#4b963f',0,0,0,'sphere');
       }else if(type==='dragon'||type==='fairy'){
-        const bodyCol=type==='dragon'?'#7b5bd6':'#f0a7e8';part(out,main,0,.68,0,.58,.72,.52,bodyCol,0,0,0,'sphere');
-        part(out,main,-.52,.78,0,.10,.34,.40,type==='dragon'?'#a0d7f7':'#fff',0,0,.35);part(out,main,.52,.78,0,.10,.34,.40,type==='dragon'?'#a0d7f7':'#fff',0,0,-.35);
-        const head=child(main,0,.72,.35,0,0,0,1,1,1);part(out,head,0,0,0,.45,.42,.46,bodyCol,0,0,0,'sphere');part(out,head,-.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');
-        if(type==='dragon'){part(out,head,-.25,.38,.02,.10,.26,.10,'#d7a84a');part(out,head,.25,.38,.02,.10,.26,.10,'#d7a84a');}
+        const bodyCol=type==='dragon'?'#7b5bd6':'#f0a7e8';
+        const wingCol=type==='dragon'?'#a0d7f7':'#ffffff';
+        part(out,main,0,.68,0,.58,.72,.52,bodyCol,0,0,0,'sphere');
+        const wf=Math.sin(t*(type==='fairy'?14:7))*.45*Math.max(.25,b.flap);
+        part(out,main,-.52,.78,0,.10,.34,.40,wingCol,0,0,.35+wf);
+        part(out,main,.52,.78,0,.10,.34,.40,wingCol,0,0,-.35-wf);
+        const head=child(main,0,.72,.35,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.45,.42,.46,bodyCol,0,0,0,'sphere');
+        part(out,head,-.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');
+        if(type==='dragon'){
+          part(out,head,-.25,.38,.02,.10,.26,.10,'#d7a84a');part(out,head,.25,.38,.02,.10,.26,.10,'#d7a84a');
+          const tail=child(main,0,.50,-.50,0,Math.sin(t*1.5)*.30*b.tailWag*1.5,0,1,1,1);
+          part(out,tail,0,0,-.30,.18,.18,.55,bodyCol,0,0,0,'sphere');
+        } else {
+          /* Fairy sparkle trail. */
+          for(let i=0;i<6;i++){
+            const a=t*1.6+i*1.05;
+            part(out,root,Math.cos(a)*.62,.85+Math.sin(a*1.3)*.45,Math.sin(a)*.62,.035,.035,.035,'#fff4b0',0,0,0,'sphere');
+          }
+        }
+      }else if(type==='panda'){
+        /* Round body, big head, and the signature black eye patches and
+           ears — proportioned so it reads as "panda" at a glance. */
+        part(out,main,0,.60,0,.72,.60,.62,'#f7f7f4',0,0,0,'sphere');
+        part(out,main,-.36,.34,.30,.24,.26,.22,'#20232a',0,0,0,'sphere');
+        part(out,main,.36,.34,.30,.24,.26,.22,'#20232a',0,0,0,'sphere');
+        addLegs(main,'#20232a','#141618',b.sit);
+        const head=child(main,0,.66,.38,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.52,.48,.50,'#f7f7f4',0,0,0,'sphere');
+        part(out,head,-.34,.30,.06,.15,(b.perk||0)>0?.20:.15,.14,'#20232a');
+        part(out,head,.34,.30,.06,.15,(b.perk||0)>0?.20:.15,.14,'#20232a');
+        part(out,head,-.16,.02,.44,.14,.11,.06,'#20232a',0,0,0,'sphere');
+        part(out,head,.16,.02,.44,.14,.11,.06,'#20232a',0,0,0,'sphere');
+        part(out,head,-.16,.02,.47,.045,.045,.03,'#fff',0,0,0,'sphere');
+        part(out,head,.16,.02,.47,.045,.045,.03,'#fff',0,0,0,'sphere');
+        part(out,head,0,-.10,.48,.09,.07,.06,'#171717',0,0,0,'sphere');
+        /* Nub tail, no swing — pandas barely have one. */
+        part(out,main,0,.30,-.56,.10,.10,.10,'#f7f7f4',0,0,0,'sphere');
+        /* Idle bamboo prop when the pet is "grooming" (its perk slot). */
+        if(b.perk>0){
+          const stick=child(main,.30,.55,.30,0,0,-.3,1,1,1);
+          part(out,stick,0,0,0,.05,.34,.05,'#8bbf5a');
+        }
+      }else if(type==='elephant'){
+        /* Large barrel body on four thick legs, a trunk built from three
+           hinged segments so it can curl, plus real floppy ears. */
+        const body=child(main,0,.86,0,0,0,0,1,1,1);
+        part(out,body,0,0,0,.98,.72,.78,'#9aa3ac',0,0,0,'sphere');
+        [-1,1].forEach(side=>{
+          const hip=child(body,side*.62,-.62,.18,-b.sit*.6,0,0,1,1,1);
+          part(out,hip,0,-.30,0,.26,.60,.26,'#8b939c');
+          part(out,hip,0,-.62,0,.28,.14,.30,'#6e767e');
+        });
+        [-1,1].forEach(side=>{
+          const hip=child(body,side*.62,-.62,-.22,b.sit*.6,0,0,1,1,1);
+          part(out,hip,0,-.30,0,.26,.60,.26,'#8b939c');
+          part(out,hip,0,-.62,0,.28,.14,.30,'#6e767e');
+        });
+        const head=child(body,0,.30,.62,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.56,.52,.52,'#9aa3ac',0,0,0,'sphere');
+        /* Ears are real hinges — the perk behaviour actually flaps them. */
+        const earL=child(head,-.48,.10,0,0,0,-.25-(b.perk||0)*.35,1,1,1);
+        part(out,earL,-.20,0,0,.32,.36,.05,'#8b939c');
+        const earR=child(head,.48,.10,0,0,0,.25+(b.perk||0)*.35,1,1,1);
+        part(out,earR,.20,0,0,.32,.36,.05,'#8b939c');
+        part(out,head,-.18,.10,.44,.07,.08,.04,'#171717',0,0,0,'sphere');
+        part(out,head,.18,.10,.44,.07,.08,.04,'#171717',0,0,0,'sphere');
+        /* Trunk: three segments, each a child of the last, so it hangs
+           naturally and curls up together during the "trunk raise" beat. */
+        const raise = b.headPitch<0 ? Math.min(1,-b.headPitch*1.6) : 0;
+        const seg1=child(head,0,-.10,.46,-.20-raise*.9,0,0,1,1,1);
+        part(out,seg1,0,-.20,0,.15,.22,.15,'#8b939c');
+        const seg2=child(seg1,0,-.40,0,-.15-raise*.9,0,0,1,1,1);
+        part(out,seg2,0,-.18,0,.13,.20,.13,'#848c95');
+        const seg3=child(seg2,0,-.36,0,-.10-raise*.6,0,0,1,1,1);
+        part(out,seg3,0,-.15,0,.11,.17,.11,'#7d858e');
+        /* Tail with a small tuft. */
+        const tail=child(body,0,-.10,-.72,0,Math.sin(t*1.1)*.14*b.tailWag,0,1,1,1);
+        part(out,tail,0,-.20,0,.06,.36,.06,'#6e767e');
+      }else if(type==='croc'){
+        /* Low, long body; the head/jaw is a real hinge so it can open when
+           the pet "barks" (its bite reaction), and the tail is a two-part
+           chain like the dragon/dino tails elsewhere in this file. */
+        const body=child(main,0,.30,0,0,0,0,1,1,1);
+        part(out,body,0,0,0,.44,.30,.95,'#5c7a4c',0,0,0,'sphere');
+        addLegs(body,'#4c6640','#33452c',b.sit);
+        const head=child(body,0,-.02,.90,b.headPitch,b.headYaw,0,1,1,1);
+        part(out,head,0,0,0,.32,.20,.55,'#5c7a4c',0,0,0,'sphere');
+        const jawOpen=(b.bark||0)*.4;
+        const jaw=child(head,0,-.10,.10,jawOpen,0,0,1,1,1);
+        part(out,jaw,0,-.05,.30,.28,.10,.42,'#3f5535');
+        part(out,head,-.14,.10,.44,.05,.05,.05,'#e8d95a',0,0,0,'sphere');
+        part(out,head,.14,.10,.44,.05,.05,.05,'#e8d95a',0,0,0,'sphere');
+        for(let i=0;i<4;i++) part(out,body,0,.20,.55-i*.28,.10,.10,.14,'#3f5535',0,0,0,'sphere');
+        const tailBase=child(body,0,0,-.85,0,Math.sin(t*1.3)*.24*b.tailWag*1.5,0,1,1,1);
+        part(out,tailBase,0,0,-.34,.24,.18,.55,'#4c6640',0,0,0,'sphere');
+        const tailTip=child(tailBase,0,0,-.62,0,Math.sin(t*1.3+.7)*.28*b.tailWag*1.5,0,1,1,1);
+        part(out,tailTip,0,0,-.28,.14,.12,.42,'#4c6640',0,0,0,'sphere');
+      }else if(type==='snake'){
+        /*
+         * A genuine segmented spine, NOT the quadruped rig with legs hidden.
+         * Each segment is parented to the previous one, and a travelling
+         * sine wave runs down that chain — real slithering, not a sprite
+         * sliding sideways. The head carries eyes and a flicking tongue.
+         */
+        const SEGS=9;
+        let parent=child(main,0,.16,0,0,0,0,1,1,1);
+        const wave=(i)=> Math.sin(t*2.6 - i*0.85)*.42;
+        for(let i=0;i<SEGS;i++){
+          const scale=1-(i/SEGS)*.55;
+          const yaw = i===0 ? 0 : wave(i);
+          const seg=child(parent, i===0?0:0, 0, i===0?0:-.30, 0, yaw, 0, 1,1,1);
+          const col = i%2===0 ? '#5fa050' : '#4c8a40';
+          part(out,seg,0,0,i===0?0:-.15,.16*scale,.14*scale,.20*scale,col,0,0,0,'sphere');
+          if(i===0){
+            const head=seg;
+            part(out,head,-.07,.03,.16,.03,.03,.03,'#171717',0,0,0,'sphere');
+            part(out,head,.07,.03,.16,.03,.03,.03,'#171717',0,0,0,'sphere');
+            const tongueOut = Math.max(0,Math.sin(t*3+2));
+            if(tongueOut>.55){
+              part(out,head,0,-.02,.20+tongueOut*.10,.015,.015,.10,'#d94a4a');
+            }
+          }
+          parent=seg;
+        }
+      }else if(type==='egg'){
+        /*
+         * PET EGG — a real 3D shape (two stacked, differently-sized spheres
+         * approximate an egg silhouette) with rarity-specific decoration,
+         * not just a bigger emoji. Used both in the Egg Store cards and in
+         * the reveal sequence, so a "Legendary Egg" actually LOOKS rarer
+         * before it is ever opened.
+         */
+        const pal = EGG_PALETTES[pet.pattern] || EGG_PALETTES.speckled;
+        const wobble=Math.sin(t*1.4)*.03, spin=t*0.6;
+        const shell=child(main,0,.62+wobble,0,0,spin,0,1,1,1);
+        part(out,shell,0,.20,0,.42,.46,.42,pal.base,0,0,0,'sphere');
+        part(out,shell,0,-.28,0,.60,.60,.60,pal.base,0,0,0,'sphere');
+        if(pet.pattern==='speckled'){
+          for(let i=0;i<10;i++){
+            const a=i*2.0, y=-.5+ (i%5)*.28;
+            part(out,shell,Math.cos(a)*.42,y,Math.sin(a)*.42,.05,.05,.05,pal.spot,0,0,0,'sphere');
+          }
+        }else if(pet.pattern==='striped'){
+          for(let i=0;i<4;i++){
+            const y=-.55+i*.38, w=.58-(Math.abs(i-1.5)*.10);
+            part(out,shell,0,y,0,w,.06,w,pal.spot,0,0,0,'sphere');
+          }
+        }else if(pet.pattern==='gem'){
+          for(let i=0;i<6;i++){
+            const a=(i/6)*Math.PI*2;
+            part(out,shell,Math.cos(a)*.35,.05,Math.sin(a)*.35,.20,.30,.06,pal.spot,0,a,0);
+          }
+        }else{ /* crystal — legendary: protruding shards + idle sparkle */
+          for(let i=0;i<6;i++){
+            const a=(i/6)*Math.PI*2;
+            const shard=child(shell,Math.cos(a)*.44,.05,Math.sin(a)*.44,0,a,.9,1,1,1);
+            part(out,shard,0,0,0,.07,.30,.07,pal.spot);
+          }
+          for(let i=0;i<4;i++){
+            const a=t*1.1+i*1.6;
+            part(out,root,Math.cos(a)*.60,.9+Math.sin(a*1.4)*.30,Math.sin(a)*.60,.03,.03,.03,'#fff6c2',0,0,0,'sphere');
+          }
+        }
       }
       return out;
     }
     function mount(stage,pet){
       if(!stage)return false;
+      sweep();
       let st=instances.get(stage);
       if(!st){
         stage.innerHTML='<canvas aria-label="Interactive 3D pet preview"></canvas><div class="pet-3d-label"></div><div class="pet-3d-hint">↔↕ Drag</div>';
@@ -2443,17 +2874,52 @@
         const F='precision mediump float;uniform vec3 uColor;varying vec3 vN;void main(){vec3 N=normalize(vN);vec3 L=normalize(vec3(-.45,.88,.55));float d=max(dot(N,L),0.0);gl_FragColor=vec4(uColor*(.46+.54*d),1.0);}';
         const program=gl.createProgram();gl.attachShader(program,shader(gl,gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl,gl.FRAGMENT_SHADER,F));gl.linkProgram(program);gl.useProgram(program);
         const buffers={};makeBox(gl,buffers);makeSphere(gl,buffers);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
-        st={gl,program,canvas,buffers,pet,rotation:0,pitch:-.08,drag:false,lastX:0,lastY:0};
-        stage.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;st.drag=true;st.lastX=e.clientX;st.lastY=e.clientY;stage.classList.add('dragging');try{stage.setPointerCapture(e.pointerId)}catch(_){}});
-        stage.addEventListener('pointermove',e=>{if(!st.drag)return;st.rotation+=(e.clientX-st.lastX)*.012;st.pitch=Math.max(-.7,Math.min(.7,st.pitch-(e.clientY-st.lastY)*.010));st.lastX=e.clientX;st.lastY=e.clientY});
+        st={gl,program,canvas,buffers,pet,rotation:0,pitch:-.08,drag:false,lastX:0,lastY:0,velX:0,velY:0,raf:0,seed:Math.random()*100};
+        stage.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;st.drag=true;st.velX=0;st.velY=0;st.lastX=e.clientX;st.lastY=e.clientY;stage.classList.add('dragging');try{stage.setPointerCapture(e.pointerId)}catch(_){}});
+        stage.addEventListener('pointermove',e=>{if(!st.drag)return;const dx=e.clientX-st.lastX,dy=e.clientY-st.lastY;st.rotation+=dx*.012;st.pitch=Math.max(-.7,Math.min(.7,st.pitch-dy*.010));st.velX=dx*.012*.5;st.velY=-dy*.010*.5;st.lastX=e.clientX;st.lastY=e.clientY});
+        stage.addEventListener('dblclick',e=>{e.preventDefault();st.rotation=0;st.pitch=-.08;st.velX=0;st.velY=0;});
         const end=e=>{st.drag=false;stage.classList.remove('dragging');if(e)try{stage.releasePointerCapture(e.pointerId)}catch(_){}};
         stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);stage.addEventListener('lostpointercapture',()=>{st.drag=false;stage.classList.remove('dragging')});
         instances.set(stage,st);
-        st.loop=(now)=>{requestAnimationFrame(st.loop);const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,r.width*d);canvas.height=Math.max(1,r.height*d);gl.viewport(0,0,canvas.width,canvas.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);const vp=mm(perspective(Math.PI/4.5,Math.max(.6,r.width/Math.max(1,r.height)),.1,20),lookAt([0,1.8,6],[0,.85,0],[0,1,0]));build(st,st.pet,now).forEach(o=>draw(st,o,vp));};requestAnimationFrame(st.loop);
+        liveStages.add(stage);
+        /*
+         * Every pet stage owns a WebGL context, and the Main Menu, Profile
+         * and Store can each hold one at the same time. The old loop
+         * reallocated the drawing buffer on EVERY frame and kept rendering
+         * even when its stage was on an inactive screen, which is the kind
+         * of thing that quietly drains an Android battery. It now resizes
+         * only on an actual change and idles whenever it is not visible.
+         */
+        st.loop=(now)=>{
+          if(st.disposed) return;
+          /* A stage removed from the DOM stops rendering AND stops
+             rescheduling, so the loop cannot outlive its element. */
+          if(!stage.isConnected){ disposeStage(stage); return; }
+          st.raf=requestAnimationFrame(st.loop);
+          if(document.hidden) return;
+          if(!canvas.offsetParent && canvas.offsetWidth===0) return;
+          const r=canvas.getBoundingClientRect();
+          if(r.width<2||r.height<2) return;
+          const d=Math.min(devicePixelRatio||1,2);
+          const w=Math.max(1,Math.floor(r.width*d)), h=Math.max(1,Math.floor(r.height*d));
+          if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}
+          if(!st.drag){
+            /* Gentle release momentum, matching the character viewer. */
+            if(Math.abs(st.velX)>0.0006||Math.abs(st.velY)>0.0006){
+              st.rotation+=st.velX;
+              st.pitch=Math.max(-.7,Math.min(.7,st.pitch+st.velY));
+              st.velX*=0.93; st.velY*=0.90;
+            } else { st.velX=0; st.velY=0; }
+          }
+          gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+          const vp=mm(perspective(Math.PI/4.5,Math.max(.6,r.width/Math.max(1,r.height)),.1,20),lookAt([0,1.8,6],[0,.85,0],[0,1,0]));
+          build(st,st.pet,now).forEach(o=>draw(st,o,vp));
+        };
+        st.raf=requestAnimationFrame(st.loop);
       }
       st.pet=pet||PETS[0];const label=stage.querySelector('.pet-3d-label');if(label)label.textContent=st.pet.name;return true;
     }
-    return {mount};
+    return {mount, sweep, react};
   })();
 
   function mountPetViewer(stageEl, pet){
@@ -2466,32 +2932,42 @@
     ensurePetState(); tickPetLifecycle();
     const p=currentPet(), count=S.pets.feedCount[p.id]||0, happy=S.pets.happiness[p.id]||0;
     const life=S.pets.life[p.id]||{bornAt:Date.now(),status:'active'};
-    const active = life.status!=='inactive';
+    const active = true;
     const el=$('profile-pet-panel'); if(!el) return;
-    const stage = active ? petHungerStage(p.id) : 'dead';
-    const stageMsg = { normal:'😊 Your pet is doing well.', low:'😟 Your pet is hungry. Get more food to keep it healthy.', critical:'⚠️ Your pet urgently needs food!', dead:'' }[stage];
+    const stage = petHungerStage(p.id);
+    const stageMsg = { normal:'😊 Your pet is doing well.', low:'😟 Your pet is getting hungry.', critical:'⚠️ Your pet is very hungry — a quick feed will help.' }[stage];
+    const hunger=Math.max(0,Math.min(100,Number(S.pets.hunger[p.id]??100))), xp=Math.max(0,Number(S.pets.xp[p.id]||0)), lv=Math.max(1,Number(S.pets.level[p.id]||1));
     const foodRow = `<div class="subtitle">🍖 Pet Food: ${S.pets.food.current} / ${S.pets.food.max}</div>`;
     if(!active){
-      el.innerHTML = `<div class="pet-panel-main"><div class="pet-3d-stage" id="profile-pet-stage"></div><div><strong>${escapeHtml(p.name)}</strong><div class="subtitle">Born: ${petBornLabel(p.id)}</div><div class="subtitle">This pet is no longer active. You can obtain another one from the Pet Store.</div><div class="pet-actions"><button class="btn btn-primary" id="btn-pet-store">🏪 Pet Store</button></div></div></div>`;
-      mountPetViewer($('profile-pet-stage'), p);
+      el.innerHTML = `<div class="pet-panel-main"><div><strong>${escapeHtml(p.name)}</strong><div class="subtitle">Born: ${petBornLabel(p.id)}</div><div class="subtitle">This pet is no longer active. You can obtain another one from the Pet Store.</div><div class="pet-actions"><button class="btn btn-primary" id="btn-pet-store">🏪 Pet Store</button></div></div></div>`;
       $('btn-pet-store')?.addEventListener('click', () => { activeStoreTab='pets'; openStore(); });
       return;
     }
-    el.innerHTML = `<div class="pet-panel-main"><div class="pet-3d-stage" id="profile-pet-stage"></div><div><strong>${escapeHtml(p.name)}</strong>
+    el.innerHTML = `<div class="pet-panel-main"><div><strong>${escapeHtml(p.name)}</strong>
       <div class="subtitle">Born: ${petBornLabel(p.id)}</div>
       <div class="subtitle">Age: ${formatPetAge(Date.now()-life.bornAt)}</div>
       ${foodRow}
-      <div class="subtitle">Happiness: ${happy}% · Fed ${count} time${count===1?'':'s'}</div>
+      <div class="pet-meta-grid"><div class="pet-meta"><strong>Lv ${lv}</strong><span>Pet Level</span></div><div class="pet-meta"><strong>${xp}/${PET_XP_PER_LEVEL}</strong><span>Pet XP</span></div><div class="pet-meta"><strong>${petMoodLabel(p.id)}</strong><span>Status</span></div></div>
+      <div class="pet-meter"><div class="pet-meter-label"><span>🍖 Hunger</span><span>${hunger}%</span></div><div class="pet-meter-track"><div class="pet-meter-fill hunger" style="width:${hunger}%"></div></div></div>
+      <div class="pet-meter"><div class="pet-meter-label"><span>💖 Happiness</span><span>${happy}%</span></div><div class="pet-meter-track"><div class="pet-meter-fill happy" style="width:${happy}%"></div></div></div>
+      <div class="pet-meter"><div class="pet-meter-label"><span>⭐ Progress</span><span>${xp}/${PET_XP_PER_LEVEL} XP</span></div><div class="pet-meter-track"><div class="pet-meter-fill petxp" style="width:${Math.round(xp/PET_XP_PER_LEVEL*100)}%"></div></div></div>
+      <div class="subtitle">${petMoodLabel(p.id)} · Fed ${count} time${count===1?'':'s'}</div>
       ${stageMsg?`<div class="subtitle" style="font-weight:800">${stageMsg}</div>`:''}
       <div class="pet-actions">
         <button class="btn" id="btn-feed-profile" ${S.pets.food.current<=0?'disabled':''}>🍎 Feed</button>
+        <button class="btn" id="btn-play-profile">🎾 Play</button>
         <button class="btn" id="btn-pet-store-food">🏪 Buy Food</button>
         <button class="btn" id="btn-pet-convert-xp">⭐→🍖 Convert XP</button>
       </div>
       ${S.pets.food.current<=0?'<div class="subtitle" style="font-weight:800">No pet food available.</div>':''}
     </div></div>`;
-    mountPetViewer($('profile-pet-stage'), p);
+    /* The full owned-pet collection, switchable in one tap. */
+    const coll=document.createElement('div');
+    coll.className='pet-collection'; coll.id='profile-pet-collection';
+    el.appendChild(coll);
+    renderPetCollection('profile-pet-collection');
     $('btn-feed-profile')?.addEventListener('click',()=>feedPet());
+    $('btn-play-profile')?.addEventListener('click',()=>playWithPet());
     $('btn-pet-store-food')?.addEventListener('click',()=>{ activeStoreTab='pets'; openStore(); });
     $('btn-pet-convert-xp')?.addEventListener('click',()=>convertXPToFood());
   }
@@ -2503,11 +2979,34 @@
     const now=Date.now();
     S.pets.food.current = Math.max(0, S.pets.food.current-1);
     S.pets.feedCount[p.id]=(S.pets.feedCount[p.id]||0)+1;
-    S.pets.happiness[p.id]=Math.min(100,(S.pets.happiness[p.id]||0)+10);
-    S.pets.lastFedAt=now; S.pets.lastFedByPet[p.id]=now;
+    S.pets.happiness[p.id]=Math.min(100,(S.pets.happiness[p.id]||0)+15);
+    S.pets.hunger[p.id]=100; S.pets.lastFedAt=now; S.pets.lastFedByPet[p.id]=now; S.pets.lastInteraction[p.id]=now; S.pets.careCount=(S.pets.careCount||0)+1; addPetXP(p.id,20);
     saveState(); sfx('correct');
+    /* The pet now visibly reacts — head dips toward its bowl, tail wags —
+       wherever it's currently rendered (Menu, Profile, or Store). */
+    Pet3D.react(p.id,'feed',2200);
     const el=document.createElement('div'); el.className='pet-fed-fx'; el.textContent='💖 ✨ 💖'; document.body.appendChild(el); setTimeout(()=>el.remove(),900);
     showInfo('🐾 Pet Fed!','Your pet enjoyed the treat.');
+    renderPetPanel();
+  }
+
+  /*
+   * PLAY (§5) — a free, no-cost interaction that boosts happiness without
+   * touching the food meter, so it can be used any time. This is the
+   * "Play" action the master prompt asks for alongside Feed.
+   */
+  let lastPlayAt=0;
+  function playWithPet(){
+    ensurePetState(); tickPetLifecycle();
+    const p=currentPet();
+    if(!petIsActive(p.id)){ renderPetPanel(); return; }
+    const now=Date.now();
+    if(now-lastPlayAt < 15000){ showInfo('🐾 Still Playing','Give your pet a short rest before playing again.'); return; }
+    lastPlayAt=now;
+    S.pets.happiness[p.id]=Math.min(100,(S.pets.happiness[p.id]||0)+10); S.pets.hunger[p.id]=Math.max(0,(S.pets.hunger[p.id]||100)-3); S.pets.lastInteraction[p.id]=now; S.pets.careCount=(S.pets.careCount||0)+1; addPetXP(p.id,15);
+    saveState(); sfx('correct');
+    Pet3D.react(p.id,'play',2200);
+    const el=document.createElement('div'); el.className='pet-fed-fx'; el.textContent='🎾 ✨ 🎾'; document.body.appendChild(el); setTimeout(()=>el.remove(),900);
     renderPetPanel();
   }
   // Rewards a small amount of pet food for completing a game activity. Called
@@ -2547,12 +3046,15 @@
       ...['Baseball Cap','Sombrero','Fez','Cowboy Hat','Beret','Top Hat','Wizard Hat'].map(n=>({id:'hat:'+n,name:n,price:300,icon:'🧢'})),
       ...['Knight Helmet','Viking Helmet','Astronaut Helmet','Construction Helmet','Military Helmet'].map(n=>({id:'hat:'+n,name:n,price:450,icon:'⛑️'})),
       ...["King's Crown",'Tiara','Headphones','Pirate Tricorne','Halo'].map(n=>({id:'hat:'+n,name:n,price:600,icon:'👑'})),
-      ...['Cat Ears','Pumpkin Head','Chef Hat','Shark Head','Santa Hat'].map(n=>({id:'hat:'+n,name:n,price:350,icon:'🎩'}))
+      ...['Cat Ears','Pumpkin Head','Chef Hat','Shark Head','Santa Hat'].map(n=>({id:'hat:'+n,name:n,price:350,icon:'🎩'})),
+      /* School-themed headwear — each one has its own 3D mesh, not a recolour. */
+      ...['Student Cap','Graduation Cap','Science Goggles'].map(n=>({id:'hat:'+n,name:n,price:320,icon:'🎓'})),
+      ...['Ninja Hood','Samurai Kabuto','Explorer Hat','Royal Crown','Detective Fedora','Chef Toque','Scientist Visor','Gamer Headset','Winter Beanie','Adventure Hat','Futuristic Helmet','Astronaut Visor'].map(n=>({id:'hat:'+n,name:n,price:700,icon:'🎩'}))
     ],
     effects: [
       ...['Fire Sparks','Water Splashes','Lightning','Cloud Dust'].map(n=>({id:'effect:'+n,name:n,price:500,icon:'💫'})),
       ...['Floating Hearts','Star Sparkles','Dollar Signs','Musical Notes','Skulls'].map(n=>({id:'effect:'+n,name:n,price:550,icon:'💖'})),
-      ...['Rainbow Trail','Neon Grid','Ghost Shadow Echo','Confetti Explosion'].map(n=>({id:'effect:'+n,name:n,price:900,icon:'🌟'}))
+      ...['Rainbow Trail','Neon Grid','Ghost Shadow Echo','Confetti Explosion','Energy Aura','XP Burst','Coin Shower','Victory Aura','Footstep Sparks','Entrance Glow','Level-Up Nova','Achievement Halo'].map(n=>({id:'effect:'+n,name:n,price:1200,icon:'🌟'}))
     ]
   };
 
@@ -2573,8 +3075,8 @@
       favoriteGame:null, favoriteGameScore:0,
       history:[],
       purchased:[], equipped:{ color:null, hat:null, effect:null },
-      pets:{ owned:['pet:plant'], equipped:'pet:plant', happiness:{'pet:plant':0}, feedCount:{'pet:plant':0}, lastFedAt:null,
-        food:{current:5, max:10}, lastFedByPet:{}, life:{}, history:[] },
+      pets:{ owned:['pet:plant'], equipped:'pet:plant', happiness:{'pet:plant':70}, hunger:{'pet:plant':100}, level:{'pet:plant':1}, xp:{'pet:plant':0}, feedCount:{'pet:plant':0}, lastFedAt:null, lastInteraction:{'pet:plant':Date.now()},
+        food:{current:5, max:10}, lastFedByPet:{}, life:{}, history:[], careCount:0 },
       achievementsCollected:{},
       dailyReward:{ lastCollectedDate:null, streakDay:0 },
       weekStart: startOfWeekISO(), weeklyScore:0,
@@ -2697,11 +3199,16 @@
     merged.pets.owned = Array.isArray(merged.pets.owned) && merged.pets.owned.length ? [...new Set(merged.pets.owned)] : ['pet:plant'];
     if(!merged.pets.owned.includes('pet:plant')) merged.pets.owned.unshift('pet:plant');
     merged.pets.happiness = Object.assign({}, fresh.pets.happiness||{}, loaded.pets?.happiness||{});
+    merged.pets.hunger = Object.assign({}, fresh.pets.hunger||{}, loaded.pets?.hunger||{});
+    merged.pets.level = Object.assign({}, fresh.pets.level||{}, loaded.pets?.level||{});
+    merged.pets.xp = Object.assign({}, fresh.pets.xp||{}, loaded.pets?.xp||{});
     merged.pets.feedCount = Object.assign({}, fresh.pets.feedCount||{}, loaded.pets?.feedCount||{});
+    merged.pets.lastInteraction = Object.assign({}, fresh.pets.lastInteraction||{}, loaded.pets?.lastInteraction||{});
     merged.pets.food = Object.assign({}, fresh.pets.food||{current:5,max:10}, loaded.pets?.food||{});
     merged.pets.lastFedByPet = Object.assign({}, fresh.pets.lastFedByPet||{}, loaded.pets?.lastFedByPet||{});
     merged.pets.life = Object.assign({}, fresh.pets.life||{}, loaded.pets?.life||{});
     merged.pets.history = Array.isArray(loaded.pets?.history) ? loaded.pets.history : (fresh.pets.history||[]);
+    merged.pets.careCount = Number(loaded.pets?.careCount)||0;
     if(!merged.pets.equipped || !merged.pets.owned.includes(merged.pets.equipped)) merged.pets.equipped='pet:plant';
     merged.avatar = Object.assign({}, fresh.avatar||{}, loaded.avatar||{});
     // Retired Dinosaur character: keep legacy saved purchase data intact, but
@@ -3447,7 +3954,45 @@
     { id:'char:detective', name:'Detective', cat:'Fun', icon:'🕵️', price:600, skin:'#ffcd94', hair:'#2b1b0e', clothes:'#8a97b5' },
     { id:'char:santa', name:'Santa Claus', cat:'Fun', icon:'🎅', price:750, skin:'#ffe0bd', hair:'#eaeaea', clothes:'#ff5a5a' },
     { id:'char:clown', name:'Clown', cat:'Fun', icon:'🤡', price:600, skin:'#ffe0bd', hair:'#ff6fa5', clothes:'#ffd94a' },
+    /* Not a recoloured human: this one swaps in an entirely separate model
+       (buildDinosaur) with its own body plan, tail and walk cycle. */
+    { id:'char:dinosaur', name:'Dinosaur', cat:'Fun', icon:'🦕', price:1400, skin:'#6bbf59', hair:'#3f7f39', clothes:'#6bbf59' },
+    /*
+     * ORIGINAL ARCHETYPE CHARACTERS
+     * -----------------------------
+     * Inspired by broad anime character archetypes (the determined scout,
+     * the tactical strategist, the inventor, and so on) — none of these are
+     * copies of any specific copyrighted character. Each gets its own
+     * geometry block in addCharacterIdentity(), not a recolour.
+     */
+    { id:'char:scout', name:'Determined Scout', cat:'Legends', icon:'🧭', price:1700, skin:'#e0ac69', hair:'#2b1b0e', clothes:'#37c9b0' },
+    { id:'char:strategist', name:'Tactical Strategist', cat:'Legends', icon:'📐', price:1750, skin:'#ffcd94', hair:'#1b1109', clothes:'#3b4a72' },
+    { id:'char:inventor', name:'Genius Inventor', cat:'Legends', icon:'🔧', price:1800, skin:'#f1c27d', hair:'#8d5524', clothes:'#e6bd43' },
+    { id:'char:explorer', name:'Energetic Explorer', cat:'Legends', icon:'🎒', price:1500, skin:'#c68642', hair:'#5c3317', clothes:'#ff9d4d' },
+    { id:'char:swordsman', name:'Mysterious Swordsman', cat:'Legends', icon:'🗡️', price:2000, skin:'#ffe0bd', hair:'#eaeaea', clothes:'#20283a' },
+    { id:'char:elitewarrior', name:'Elite Warrior', cat:'Legends', icon:'🔱', price:2100, skin:'#e0ac69', hair:'#1b1109', clothes:'#7a1f2b' },
   ];
+  /*
+   * RARITY (§10) — derived from price rather than hand-tagged on all 29
+   * entries, so it can never drift out of sync with what a character
+   * actually costs. Free characters are Common; the two new top-tier
+   * archetypes land in Mythic.
+   */
+  /*
+   * RARITY (§10) — derived from price rather than hand-tagged on every
+   * catalogue entry, so it can never drift out of sync with what an item
+   * actually costs. Shared by characters, hats, effects and pets.
+   */
+  function priceRarity(p){
+    p = p||0;
+    if(p<=0) return 'Common';
+    if(p<=500) return 'Rare';
+    if(p<=900) return 'Epic';
+    if(p<=1500) return 'Legendary';
+    return 'Mythic';
+  }
+  function characterRarity(item){ return priceRarity(item.price); }
+  const RARITY_COLORS = { Common:'#8fa0bd', Rare:'#4d9dff', Epic:'#9b6bff', Legendary:'#e6bd43', Mythic:'#ff5a8a', Special:'#20bfa5' };
   function defaultAvatar(){
     return { character:'char:student_m', skin:AV_SKINS[2], hairStyle:'short', hairColor:AV_HAIR_COLORS[1], eyes:'normal', expression:'smile',
       clothes:AV_CLOTHES[0], shoes:AV_SHOES[0], hat:'none', glasses:'none', accessory:'none', back:'none', walkAnim:'bounce', victoryAnim:'jump', showName:true };
@@ -3636,7 +4181,15 @@
     let gl=null, program=null, canvas=null, viewer=null, raf=0, resizeObserver=null;
     let cfg=null, mode='idle', modeStarted=0, rotation=0, pitch=0;
     let targetCanvasId='cust-3d-canvas', targetViewerId='cust-3d-viewer', targetHintId='cust-3d-hint', targetStatusId='cust-3d-status';
-    let dragging=false, lastX=0, pointerId=null, hintHidden=false;
+    /* lastY was previously assigned without ever being declared. Under
+       "use strict" that is a ReferenceError, thrown inside pointerdown
+       AFTER rotation had already been set up — which is exactly why the
+       character could be dragged left/right but never up/down, why the
+       drag hint never disappeared, and why pointer capture never engaged.
+       Declaring it here repairs vertical dragging in every viewer
+       (Customize, Profile, Store preview and Main Menu). */
+    let dragging=false, lastX=0, lastY=0, pointerId=null, hintHidden=false;
+    let velX=0, velY=0, lastMoveAt=0;
     let buffers={};
 
     const V=`
@@ -3783,6 +4336,17 @@
         return true;
       }catch(e){console.warn('3D character viewer fallback:',e);return false;}
     }
+    /* Just under 45 degrees each way: enough to inspect the top of a hat
+       and the soles of the shoes, never enough to invert the character. */
+    const PITCH_LIMIT=0.72;
+    function resetView(){ rotation=0; pitch=0; velX=0; velY=0; }
+    function applyInertia(){
+      if(dragging) return;
+      if(Math.abs(velX)<0.0006 && Math.abs(velY)<0.0006){ velX=0; velY=0; return; }
+      rotation+=velX;
+      pitch=Math.max(-PITCH_LIMIT,Math.min(PITCH_LIMIT,pitch+velY));
+      velX*=0.93; velY*=0.90;
+    }
     function bind(){
       if(!viewer||viewer.dataset.avatar3dBound)return;viewer.dataset.avatar3dBound='1';
       /* Bind to the actual canvas, not the whole card. This prevents buttons,
@@ -3791,23 +4355,56 @@
       const start=e=>{
         if(e.pointerType==='mouse' && e.button!==0)return;
         e.preventDefault(); e.stopPropagation();
-        dragging=true; pointerId=e.pointerId; lastX=e.clientX; lastY=e.clientY;
+        dragging=true; pointerId=e.pointerId;
+        lastX=e.clientX; lastY=e.clientY; lastMoveAt=performance.now();
+        velX=0; velY=0;
         viewer.classList.add('dragging'); hideHint();
         try{surface.setPointerCapture(e.pointerId);}catch(_){}
       };
       const move=e=>{
         if(!dragging || (pointerId!==null && e.pointerId!==pointerId))return;
         e.preventDefault(); e.stopPropagation();
-        rotation+=(e.clientX-lastX)*.010;
-        pitch=Math.max(-0.58,Math.min(0.58,pitch-(e.clientY-lastY)*.008));
-        lastX=e.clientX; lastY=e.clientY;
+        const dx=e.clientX-lastX, dy=e.clientY-lastY;
+        rotation+=dx*.010;
+        /* PITCH_LIMIT keeps the camera between a clear above-view and a
+           clear below-view without ever letting the model flip over. */
+        pitch=Math.max(-PITCH_LIMIT,Math.min(PITCH_LIMIT,pitch-dy*.008));
+        const now=performance.now(), dt=Math.max(8,now-lastMoveAt);
+        velX=(dx*.010)/dt*16; velY=(-dy*.008)/dt*16;
+        lastX=e.clientX; lastY=e.clientY; lastMoveAt=now;
       };
       const end=e=>{
         if(pointerId!==null&&e&&e.pointerId!==undefined&&e.pointerId!==pointerId)return;
         if(e) { e.preventDefault(); e.stopPropagation(); }
+        if(!dragging){ pointerId=null; return; }
         dragging=false; pointerId=null; viewer.classList.remove('dragging');
+        /* Flick momentum only if the gesture was still moving on release. */
+        if(performance.now()-lastMoveAt>110){ velX=0; velY=0; }
         if(e){try{surface.releasePointerCapture(e.pointerId);}catch(_){} }
       };
+      /* Double-tap / double-click returns the model to its neutral pose, so
+         a player who spins the character into an awkward angle always has a
+         one-gesture way back. */
+      surface.addEventListener('dblclick',e=>{e.preventDefault();resetView();});
+      let lastTapAt=0;
+      surface.addEventListener('pointerup',e=>{
+        if(e.pointerType==='mouse')return;
+        const now=performance.now();
+        if(now-lastTapAt<300) resetView();
+        lastTapAt=now;
+      },{passive:true});
+      /* Keyboard inspection for players on a laptop without a pointer. */
+      viewer.tabIndex=0;
+      viewer.addEventListener('keydown',e=>{
+        const k=e.key;
+        if(k==='ArrowLeft'){rotation-=.16;}
+        else if(k==='ArrowRight'){rotation+=.16;}
+        else if(k==='ArrowUp'){pitch=Math.min(PITCH_LIMIT,pitch+.10);}
+        else if(k==='ArrowDown'){pitch=Math.max(-PITCH_LIMIT,pitch-.10);}
+        else if(k==='Home'||k===' '){resetView();}
+        else return;
+        e.preventDefault(); hideHint();
+      });
       surface.addEventListener('pointerdown',start,{passive:false});
       surface.addEventListener('pointermove',move,{passive:false});
       surface.addEventListener('pointerup',end,{passive:false});
@@ -3818,7 +4415,8 @@
     function hideHint(){if(hintHidden)return;hintHidden=true;const h=$(targetHintId);if(h)h.classList.add('hidden-hint');}
     function resize(){if(!canvas||!gl)return;const r=canvas.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.floor(r.width*d)),h=Math.max(1,Math.floor(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,canvas.width,canvas.height);}
     function setCfg(c){cfg=Object.assign(defaultAvatar(),c||{});}
-    function color(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return[.65,.7,.8];const n=parseInt(m[1],16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
+    /* Accepts #abc as well as #aabbcc (see Pet3D.color for why). */
+    function color(hex){let v=String(hex||'').replace('#','');if(/^[0-9a-f]{3}$/i.test(v))v=v[0]+v[0]+v[1]+v[1]+v[2]+v[2];if(!/^[0-9a-f]{6}$/i.test(v))return[.65,.7,.8];const n=parseInt(v,16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];}
     function draw(shape,model,col,vp){
       const b=buffers[shape];if(!b)return;
       const ap=gl.getAttribLocation(program,'aPos'),an=gl.getAttribLocation(program,'aNormal');
@@ -3997,19 +4595,85 @@
         const hn=String(c.hat).toLowerCase();
         if(hn.includes('cat ears')){ out.push(node(head,-.48,.63,0,0,0,.18,.20,.38,.20,'sphere','#4b3a62')); out.push(node(head,.48,.63,0,0,0,-.18,.20,.38,.20,'sphere','#4b3a62')); }
         else if(hn.includes('pumpkin')){ out.push(node(head,0,.18,0,0,0,0,1.05,.82,1.05,'sphere','#e87826')); for(let i=-2;i<=2;i++) out.push(box(head,i*.16,.18,.94,0,0,0,.035,.62,.03,'#8f4b20')); out.push(box(head,0,.72,0,0,0,0,.13,.18,.13,'#4d7d35')); }
-        else if(hn.includes('chef')){ out.push(box(head,0,.70,0,0,0,0,.50,.32,.50,'#fff')); out.push(node(head,-.25,.84,0,0,0,0,.22,.24,.22,'sphere','#fff')); out.push(node(head,.25,.84,0,0,0,0,.22,.24,.22,'sphere','#fff')); }
+        else if(hn.includes('chef')){ out.push(box(head,0,.70,0,0,0,0,.50,.32,.50,'#ffffff')); out.push(node(head,-.25,.84,0,0,0,0,.22,.24,.22,'sphere','#ffffff')); out.push(node(head,.25,.84,0,0,0,0,.22,.24,.22,'sphere','#ffffff')); }
         else if(hn.includes('shark')){ out.push(node(head,0,.64,0,0,0,0,.72,.38,.82,'sphere','#6b9bb8')); out.push(box(head,0,.42,.58,0,0,0,.22,.10,.34,'#dbe8ef')); out.push(box(head,0,.92,-.04,0,0,0,.12,.26,.08,'#6b9bb8')); }
-        else if(hn.includes('santa')){ out.push(box(head,0,.70,0,0,0,0,.46,.28,.46,'#d73f4a')); out.push(node(head,.25,.86,.05,0,0,0,.14,.14,.14,'sphere','#fff')); out.push(box(head,0,.48,.02,0,0,0,.58,.07,.58,'#fff')); }
+        else if(hn.includes('santa')){ out.push(box(head,0,.70,0,0,0,0,.46,.28,.46,'#d73f4a')); out.push(node(head,.25,.86,.05,0,0,0,.14,.14,.14,'sphere','#ffffff')); out.push(box(head,0,.48,.02,0,0,0,.58,.07,.58,'#ffffff')); }
         else if(hn.includes('halo')){ out.push(node(head,0,.72,0,0,0,0,.72,.06,.72,'sphere','#ffe66d')); }
         else if(hn.includes('baseball')){ out.push(box(head,0,.58,0,0,0,0,.56,.20,.58,'#d94a4a')); out.push(box(head,0,.45,.38,0,0,0,.72,.05,.38,'#d94a4a')); }
-        else if(hn.includes('beret')||hn.includes('fez')){ out.push(box(head,0,.57,0,0,0,0,.58,.20,.58,'#b83b4b')); out.push(box(head,0,.45,.12,0,0,0,.92,.06,.40,'#d0505e')); }
+        else if(hn.includes('beret')){ out.push(node(head,0,.58,-.04,0,0,.06,.62,.18,.62,'sphere','#2f3d66')); out.push(box(head,.16,.66,-.10,0,0,0,.05,.12,.05,'#1f2a48')); }
+        else if(hn.includes('fez')){ out.push(box(head,0,.66,0,0,0,0,.44,.38,.44,'#b83b4b')); out.push(box(head,0,.86,0,0,0,0,.46,.05,.46,'#8d2b39')); out.push(box(head,.06,.72,0,0,.4,0,.03,.34,.03,'#f0c94a')); }
         else if(hn.includes('sombrero')){ out.push(box(head,0,.57,0,0,0,0,.55,.22,.55,'#d7b25a')); out.push(box(head,0,.44,.02,0,0,0,1.28,.055,.98,'#e5c979')); }
         else if(hn.includes('top hat')){ out.push(box(head,0,.70,0,0,0,0,.50,.45,.50,'#202638')); out.push(box(head,0,.43,.05,0,0,0,1.02,.07,.82,'#202638')); }
         else if(hn.includes('wizard')){ out.push(box(head,0,.72,0,0,0,0,.48,.65,.48,'#4b2a83')); out.push(box(head,0,.48,.02,0,0,0,1.02,.07,.84,'#6c43a5')); out.push(node(head,.28,.88,.05,0,0,0,.10,.10,.10,'sphere','#ffcf3d')); }
         else if(hn.includes('cowboy')){ out.push(box(head,0,.57,0,.08,0,0,.62,.24,.54,'#9a6b32')); out.push(box(head,0,.43,.16,0,0,0,1.18,.06,.38,'#b88947')); }
         else if(hn.includes('pirate')){ out.push(box(head,0,.58,0,0,0,0,.90,.24,.72,'#1e2433')); out.push(box(head,0,.43,.20,0,0,0,1.08,.06,.34,'#2d354a')); out.push(box(head,0,.43,.42,0,0,0,.16,.08,.08,'#d9a92f')); }
-        else if(hn.includes('helmet')||hn.includes('astronaut')||hn.includes('knight')||hn.includes('viking')||hn.includes('construction')||hn.includes('military')){ out.push(box(head,0,.50,0,0,0,0,.92,.30,.86,'#6d778a')); out.push(box(head,0,.32,.58,0,0,0,.66,.10,.20,'#aab5c8')); }
-        else if(hn.includes('crown')||hn.includes('tiara')){ out.push(box(head,0,.64,0,0,0,0,.66,.22,.66,'#d9a92f')); out.push(box(head,0,.77,0,0,0,0,.48,.18,.48,'#f0c94a')); }
+        /* Each helmet is now its own shape. Previously all five shared one
+           grey block, which is why they looked like duplicates in the Store. */
+        else if(hn.includes('knight')){
+          out.push(node(head,0,.28,0,0,0,0,1.02,.90,1.00,'sphere','#aab4c6'));
+          out.push(box(head,0,.06,.92,0,0,0,.56,.28,.12,'#1b2130'));
+          out.push(box(head,0,.30,.96,0,0,0,.10,.50,.12,'#8d98ad'));
+          out.push(box(head,0,.92,0,0,0,0,.14,.30,.50,'#d94a4a'));
+        }
+        else if(hn.includes('viking')){
+          out.push(box(head,0,.52,0,0,0,0,.92,.32,.88,'#8d98ad'));
+          out.push(box(head,0,.30,.62,0,0,0,.30,.36,.16,'#6d778a'));
+          [-1,1].forEach(s=>{ out.push(node(head,s*.88,.66,-.02,0,0,s*.55,.14,.34,.14,'capsule','#efe6cf')); out.push(node(head,s*1.12,.92,-.04,0,0,s*.95,.10,.26,.10,'capsule','#efe6cf')); });
+        }
+        else if(hn.includes('astronaut')){
+          out.push(node(head,0,.06,0,0,0,0,1.14,1.14,1.14,'sphere','#dfe7f2'));
+          out.push(box(head,0,.02,1.00,0,0,0,.62,.34,.10,'#74a9d8'));
+          out.push(box(head,0,.02,1.06,0,0,0,.66,.05,.05,'#b9c8dc'));
+          out.push(box(head,-1.08,.10,-.10,0,0,0,.08,.16,.22,'#9fb0c6'));
+        }
+        else if(hn.includes('construction')){
+          out.push(node(head,0,.42,0,0,0,0,.94,.52,.90,'sphere','#f5a524'));
+          out.push(box(head,0,.30,.62,0,0,0,.84,.06,.34,'#f5a524'));
+          out.push(box(head,0,.78,0,0,0,0,.12,.14,.78,'#d98c12'));
+        }
+        else if(hn.includes('military')){
+          out.push(node(head,0,.40,0,0,0,0,.98,.48,.96,'sphere','#5a6b4a'));
+          out.push(box(head,0,.26,.70,0,0,0,.52,.06,.22,'#47563b'));
+          out.push(box(head,-.62,.44,.34,0,0,0,.10,.10,.10,'#3b4732'));
+        }
+        else if(hn.includes('helmet')){ out.push(box(head,0,.50,0,0,0,0,.92,.30,.86,'#6d778a')); out.push(box(head,0,.32,.58,0,0,0,.66,.10,.20,'#aab5c8')); }
+        else if(hn.includes('crown')){
+          out.push(box(head,0,.60,0,0,0,0,.72,.20,.72,'#d9a92f'));
+          [0,1,2,3,4].forEach(i=>{ const a=i/5*Math.PI*2; out.push(box(head,Math.cos(a)*.60,.80,Math.sin(a)*.60,0,0,0,.09,.22,.09,'#f0c94a')); });
+          out.push(node(head,0,.96,0,0,0,0,.10,.10,.10,'sphere','#ff5a5a'));
+        }
+        else if(hn.includes('tiara')){
+          /* Delicate arc, not a full band — clearly distinct from the crown. */
+          [-.52,-.26,0,.26,.52].forEach((x,i)=>out.push(box(head,x,.52+(2-Math.abs(i-2))*.045,.44,0,0,0,.05,.14,.05,'#e6d7f0')));
+          out.push(box(head,0,.50,.46,0,0,0,.62,.04,.05,'#cbb6dd'));
+          out.push(node(head,0,.70,.48,0,0,0,.09,.09,.05,'sphere','#7fd7ff'));
+        }
+        else if(hn.includes('graduation')){
+          out.push(box(head,0,.54,0,0,0,0,.52,.16,.52,'#20283a'));
+          out.push(box(head,0,.66,0,0,0,0,1.00,.05,1.00,'#20283a'));
+          out.push(node(head,0,.70,0,0,0,0,.07,.07,.07,'sphere','#d9a92f'));
+          out.push(box(head,.44,.50,.30,0,0,.22,.04,.36,.04,'#d9a92f'));
+        }
+        else if(hn.includes('student')){
+          out.push(box(head,0,.54,-.04,0,0,0,.58,.20,.56,'#2f5fb8'));
+          out.push(box(head,0,.42,.44,0,0,0,.70,.06,.34,'#20447f'));
+          out.push(box(head,0,.56,.36,0,0,0,.16,.12,.05,'#f0c94a'));
+        }
+        else if(hn.includes('ninja')){
+          out.push(box(head,0,.30,-.06,0,0,0,1.00,.72,.98,'#1f2937'));
+          out.push(box(head,0,.06,.92,0,0,0,.78,.20,.12,'#f2f4f8'));
+          out.push(box(head,-.06,.02,-.84,0,0,.25,.10,.46,.10,'#1f2937'));
+        }
+        else if(hn.includes('samurai')||hn.includes('kabuto')){
+          out.push(node(head,0,.40,-.06,0,0,0,.98,.52,1.00,'sphere','#2b3448'));
+          out.push(box(head,0,.16,-.60,0,0,0,.92,.30,.22,'#3d4a63'));
+          out.push(box(head,0,.62,.46,0,0,0,.90,.06,.16,'#d9a92f'));
+          [-1,1].forEach(s=>out.push(box(head,s*.20,.86,.18,0,0,s*.45,.05,.42,.05,'#d9a92f')));
+        }
+        else if(hn.includes('goggles')||hn.includes('scientist')){
+          out.push(box(head,0,.34,.62,0,0,0,.92,.24,.30,'#7fd7ff'));
+          out.push(box(head,0,.34,.50,0,0,0,.98,.10,.32,'#4b5563'));
+        }
         else if(hn.includes('headphones')){ out.push(box(head,-.92,.04,.02,0,0,0,.08,.45,.10,'#2e6be6')); out.push(box(head,.92,.04,.02,0,0,0,.08,.45,.10,'#2e6be6')); out.push(box(head,0,.47,-.02,0,0,0,.86,.07,.16,'#2e6be6')); }
         else { out.push(box(head,0,.54,0,0,0,0,.78,.18,.70,'#273b67')); out.push(box(head,0,.42,.24,0,0,0,1.04,.055,.28,'#334f86')); }
       }
@@ -4022,16 +4686,29 @@
         out.push(box(torso,-.58,.10,-.28,0,.18,.35,.45,.31,.06,'#eef2fb'));
         out.push(box(torso,.58,.10,-.28,0,-.18,-.35,.45,.31,.06,'#eef2fb'));
       }
-      const e=String(c.effect||'none').toLowerCase();if(e!=='none'){
-        const ec=e.includes('fire')?'#ff8a3d':e.includes('water')?'#4da6ff':e.includes('lightning')?'#ffe56b':e.includes('neon')?'#66e0ff':e.includes('rainbow')?'#ff7bc8':e.includes('ghost')?'#d9dff2':e.includes('confetti')?'#ffd94a':e.includes('dollar')?'#4dcf7a':e.includes('musical')?'#9b6bff':e.includes('heart')?'#ff6fa5':'#f4d35e';
-        for(let i=0;i<10;i++){const a=i*Math.PI/5;out.push(node(root,Math.cos(a)*.82,1.55+Math.sin(a)*1.35,.05,0,0,0,.025,.025,.025,'sphere',ec));}
-      }
+      /* Effects are no longer drawn here. They used to be a static ring of
+         ten identical spheres that never moved and looked the same for every
+         effect. They now go through addEffectGeometry(), which is animated,
+         differs per effect, and intensifies during the Victory sequence. */
     }
 
     function addCharacterIdentity(out,root,head,torso,armsL,armsR,pelvis,c){
       const ch=String(c.character||'');
       const white='#f7f7fb', dark='#20283a', gold='#e6bd43', red='#d94a4a';
-      if(ch==='char:honor'){
+      if(ch==='char:student_m'){
+        /* Boys' uniform: collared shirt with a tie. */
+        out.push(box(torso,0,.52,.44,0,0,0,.30,.14,.04,white));
+        out.push(box(torso,0,.22,.45,0,0,0,.07,.36,.04,'#2f4a86'));
+        out.push(box(torso,0,.44,.46,0,0,0,.10,.09,.04,'#2f4a86'));
+      }else if(ch==='char:student_f'){
+        /* Girls' uniform: sailor collar, neck ribbon and a pleated skirt —
+           a different silhouette, not the same body in another colour. */
+        out.push(box(torso,0,.50,-.02,0,0,0,.66,.12,.46,white));
+        out.push(box(torso,0,.40,.44,0,0,0,.34,.16,.04,white));
+        out.push(node(torso,0,.30,.47,0,0,.78,.09,.09,.04,'sphere',red));
+        out.push(box(pelvis,0,-.18,0,0,0,0,.52,.34,.48,'#3b4a72'));
+        [-1,1].forEach(s=>out.push(box(pelvis,s*.30,-.20,.16,0,0,s*.12,.06,.32,.06,'#2c3859')));
+      }else if(ch==='char:honor'){
         out.push(box(torso,0,.12,.44,0,0,0,.18,.18,.05,gold));
         out.push(box(torso,0,.05,.48,0,0,0,.10,.10,.03,white));
       }else if(ch==='char:athlete'){
@@ -4082,7 +4759,30 @@
         out.push(node(head,0,.05,.98,0,0,0,.99,.99,.99,'sphere','#dfe7f2'));
         out.push(box(head,0,.02,.97,0,0,0,.60,.30,.10,'#74a9d8'));
         out.push(box(torso,-.35,-.05,.10,0,0,0,.10,.28,.10,'#64748b'));
-      }else if(ch==='char:robot'||ch==='char:cyborg'){
+      }else if(ch==='char:cyborg'){
+        /* Half human, half machine — deliberately asymmetric so it reads as
+           a different character from the Robot rather than a recolour. */
+        out.push(box(torso,0,0,.47,0,0,0,.34,.70,.07,'#6b7a93'));
+        out.push(box(torso,-.18,.10,.53,0,0,0,.14,.05,.04,'#2dd4b8'));
+        out.push(box(torso,-.18,-.02,.53,0,0,0,.09,.05,.04,'#ffb547'));
+        /* Machine half of the face plus a glowing optic. */
+        out.push(box(head,.52,.06,.62,0,0,0,.50,.60,.42,'#8b98a8'));
+        out.push(node(head,.44,.10,.92,0,0,0,.13,.13,.06,'sphere','#ff5a5a'));
+        out.push(box(head,.58,.52,.10,0,0,0,.08,.26,.08,'#aab5c8'));
+        /* Prosthetic right arm. */
+        out.push(box(armsR.shoulder,0,-.45,0,0,0,0,.28,.50,.29,'#8b98a8'));
+        out.push(box(armsR.elbow,0,-.43,0,0,0,0,.26,.46,.27,'#6b7a93'));
+        out.push(box(armsR.elbow,0,-.43,.16,0,0,0,.10,.30,.04,'#2dd4b8'));
+      }else if(ch==='char:elf'){
+        /* Long pointed ears, forest tunic, leaf clasp and a circlet. */
+        out.push(node(head,-1.02,.10,-.02,0,0,.45,.10,.34,.12,'sphere',c.skin||'#ffe0bd'));
+        out.push(node(head,1.02,.10,-.02,0,0,-.45,.10,.34,.12,'sphere',c.skin||'#ffe0bd'));
+        out.push(box(torso,0,-.12,.46,0,0,0,.60,.50,.06,'#2f7d52'));
+        out.push(box(torso,0,.34,.47,0,0,0,.66,.10,.06,'#1f5c3c'));
+        out.push(node(torso,0,.20,.50,0,0,.7,.09,.13,.04,'sphere','#8fd27a'));
+        out.push(box(head,0,.44,.02,0,0,0,.90,.06,.86,gold));
+        out.push(node(head,0,.50,.74,0,0,0,.09,.09,.05,'sphere','#8fd27a'));
+      }else if(ch==='char:robot'){
         out.push(box(torso,0,0,.48,0,0,0,.72,.70,.50,'#66758b'));
         out.push(box(head,0,0,.96,0,0,0,.82,.82,.82,'#8b98a8'));
         out.push(node(head,-.25,.05,.84,0,0,0,.09,.09,.05,'sphere','#7fffe8'));
@@ -4113,51 +4813,246 @@
       }else if(ch==='char:ranger'){
         out.push(box(torso,0,.02,.48,0,0,0,.68,.66,.09,'#243b73'));
         out.push(box(torso,0,.20,.54,0,0,0,.12,.18,.03,gold));
+      }else if(ch==='char:scout'){
+        /* Practical field gear: a bandana, a slung satchel, and a rolled
+           bedroll on the back — reads as "adventurer", not a soldier. */
+        out.push(box(head,0,.50,0,0,0,0,.86,.10,.80,'#2f8f6e'));
+        out.push(box(head,-.42,.44,-.30,0,0,.3,.06,.14,.06,'#2f8f6e'));
+        out.push(box(torso,.36,-.05,.10,0,0,.20,.30,.38,.10,'#8a5a2e'));
+        out.push(box(torso,0,-.20,-.42,0,0,0,.48,.14,.14,'#6b4423'));
+      }else if(ch==='char:strategist'){
+        /* Long layered coat over the torso and legs, a data-slate prop, and
+           narrow rectangular glasses — a planner, not a fighter. */
+        out.push(box(torso,0,-.30,0,0,0,0,.76,1.15,.46,'#2b3550'));
+        out.push(box(torso,0,.34,.48,0,0,0,.22,.06,.03,'#c7cfe0'));
+        out.push(box(head,-.30,.08,1.00,0,0,0,.29,.13,.02,dark));
+        out.push(box(head,.30,.08,1.00,0,0,0,.29,.13,.02,dark));
+        out.push(box(armsL.hand,0,0,.14,0,0,0,.16,.22,.03,'#e8ecf5'));
+      }else if(ch==='char:inventor'){
+        /* Forehead goggles, a mechanical backpack rig, and a tool belt. */
+        out.push(node(head,-.28,.30,.86,0,0,0,.13,.13,.06,'sphere','#7fd7ff'));
+        out.push(node(head,.28,.30,.86,0,0,0,.13,.13,.06,'sphere','#7fd7ff'));
+        out.push(box(head,0,.30,.86,0,0,0,.30,.06,.05,'#8b98a8'));
+        out.push(box(torso,0,.02,-.44,0,0,0,.46,.58,.20,'#8b98a8'));
+        out.push(node(torso,0,.20,-.56,0,0,0,.08,.08,.08,'sphere','#e6bd43'));
+        out.push(box(pelvis,0,-.24,.10,0,0,0,.44,.10,.05,'#6b4423'));
+      }else if(ch==='char:explorer'){
+        /* Long trailing scarf built as a hanging chain of segments, plus a
+           compass held in hand. Hangs from the torso collar, since `neck`
+           is not one of this function's parameters. */
+        let seg=child(torso,0,.60,-.20,.15,0,0,1,1,1);
+        for(let i=0;i<4;i++){
+          out.push(box(seg,0,-.16,0,0,0,0,.16,.16,.06,'#e0743a'));
+          seg=child(seg,0,-.30,0,.10,0,0,1,1,1);
+        }
+        out.push(node(armsR.hand,0,0,.14,0,0,0,.09,.09,.05,'sphere',gold));
+      }else if(ch==='char:swordsman'){
+        /* A calm silhouette: long dark cloak and a sheathed blade across
+           the back rather than drawn — "mysterious", not aggressive. */
+        out.push(box(torso,0,-.35,-.10,0,0,0,.60,1.30,.10,'#171b26'));
+        const sheath=child(torso,-.20,0,-.36,0,0,.6,1,1,1);
+        out.push(box(sheath,0,-.30,0,0,0,0,.09,.85,.06,'#3b4258'));
+        out.push(box(sheath,0,.32,0,0,0,0,.11,.10,.08,gold));
+      }else if(ch==='char:elitewarrior'){
+        /* Ornate layered armor distinct from the plain Knight: a chest
+           emblem, pauldrons, and a short cape. */
+        out.push(box(torso,0,0,.47,0,0,0,.74,.72,.10,'#4a1620'));
+        out.push(box(torso,0,.20,.55,0,0,0,.20,.20,.04,gold));
+        out.push(box(armsL.shoulder,0,-.30,0,0,0,0,.36,.20,.36,gold));
+        out.push(box(armsR.shoulder,0,-.30,0,0,0,0,.36,.20,.36,gold));
+        out.push(box(torso,0,-.10,-.44,0,0,0,.62,.90,.05,'#7a1f2b'));
+        out.push(box(head,0,.52,0,0,0,0,.90,.24,.84,'#6d778a'));
       }
     }
 
     function buildDinosaur(c,t){
-      const q=t/1000, bob=Math.sin(q*3.2)*.035, root=TRS(0,bob-.05,0,pitch,rotation,0,1,1,1),out=[];
+      const q=t/1000, elapsed=t-modeStarted, out=[];
       const green='#6bbf59', dark='#3f7f39', belly='#a9d879', eye='#171717';
-      const body=child(root,0,1.35,0,0,0,0,1.25,.78,.70);
-      out.push(node(body,0,0,0,0,0,0,1,1,1,'sphere',green));
-      out.push(box(body,0,.18,.54,0,0,0,.68,.48,.10,belly));
-      const neck=child(root,0,1.92,.22,-.10,0,0,1,1,1);
+
+      /* The dinosaur is a fully separate rig, so it gets its own idle,
+         walk and victory motion rather than reusing the humanoid cycle. */
+      let bob=Math.sin(q*3.2)*.035, hop=0, legPhase=0, neckTilt=-.10, tailSwing=Math.sin(q*1.5)*.10, bodyRy=0;
+      if(mode==='walk'){
+        const w=elapsed/1000*5.0;
+        legPhase=Math.sin(w)*.42;
+        bob=Math.abs(Math.sin(w))*.07;
+        tailSwing=Math.sin(w)*.28;
+        neckTilt=-.10+Math.sin(w)*.06;
+      }else if(mode==='victory'){
+        const p=Math.min(1,elapsed/1400);
+        const vic=['jump','spin','dance','flex'].includes(c.victoryAnim)?c.victoryAnim:'jump';
+        if(vic==='spin') bodyRy=Math.PI*2*p;
+        else if(vic==='dance'){ tailSwing=Math.sin(elapsed/140)*.55; legPhase=Math.sin(elapsed/160)*.30; }
+        else { hop=Math.sin(Math.min(Math.PI,p*Math.PI))*.42; neckTilt=-.42; }
+      }
+
+      const root=TRS(0,bob+hop-.05,0,pitch,rotation+bodyRy,0,1,1,1);
+      /* The torso mesh is scaled, but limbs hang off an UNSCALED spine pivot.
+         Parenting limbs to a non-uniformly scaled node is what makes legs and
+         tails look stretched or detached, so the two are kept separate. */
+      const spine=child(root,0,1.35,0,0,0,0,1,1,1);
+      out.push(node(spine,0,0,0,0,0,0,1.25,.78,.70,'sphere',green));
+      out.push(box(spine,0,.14,.40,0,0,0,.62,.38,.08,belly));
+      const body=spine;
+      const neck=child(root,0,1.92,.22,neckTilt,0,0,1,1,1);
       out.push(node(neck,0,.35,0,0,0,0,.48,.85,.46,'sphere',green));
       const head=child(neck,0,.72,.28,0,0,0,1,1,1);
       out.push(node(head,0,0,0,0,0,0,.66,.52,.72,'sphere',green));
       out.push(box(head,0,-.04,.62,0,0,0,.38,.18,.42,dark));
       out.push(node(head,-.27,.10,.60,0,0,0,.07,.07,.04,'sphere',eye));
       out.push(node(head,.27,.10,.60,0,0,0,.07,.07,.04,'sphere',eye));
-      [-.55,.55].forEach(side=>{
-        const leg=child(body,side*.52,-.55,.02,0,0,0,1,1,1);
-        out.push(box(leg,0,-.40,0,0,0,0,.20,.46,.20,dark));
-        out.push(box(leg,0,-.84,.15,0,0,0,.25,.12,.36,dark));
+      /* Small arms, kept as children of the body so they never detach. */
+      [-1,1].forEach(side=>{
+        const arm=child(body,side*.62,.10,.34,legPhase*.4,0,0,1,1,1);
+        out.push(box(arm,0,-.20,0,0,0,0,.10,.22,.10,green));
       });
-      const tail=child(body,0,-.05,-.80,0,0,0,1,1,1);
-      out.push(node(tail,0,0,0,0,0,0,.42,.42,1.55,'capsule',dark));
-      [-.42,-.18,.06,.30].forEach((x,i)=>out.push(node(root,x,2.48,.10,0,0,.3*(i%2?-1:1),.08,.18,.08,'sphere',dark)));
+      /* Legs alternate through a real hip rotation instead of sliding. */
+      [-1,1].forEach(side=>{
+        const hip=child(body,side*.58,-.42,.02,side>0?legPhase:-legPhase,0,0,1,1,1);
+        out.push(box(hip,0,-.36,0,0,0,0,.20,.42,.20,dark));
+        out.push(box(hip,0,-.76,.14,0,0,0,.25,.12,.36,dark));
+      });
+      /* Tail is a two-segment chain: the tip inherits the base swing, so it
+         curves naturally and can never separate from the body. */
+      const tailBase=child(body,0,-.02,-.52,0,tailSwing,0,1,1,1);
+      out.push(node(tailBase,0,0,-.26,0,0,0,.34,.34,.56,'capsule',dark));
+      const tailTip=child(tailBase,0,0,-.72,0,tailSwing*.9,0,1,1,1);
+      out.push(node(tailTip,0,0,-.30,0,0,0,.20,.20,.48,'capsule',dark));
+      /* Back plates ride on the spine, not on the world root. */
+      [-.46,-.20,.06,.32].forEach((z,i)=>out.push(node(body,0,.70,z,0,0,.3*(i%2?-1:1),.07,.22,.07,'sphere',dark)));
       addEffectGeometry(out,root,c,t);
       return out;
     }
 
+    /*
+     * EFFECT SYSTEM
+     * -------------
+     * Every effect is generated as real geometry parented to the character's
+     * root node, so it rotates, tilts and moves WITH the model instead of
+     * sitting behind it as a flat backdrop. Each family has its own motion
+     * (rising, falling, orbiting, pulsing) so two equipped effects never
+     * look like the same ring of dots in a different colour.
+     *
+     * `boost` rises to 1 during the Victory animation, which is what makes
+     * the effect visibly erupt when the player wins a round.
+     */
+    const EFFECT_STYLES = {
+      fire:      {colors:['#ff8a3d','#ffc24d','#ff5a2b'], motion:'rise',   count:16, shape:'sphere'},
+      water:     {colors:['#4da6ff','#8fd0ff','#2f7fd6'], motion:'fall',   count:15, shape:'sphere'},
+      lightning: {colors:['#ffe56b','#fff6c2','#ffd028'], motion:'flash',  count:10, shape:'box'},
+      cloud:     {colors:['#e6ecf8','#cfd9ec','#f4f7ff'], motion:'drift',  count:11, shape:'sphere'},
+      heart:     {colors:['#ff6fa5','#ffa8c9','#ff4f8e'], motion:'rise',   count:12, shape:'sphere'},
+      star:      {colors:['#ffd94a','#fff0a8','#ffbe2e'], motion:'orbit',  count:14, shape:'box'},
+      dollar:    {colors:['#4dcf7a','#9ae9b4','#2fae5c'], motion:'fall',   count:12, shape:'box'},
+      musical:   {colors:['#9b6bff','#c3a6ff','#7a45e8'], motion:'spiral', count:12, shape:'box'},
+      skull:     {colors:['#e8ecf5','#b9c2d6','#8d97ad'], motion:'orbit',  count:10, shape:'sphere'},
+      rainbow:   {colors:['#ff5a5a','#ff9d4d','#ffd94a','#4dcf7a','#4d9dff','#9b6bff'], motion:'spiral', count:18, shape:'sphere'},
+      neon:      {colors:['#66e0ff','#b6f3ff','#2fc6ea'], motion:'grid',   count:16, shape:'box'},
+      ghost:     {colors:['#d9dff2','#eef2fb','#b4bfd8'], motion:'trail',  count:12, shape:'sphere'},
+      confetti:  {colors:['#ff5a5a','#ffd94a','#4dcf7a','#4d9dff','#ff6fa5','#9b6bff'], motion:'fall', count:22, shape:'box'},
+      leaf:      {colors:['#6fbf5a','#9bd97f','#4f9b57'], motion:'fall',   count:14, shape:'box'}
+    };
+    function effectStyle(name){
+      const e=String(name||'none').toLowerCase();
+      if(e==='none') return null;
+      const key=Object.keys(EFFECT_STYLES).find(k=>e.includes(k));
+      return EFFECT_STYLES[key] || {colors:['#f4d35e','#fff0b8'], motion:'orbit', count:12, shape:'sphere'};
+    }
     function addEffectGeometry(out,root,c,t){
-      const e=String(c.effect||'none').toLowerCase(); if(e==='none') return;
-      const palette=e.includes('fire')?'#ff8a3d':e.includes('water')?'#4da6ff':e.includes('lightning')?'#ffe56b':e.includes('neon')?'#66e0ff':e.includes('rainbow')?'#ff7bc8':e.includes('ghost')?'#d9dff2':e.includes('confetti')?'#ffd94a':e.includes('dollar')?'#4dcf7a':e.includes('musical')?'#9b6bff':e.includes('heart')?'#ff6fa5':'#f4d35e';
+      const st=effectStyle(c.effect); if(!st) return;
       const phase=t/650;
-      const count=e.includes('confetti')||e.includes('rainbow')?16:12;
+      const boost = mode==='victory' ? Math.min(1,(t-modeStarted)/260) : 0;
+      const count=Math.round(st.count*(1+boost*0.6));
+      const spread=1+boost*0.55;
+
       for(let i=0;i<count;i++){
-        const a=(i/count)*Math.PI*2+phase*(i%2?.6:-.45), r=.82+.12*Math.sin(phase+i);
-        const y=1.45+Math.sin(a*1.7+phase)*.75;
-        const x=Math.cos(a)*r, z=Math.sin(a)*r;
-        const s=(mode==='victory'?1.5:1)*(0.022+0.008*Math.sin(phase*2+i));
-        out.push(node(root,x,y,z,0,0,phase+i,s,s,s,'sphere',palette));
+        const col=st.colors[i%st.colors.length];
+        const seed=i*1.37;
+        let x=0,y=1.45,z=0,s=.03,rz=0;
+
+        if(st.motion==='rise'){
+          /* Embers climb the body and fade out above the head. */
+          const climb=((phase*.42+i/count)%1);
+          const a=seed*2.4;
+          y=.35+climb*3.1;
+          const r=(.52+Math.sin(climb*3.1)*.22)*spread;
+          x=Math.cos(a+climb*2.2)*r; z=Math.sin(a+climb*2.2)*r;
+          s=.045*(1-climb*.65);
+        } else if(st.motion==='fall'){
+          /* Confetti / droplets / leaves descend and flutter sideways. */
+          const drop=((phase*.30+i/count)%1);
+          y=3.55-drop*3.5;
+          const sway=Math.sin(drop*7+seed)*.34;
+          x=(Math.cos(seed)*.78+sway)*spread;
+          z=Math.sin(seed)*.78*spread;
+          s=.038; rz=drop*7+seed;
+        } else if(st.motion==='spiral'){
+          /* A rising helix — reads clearly from every viewing angle. */
+          const up=((phase*.34+i/count)%1);
+          const a=up*Math.PI*4+seed;
+          y=.30+up*3.0;
+          x=Math.cos(a)*.70*spread; z=Math.sin(a)*.70*spread;
+          s=.036; rz=a;
+        } else if(st.motion==='flash'){
+          /* Short bolts that blink in and out near the shoulders/head. */
+          const blink=Math.sin(phase*6+seed);
+          if(blink<.25 && boost<.2) continue;
+          const a=seed*1.9;
+          x=Math.cos(a)*.92*spread; z=Math.sin(a)*.92*spread;
+          y=1.55+Math.cos(seed*3)*1.0;
+          s=.05; rz=a;
+          out.push(node(root,x,y,z,0,0,rz,s*.35,s*3.2,s*.35,st.shape,col));
+          continue;
+        } else if(st.motion==='drift'){
+          /* Slow low-lying cloud ring around the feet. */
+          const a=(i/count)*Math.PI*2+phase*.22;
+          const r=(1.02+Math.sin(phase+seed)*.14)*spread;
+          x=Math.cos(a)*r; z=Math.sin(a)*r;
+          y=.28+Math.sin(phase*.9+seed)*.10;
+          s=.10+.03*Math.sin(phase*1.6+seed);
+        } else if(st.motion==='grid'){
+          /* Neon lattice: two stacked squares that counter-rotate. */
+          const ring=i%2, idx=Math.floor(i/2), per=Math.max(1,Math.floor(count/2));
+          const a=(idx/per)*Math.PI*2+phase*(ring?-.5:.5);
+          const r=(ring?1.05:.80)*spread;
+          x=Math.cos(a)*r; z=Math.sin(a)*r;
+          y=ring?2.55:1.00;
+          s=.05; rz=a;
+          out.push(node(root,x,y,z,0,a,0,s*.25,s*.25,s*2.6,st.shape,col));
+          continue;
+        } else if(st.motion==='trail'){
+          /* Ghost echoes lag behind the character as it turns. */
+          const lag=i/count;
+          y=1.50+Math.sin(phase*1.3+seed)*.30;
+          const a=-lag*1.1+phase*.30;
+          x=Math.cos(a)*.15; z=Math.sin(a)*.15-lag*.95;
+          s=(.30-lag*.20)*spread;
+        } else {
+          /* orbit */
+          const a=(i/count)*Math.PI*2+phase*(i%2?.62:-.46);
+          const r=(.84+.12*Math.sin(phase+seed))*spread;
+          x=Math.cos(a)*r; z=Math.sin(a)*r;
+          y=1.45+Math.sin(a*1.7+phase)*.78;
+          s=.026+.010*Math.sin(phase*2+seed);
+          rz=phase+seed;
+        }
+        const sc=s*(1+boost*.45);
+        out.push(node(root,x,y,z,0,0,rz,sc,sc,sc,st.shape,col));
       }
-      if(mode==='victory'){
-        out.push(node(root,0,1.45,0,0,0,phase,1.05,1.05,1.05,'sphere',palette));
+
+      /* Victory shockwave: one expanding ring at chest height. */
+      if(boost>0){
+        const ringR=.9+boost*1.9;
+        for(let i=0;i<18;i++){
+          const a=(i/18)*Math.PI*2;
+          const s=.07*(1-boost*.55);
+          out.push(node(root,Math.cos(a)*ringR,1.35,Math.sin(a)*ringR,0,0,0,s,s,s,'sphere',st.colors[i%st.colors.length]));
+        }
       }
     }
 
+    /* Emotes always expire, so the rig can never be left in a stuck pose. */
+    const EMOTE_MS=1800;
     function build(c,t){
       const walk=['bounce','skip','robot','moonwalk'].includes(c.walkAnim)?c.walkAnim:'bounce';
       const vic=['jump','spin','dance','flex'].includes(c.victoryAnim)?c.victoryAnim:'jump';
@@ -4171,6 +5066,42 @@
         bob=Math.abs(Math.sin(q))*(walk==='skip'?.045:.025);
         if(walk==='robot'){armL*=.55;armR*=.55;foreL*=.45;foreR*=.45;}
         if(walk==='moonwalk'){bodyRy=-.08;legL*=.75;legR*=.75;}
+      }else if(mode==='emote'){
+        /*
+         * EMOTES are a transient pose layer. They drive the SAME joint
+         * variables as walk and victory and always expire back to idle in
+         * loop(), so an emote can never leave the rig stuck in a broken
+         * state or block the walk/victory animations afterwards.
+         */
+        const em=String(c.emote||'wave');
+        const s=elapsed/1000;
+        const p=Math.min(1,elapsed/EMOTE_MS);
+        const ease=Math.sin(Math.min(Math.PI,p*Math.PI));      /* in and out */
+        if(em==='wave'){
+          armR=-2.05*ease; foreR=(-.55+Math.sin(s*11)*.55)*ease;
+          armL=.10*ease; bodyRy=.14*ease;
+        }else if(em==='cheer'){
+          armL=-2.5*ease; armR=2.5*ease; foreL=-.25*ease; foreR=.25*ease;
+          jump=Math.abs(Math.sin(s*7))*.16*ease;
+        }else if(em==='think'){
+          armR=-1.55*ease; foreR=-1.30*ease; bodyRy=-.12*ease;
+          legL=.04*ease; legR=-.04*ease;
+        }else if(em==='laugh'){
+          armL=-.75*ease; armR=.75*ease; foreL=-.95*ease; foreR=.95*ease;
+          bob=Math.abs(Math.sin(s*9))*.05*ease;
+        }else if(em==='dance'){
+          armL=Math.sin(s*7)*1.15*ease; armR=-armL;
+          foreL=-armL*.45; foreR=-armR*.45;
+          legL=Math.sin(s*7+1)*.20*ease; legR=-legL;
+          bodyRy=Math.sin(s*3.5)*.32*ease;
+        }else if(em==='bow'){
+          armL=.18*ease; armR=-.18*ease;
+          bob=-.22*ease; legL=.10*ease; legR=.10*ease;
+        }else if(em==='flex'){
+          armL=-1.55*ease; armR=1.55*ease; foreL=-1.45*ease; foreR=1.45*ease;
+        }else{ /* greet */
+          armR=-1.15*ease; foreR=-.45*ease; bodyRy=.10*ease;
+        }
       }else if(mode==='victory'){
         const q=Math.min(1,elapsed/1400);
         if(vic==='spin')bodyRy=Math.PI*2*q;
@@ -4204,21 +5135,32 @@
       addLeg(out,pelvis,-1,legL,shinL,pants,shoes);addLeg(out,pelvis,1,legR,shinR,pants,shoes);
       addClothingDetails(out,torso,c);addHair(out,head,c);addFace(out,head,c);
       addAccessories(out,root,head,torso,armsL.hand,c);
+      addCharacterIdentity(out,root,head,torso,armsL,armsR,pelvis,c);
+      /* Effects are parented to the same root as the body, so they turn and
+         tilt with the character instead of floating independently. */
+      addEffectGeometry(out,root,c,t);
       return out;
     }
 
     function loop(now){
-      raf=requestAnimationFrame(loop);if(!gl||!cfg||document.hidden)return;resize();
+      raf=requestAnimationFrame(loop);if(!gl||!cfg||document.hidden)return;
+      /* A viewer on an inactive screen has no layout box. Skipping it saves
+         a full GPU pass every frame, which matters a lot on mid-range
+         Android hardware. */
+      if(!canvas.offsetParent && canvas.offsetWidth===0) return;
+      applyInertia();
+      resize();
       const r=canvas.getBoundingClientRect(),aspect=Math.max(.55,r.width/Math.max(1,r.height));
       gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       const proj=perspective(Math.PI/4.7,aspect,.1,30),eye=[0,2.25,8.8],view=lookAt(eye,[0,2.15,0],[0,1,0]),vp=matMul(proj,view);
       build(cfg,now).forEach(o=>draw(o.shape,o.m,o.col,vp));
       if(mode==='victory'&&now-modeStarted>1500)mode='idle';
+      if(mode==='emote'&&now-modeStarted>EMOTE_MS)mode='idle';
     }
     function show(c,m,anim){
       if(!gl||!canvas)return;
       setCfg(c); mode=m||'idle'; modeStarted=performance.now();
-      if(anim){if(m==='walk')cfg.walkAnim=anim;if(m==='victory')cfg.victoryAnim=anim;}
+      if(anim){if(m==='walk')cfg.walkAnim=anim;if(m==='victory')cfg.victoryAnim=anim;if(m==='emote')cfg.emote=anim;}
       const e=String(cfg.effect||'none').toLowerCase(), palettes={
         fire:'rgba(255,138,61,.22)',water:'rgba(77,166,255,.22)',lightning:'rgba(255,229,107,.24)',
         neon:'rgba(102,224,255,.22)',rainbow:'rgba(255,123,200,.20)',ghost:'rgba(217,223,242,.22)',
@@ -4247,6 +5189,9 @@
          screen keeps its own canvas/context; only the active one is rendered. */
       cancelAnimationFrame(raf); raf=0;
       gl=null; program=null; canvas=null; viewer=null; buffers={}; dragging=false; pointerId=null;
+      /* A fresh screen starts from the neutral front view rather than
+         inheriting whatever angle the previous screen was left at. */
+      resetView();
       if(resizeObserver){try{resizeObserver.disconnect();}catch(_){} resizeObserver=null;}
       return init(canvasId,viewerId,hintId,statusId);
     }
@@ -4742,16 +5687,81 @@
       showCodenameReveal();
     }
   }
+  /*
+   * EMOTE SYSTEM
+   * ------------
+   * Emotes are free and unlock with level, so they reward progression
+   * without gating anything behind coins. Wave is available from level 1,
+   * which satisfies "the default emote should be available immediately".
+   * Playing one drives Avatar3D's transient 'emote' mode, which always
+   * expires back to idle — it cannot break the walk/victory state.
+   */
+  const EMOTES = [
+    { id:'wave',  name:'Wave',     icon:'👋', level:1 },
+    { id:'greet', name:'Greeting', icon:'🙌', level:1 },
+    { id:'cheer', name:'Cheer',    icon:'🎉', level:3 },
+    { id:'think', name:'Think',    icon:'🤔', level:5 },
+    { id:'laugh', name:'Laugh',    icon:'😂', level:8 },
+    { id:'bow',   name:'Bow',      icon:'🙇', level:12 },
+    { id:'flex',  name:'Flex',     icon:'💪', level:16 },
+    { id:'dance', name:'Dance',    icon:'🕺', level:20 }
+  ];
+  function emoteUnlocked(e){ return level() >= (e.level||1); }
+  function playEmote(id){
+    const e = EMOTES.find(x=>x.id===id); if(!e || !emoteUnlocked(e)) return;
+    S.avatar = S.avatar || defaultAvatar();
+    S.avatar.emote = id;
+    saveState(); sfx('click');
+    if(Avatar3D.ready()) Avatar3D.show(S.avatar,'emote',id);
+  }
+  function renderEmoteRow(hostId){
+    const host=$(hostId); if(!host) return;
+    host.innerHTML='';
+    const current=(S.avatar&&S.avatar.emote)||'wave';
+    EMOTES.forEach(e=>{
+      const unlocked=emoteUnlocked(e);
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='emote-btn'+(current===e.id?' active':'');
+      b.textContent=`${e.icon} ${e.name}`;
+      if(!unlocked){ b.disabled=true; b.title=`Unlocks at level ${e.level}`; b.textContent=`🔒 ${e.name}`; }
+      else b.addEventListener('click',()=>{ playEmote(e.id); renderEmoteRow(hostId); });
+      host.appendChild(b);
+    });
+  }
+
   function renderMenuAvatar(){
     let el = $('menu-avatar');
     if(!el){
       el = document.createElement('div'); el.id='menu-avatar'; el.className='avatar-preview-wrap';
-      el.style.cssText='margin:4px auto 12px;max-width:420px;width:100%;padding:8px;box-sizing:border-box;overflow:hidden;position:relative;';
-      el.innerHTML='<div class="character-3d-viewer" id="menu-3d-viewer"><canvas id="menu-3d-canvas" aria-label="Interactive 3D main menu character"></canvas><div class="character-3d-grid" aria-hidden="true"></div><div class="character-3d-hint" id="menu-3d-hint">↔↕ Drag to inspect</div><div class="character-3d-status" id="menu-3d-status">3D Character</div></div><p class="subtitle" style="margin:6px 0 0">Your saved character • drag to inspect</p>';
+      el.style.cssText='margin:4px auto 12px;max-width:600px;width:100%;padding:6px;box-sizing:border-box;overflow:hidden;position:relative;';
+      /*
+       * Character and pet now share one showcase row rather than living in
+       * two unrelated cards. Each 3D surface keeps its own contained panel,
+       * so nothing can paint over the menu grid or the stats beneath it.
+       */
+      el.innerHTML=
+        '<div class="companion-showcase" id="menu-showcase">'+
+          '<div class="showcase-ground" aria-hidden="true"></div>'+
+          '<div class="showcase-char">'+
+            '<div class="character-3d-viewer" id="menu-3d-viewer">'+
+              '<canvas id="menu-3d-canvas" aria-label="Interactive 3D main menu character"></canvas>'+
+              '<div class="character-3d-grid" aria-hidden="true"></div>'+
+              '<div class="character-3d-hint" id="menu-3d-hint">↔↕ Drag to inspect</div>'+
+              '<div class="character-3d-status" id="menu-3d-status">3D Character</div>'+
+            '</div>'+
+          '</div>'+
+          '<div class="showcase-pet">'+
+            '<div class="pet-3d-stage" id="menu-pet-stage"></div>'+
+            '<div class="showcase-caption" id="menu-showcase-pet-name">Your Pet</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="emote-row" id="menu-emote-row"></div>';
       $('menu-welcome').parentNode.insertBefore(el, $('menu-welcome'));
     }
     const ok=Avatar3D.mount('menu-3d-canvas','menu-3d-viewer','menu-3d-hint','menu-3d-status');
     if(ok) Avatar3D.show(S.avatar||defaultAvatar(),'idle');
+    renderEmoteRow('menu-emote-row');
   }
   // Dedicated Main Menu pet section, placed below the Game Modes grid (see
   // #menu-pet-card in the Main Menu markup). Always reads the actual saved
@@ -4763,16 +5773,45 @@
     const stage = $('menu-pet-stage'); if(!stage) return;
     ensurePetState(); tickPetLifecycle();
     const p = currentPet(), life = S.pets.life[p.id];
+    stage.style.visibility = S.pets.equipped ? 'visible' : 'hidden';
     mountPetViewer(stage, p);
-    const nameEl = $('menu-pet-name'), statusEl = $('menu-pet-status');
+    const nameEl = $('menu-pet-name'), statusEl = $('menu-pet-status'), capEl = $('menu-showcase-pet-name');
     if(nameEl) nameEl.textContent = p.name;
+    if(capEl) capEl.textContent = p.name;
     if(statusEl){
       if(life && life.status!=='inactive'){
-        statusEl.textContent = `Age: ${formatPetAge(Date.now()-life.bornAt)} · 🍖 ${S.pets.food.current}/${S.pets.food.max}`;
+        statusEl.textContent = `${petMoodLabel(p.id)} · Age: ${formatPetAge(Date.now()-life.bornAt)} · 🍖 ${S.pets.food.current}/${S.pets.food.max}`;
       } else {
         statusEl.textContent = `🪦 No longer active — visit the Pet Store`;
       }
     }
+    renderPetCollection('menu-pet-collection');
+  }
+
+  /*
+   * PET COLLECTION
+   * --------------
+   * Owned pets were already stored as a list (S.pets.owned) but the only way
+   * to change the active one was to re-open the Store and press Equip. This
+   * renders the whole collection wherever it is needed and lets the player
+   * switch with one tap. It writes to the same S.pets.equipped field, so the
+   * Store, Profile, Main Menu and save file all stay in agreement.
+   */
+  const PET_RARITY_ORDER = { common:0, rare:1, epic:2, legendary:3 };
+  function renderPetCollection(hostId){const host=$(hostId);if(!host)return;ensurePetState();tickPetLifecycle();host.innerHTML='';const owned=PETS.filter(p=>S.pets.owned.includes(p.id));if(!owned.length){host.innerHTML='<div class="subtitle">No pets yet — open an egg in the Egg Store.</div>';return;}owned.forEach(p=>{const active=S.pets.equipped===p.id,hunger=Number(S.pets.hunger[p.id]??100),happy=Number(S.pets.happiness[p.id]??70),lv=Number(S.pets.level[p.id]||1);const b=document.createElement('button');b.type='button';b.className='pet-chip'+(active?' active':'');b.innerHTML=`<span class="pc-icon">${escapeHtml(p.icon||'🐾')}</span><span><strong>${escapeHtml(p.name)}</strong><span class="pc-state">${active?'● Equipped':'○ Available'}</span></span><span class="pc-detail">Lv ${lv}<br>🍖${hunger}% · 😊${happy}%</span>`;b.setAttribute('aria-pressed',active?'true':'false');b.addEventListener('click',()=>{S.pets.equipped=active?null:p.id;saveState();sfx('open');renderMenuPetSection();if($('screen-profile')?.classList.contains('active'))renderPetPanel();renderPetCollection(hostId);});host.appendChild(b);});}
+
+  /* A light, non-punishing mood read-out built from the existing hunger and
+     happiness values — no new save fields, so old saves work unchanged. */
+  function petMoodLabel(id){
+    if(!petIsActive(id)) return '🪦 Inactive';
+    const stage = petHungerStage(id);
+    if(stage==='critical') return '😣 Very hungry';
+    if(stage==='low') return '😟 Hungry';
+    const happy = S.pets.happiness[id]||0;
+    if(happy>=80) return '🤩 Excited';
+    if(happy>=50) return '😊 Happy';
+    if(happy>=20) return '🙂 Content';
+    return '😐 Sleepy';
   }
 
   /* ================= GAME HISTORY ================= */
@@ -5621,6 +6660,14 @@
       const ok=Avatar3D.mount('profile-3d-canvas','profile-3d-viewer','profile-3d-hint','profile-3d-status');
       if(ok) Avatar3D.show(S.avatar||defaultAvatar(),'idle');
       const petStage=$('profile-pet-3d-stage'); if(petStage) mountPetViewer(petStage,currentPet());
+      /* Character and pet share the Profile showcase, same as the Main Menu. */
+      const showcasePet=$('profile-showcase-pet-stage');
+      if(showcasePet){
+        const p=currentPet();
+        mountPetViewer(showcasePet,p);
+        const cap=$('profile-showcase-pet-name'); if(cap) cap.textContent=p.name;
+      }
+      renderEmoteRow('profile-emote-row');
     }catch(e){ console.warn('Profile 3D viewer unavailable:',e); }
   }
 
@@ -7326,8 +8373,34 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     if(showAvatar){
       if(!avWrap){ avWrap = document.createElement('div'); avWrap.id='result-avatar'; avWrap.style.marginBottom='4px'; $('result-emoji').parentNode.insertBefore(avWrap, $('result-emoji')); }
       avWrap.classList.remove('hidden');
-      renderAvatarInto(avWrap, S.avatar, { sizeClass:'small', victory:true, name:S.name });
-      playAvatarVictory(avWrap, S.avatar?.victoryAnim, 1450);
+      /*
+       * The results screen used to show the flat SVG avatar, which meant the
+       * player's equipped effect never appeared at the moment it matters most.
+       * It now mounts the real 3D character and plays the saved victory
+       * animation, so the effect erupts around the model on a win — and the
+       * character shown here is byte-for-byte the same rig as the Profile,
+       * Main Menu and Store preview, driven by the same S.avatar data.
+       */
+      if(!avWrap.querySelector('#result-3d-viewer')){
+        avWrap.innerHTML='<div class="character-3d-viewer result-character-viewer" id="result-3d-viewer"><canvas id="result-3d-canvas" aria-label="Your 3D character celebrating"></canvas><div class="character-3d-grid" aria-hidden="true"></div><div class="character-3d-hint hidden-hint" id="result-3d-hint">↔↕ Drag to inspect</div><div class="character-3d-status" id="result-3d-status">Victory!</div></div>';
+      }
+      const cfg = S.avatar || defaultAvatar();
+      const mounted = Avatar3D.mount('result-3d-canvas','result-3d-viewer','result-3d-hint','result-3d-status');
+      if(mounted){
+        Avatar3D.show(cfg,'victory',cfg.victoryAnim);
+        /* Loop the celebration a couple of times so it is still playing while
+           the player reads their stats, then settle into idle. */
+        let replays=0;
+        const replay=setInterval(()=>{
+          if(++replays>2 || !$('screen-results')?.classList.contains('active')){ clearInterval(replay); return; }
+          Avatar3D.show(cfg,'victory',cfg.victoryAnim);
+        },1700);
+      } else {
+        /* WebGL unavailable — fall back to the original 2D celebration. */
+        avWrap.innerHTML='';
+        renderAvatarInto(avWrap, cfg, { sizeClass:'small', victory:true, name:S.name });
+        playAvatarVictory(avWrap, cfg.victoryAnim, 1450);
+      }
     } else if(avWrap){ avWrap.classList.add('hidden'); }
     $('result-emoji').textContent = emoji;
     $('result-title').textContent = title;
@@ -7440,12 +8513,19 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   }
   document.querySelectorAll('#screen-store .tab-btn').forEach(btn => btn.addEventListener('click', () => { activeStoreTab = btn.dataset.store; sfx('click'); openStore(); }));
   let storePreviewCfg=null;
+  function scrollPreviewIntoView(){
+    /* Only needed when the layout is stacked (mobile) — on desktop the
+       preview is already pinned in view via position:sticky. */
+    if(window.innerWidth>=860) return;
+    document.querySelector('.store-preview-col')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
   function showStorePreview(cfg){
     $('store-pet-stage')?.classList.add('hidden');
     $('store-3d-viewer')?.classList.remove('hidden');
     storePreviewCfg=Object.assign(defaultAvatar(),JSON.parse(JSON.stringify(cfg||S.avatar||defaultAvatar())));
     const ok=Avatar3D.mount('store-3d-canvas','store-3d-viewer','store-3d-hint','store-3d-status');
     if(ok) Avatar3D.show(storePreviewCfg,'idle');
+    scrollPreviewIntoView();
   }
   // Pet Store preview: shows the exact pet item that was clicked (not just
   // whatever is currently equipped), using the same draggable 3D pet card
@@ -7457,6 +8537,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     const stage=$('store-pet-stage'); if(!stage) return;
     stage.classList.remove('hidden');
     mountPetViewer(stage, pet);
+    scrollPreviewIntoView();
   }
 
   function renderStoreGrid(){
@@ -7476,7 +8557,8 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
       };
       const icon = activeStoreTab==='hats' ? (capIcons[item.name]||item.icon) : item.icon;
       const visual = item.hex ? `<div class="swatch-item" style="background:${item.hex};"></div>` : `<div class="sii">${icon}</div>`;
-      div.innerHTML = `${visual}<div class="sname">${item.name}</div><div class="sprice">🪙${item.price}</div>`;
+      const rarity = priceRarity(item.price);
+      div.innerHTML = `<div class="rarity-badge" style="background:${RARITY_COLORS[rarity]}">${rarity}</div>${visual}<div class="sname">${item.name}</div><div class="sprice">🪙${item.price}</div>`;
       const btn=document.createElement('button'); btn.className='btn';
       if(!owned){
         btn.textContent='Buy'; btn.disabled = S.coins < item.price;
@@ -7504,8 +8586,9 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     CHARACTERS.forEach(item => {
       const owned = item.price===0 || S.purchased.includes(item.id);
       const equipped = (S.avatar && S.avatar.character) === item.id;
+      const rarity = characterRarity(item);
       const div=document.createElement('div'); div.className='store-item'+(owned?' owned':'')+(equipped?' equipped':'');
-      div.innerHTML = `<div class="sii">${item.icon}</div><div class="sname">${item.name}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div>`;
+      div.innerHTML = `<div class="rarity-badge" style="background:${RARITY_COLORS[rarity]}">${rarity}</div><div class="sii">${item.icon}</div><div class="sname">${item.name}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div>`;
       const btn=document.createElement('button'); btn.className='btn';
       if(!owned){
         btn.textContent='Buy'; btn.disabled = S.coins < item.price;
@@ -7553,13 +8636,18 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     }
     saveState(); updateHeaderStats();
     const overlay=document.createElement('div'); overlay.className='modal-overlay active egg-reveal-modal';
-    overlay.innerHTML=`<div class="modal-box"><p class="eyebrow">🥚 ${escapeHtml(egg.name)}</p><h2 style="margin:0 0 8px">Opening Egg…</h2><div class="egg-stage"><div class="egg-big">🥚</div><div class="egg-burst">✨💥✨</div><div class="egg-result"><div class="egg-pet-icon">🐾</div><div class="egg-rarity">${escapeHtml(egg.rarity)}</div><strong>${escapeHtml(pet.name)}</strong><div class="subtitle">${wasOwned?'Duplicate reward • bonus coins added':'New Pet Unlocked!'}</div></div></div><div class="btn-row"><button class="btn btn-primary btn-block" disabled>Revealing…</button></div></div>`;
+    overlay.innerHTML=`<div class="modal-box"><p class="eyebrow">🥚 ${escapeHtml(egg.name)}</p><h2 style="margin:0 0 8px">Opening Egg…</h2><div class="egg-stage"><div class="egg-big"><div class="pet-3d-stage egg-reveal-stage" id="egg-reveal-stage"></div></div><div class="egg-burst">✨💥✨</div><div class="egg-result"><div class="egg-pet-icon">🐾</div><div class="egg-rarity">${escapeHtml(egg.rarity)}</div><strong>${escapeHtml(pet.name)}</strong><div class="subtitle">${wasOwned?'Duplicate reward • bonus coins added':'New Pet Unlocked!'}</div></div></div><div class="btn-row"><button class="btn btn-primary btn-block" disabled>Revealing…</button></div></div>`;
     document.body.appendChild(overlay);
     const eggEl=overlay.querySelector('.egg-big'), burst=overlay.querySelector('.egg-burst'), result=overlay.querySelector('.egg-result'), stage=overlay.querySelector('.egg-stage');
+    /* The 3D egg shell (same rarity-coded model shown in the Store) shakes
+       and cracks via the existing CSS keyframes applied to its wrapper —
+       transforms work the same on a div containing a canvas as on text. */
+    const eggReveal3D=$('egg-reveal-stage');
+    if(eggReveal3D) mountPetViewer(eggReveal3D, {type:'egg', pattern:egg.pattern, icon:egg.icon, name:egg.name});
     setTimeout(()=>eggEl?.classList.add('shake'),120);
     setTimeout(()=>{eggEl?.classList.remove('shake');eggEl?.classList.add('crack');burst?.classList.add('active');},1150);
     setTimeout(()=>{if(eggEl)eggEl.style.display='none';const icon=result?.querySelector('.egg-pet-icon');if(icon)icon.textContent=pet.icon||'🐾';result?.classList.add('show');if(stage){const petStage=document.createElement('div');petStage.className='pet-3d-stage';petStage.style.cssText='position:absolute;width:190px;height:190px;opacity:0;pointer-events:none;';stage.appendChild(petStage);mountPetViewer(petStage,pet);setTimeout(()=>{petStage.style.opacity='1';},120);} },1750);
-    setTimeout(()=>{overlay.querySelector('.btn')?.removeAttribute('disabled');overlay.querySelector('.btn').textContent='✨ Continue';overlay.querySelector('.btn').onclick=()=>{overlay.remove();activeStoreTab='pets';openStore();renderMenuPetSection();initProfileAvatar3D();};},2400);
+    setTimeout(()=>{overlay.querySelector('.btn')?.removeAttribute('disabled');overlay.querySelector('.btn').textContent='✨ Continue';overlay.querySelector('.btn').onclick=()=>{overlay.remove();Pet3D.sweep();activeStoreTab='pets';openStore();renderMenuPetSection();initProfileAvatar3D();};},2400);
   }
   function renderEggStoreGrid(grid){
     ensurePetState();
@@ -7570,9 +8658,20 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     PET_EGGS.forEach(egg=>{
       const ownedCount=Number(S.pets.eggInventory[egg.id]||0);
       const div=document.createElement('div'); div.className='store-item egg-card';
-      div.innerHTML=`<div class="egg-visual">${egg.icon}</div><div class="sname">${escapeHtml(egg.name)}</div><div class="egg-rarity">${escapeHtml(egg.rarity)}</div><div class="sprice">🪙${egg.price}</div><p class="subtitle">${egg.pool.length} possible pets · ${ownedCount} stored</p>`;
+      /*
+       * The egg is now a real rotating 3D model (shell shape + rarity-coded
+       * decoration from Pet3D.build's 'egg' branch), not a static emoji, so
+       * a Legendary egg visibly looks rarer before it is ever opened.
+       */
+      div.innerHTML=`<div class="egg-visual egg-visual-3d"><div class="pet-3d-stage egg-mini-stage" id="egg-stage-${egg.id}"></div></div><div class="sname">${escapeHtml(egg.name)}</div><div class="egg-rarity">${escapeHtml(egg.rarity)}</div><div class="sprice">🪙${egg.price}</div><p class="subtitle">${egg.pool.length} possible pets · ${ownedCount} stored</p>`;
       const btn=document.createElement('button'); btn.className='btn btn-primary'; btn.textContent='Open Egg'; btn.disabled=S.coins<egg.price; btn.onclick=()=>openEggReveal(egg);
       div.appendChild(btn); grid.appendChild(div);
+    });
+    /* Mount after the cards are in the DOM, since mountPetViewer needs
+       getBoundingClientRect() to size the canvas correctly. */
+    PET_EGGS.forEach(egg=>{
+      const stage=$('egg-stage-'+egg.id);
+      if(stage) mountPetViewer(stage, {type:'egg', pattern:egg.pattern, icon:egg.icon, name:egg.name});
     });
   }
 
@@ -7590,7 +8689,8 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
       const active = !owned || petIsActive(item.id);
       const div=document.createElement('div'); div.className='store-item'+(owned?' owned':'')+(equipped?' equipped':'')+(!active?' inactive':'');
       const statusLine = owned && !active ? `<p class="subtitle" style="font-weight:800">🪦 Deceased</p>` : `<p class="subtitle">Animated ${item.type} companion</p>`;
-      div.innerHTML=`<div class="sii pet-store-icon pet-${item.type}${!active?' pet-inactive':''}">${!active?'🪦':item.icon}</div><div class="sname">${escapeHtml(item.name)}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div>${statusLine}`;
+      const petRarity = (item.rarity||'common').replace(/^./,c=>c.toUpperCase());
+      div.innerHTML=`<div class="rarity-badge" style="background:${RARITY_COLORS[petRarity]||RARITY_COLORS.Common}">${petRarity}</div><div class="sii pet-store-icon pet-${item.type}${!active?' pet-inactive':''}">${!active?'🪦':item.icon}</div><div class="sname">${escapeHtml(item.name)}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div>${statusLine}`;
       const btn=document.createElement('button'); btn.className='btn';
       if(!owned){ btn.textContent='Buy'; btn.disabled=S.coins<item.price; btn.onclick=()=>{ if(S.coins<item.price)return; spendCoins(item.price); S.pets.owned.push(item.id); ensurePetState(); saveState(); renderStoreGrid(); }; }
       else if(!active){ btn.textContent='Deceased'; btn.disabled=true; }
