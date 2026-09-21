@@ -237,6 +237,10 @@
     .btn{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem; border:3px solid var(--ink); background:#fff; color:var(--ink); padding:10px 20px; border-radius:14px; cursor:pointer; box-shadow:0 4px 0 var(--ink); }
     .btn:active:not(:disabled){ transform:translateY(3px); box-shadow:0 1px 0 var(--ink); }
     .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+    .avatar-slot-panel{background:linear-gradient(135deg,#fff,#f7f3ff);border:3px solid #dbe3f5;border-radius:16px;padding:12px;margin:0 0 14px;box-shadow:0 6px 16px rgba(31,43,64,.06)}
+    .avatar-slot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.avatar-slot{border:3px solid #dbe3f5;background:#fff;border-radius:12px;padding:8px 5px;font:700 .76rem 'Quicksand',sans-serif;cursor:pointer;min-width:0}.avatar-slot strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.avatar-slot small{display:block;color:#7b88a5;margin-top:3px}.avatar-slot.active{border-color:var(--purple);background:#f4efff;box-shadow:0 3px 0 var(--purple-d)}.avatar-slot-actions{display:flex;gap:7px;margin-top:8px}.avatar-slot-actions .btn{flex:1;padding:7px 8px;font-size:.78rem}
+    .challenge-character-token{position:absolute;inset:2px;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:visible;transform:scale(.72);transform-origin:center bottom}.challenge-character-token .avatar-figure{margin:0!important}.challenge-character-token .avatar-figure svg{width:100%;height:100%}
+    @media(max-width:639px){.avatar-slot-grid{grid-template-columns:repeat(2,1fr)}}
     .btn-primary{ background:var(--accent); color:#fff; border-color:var(--accent-d); box-shadow:0 4px 0 var(--accent-d); }
     .btn-block{ display:block; width:100%; text-align:center; }
     .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
@@ -3582,6 +3586,9 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       settings:{ musicVol:0.5, sfxVol:0.6, reducedMotion:false, largerText:false, highContrast:false, offlineMode:false },
       playerColor:'blue',
       avatar: null,
+      avatarSlots: [null,null,null,null],
+      avatarSlotNames: ['Character 1','Character 2','Character 3','Character 4'],
+      activeAvatarSlot: 0,
       lastScreen:'menu',
       activeSession:null,
       tutorialCompleted:false,
@@ -3705,6 +3712,12 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     merged.pets.history = Array.isArray(loaded.pets?.history) ? loaded.pets.history : (fresh.pets.history||[]);
     if(!merged.pets.equipped || !merged.pets.owned.includes(merged.pets.equipped)) merged.pets.equipped='pet:plant';
     merged.avatar = Object.assign({}, fresh.avatar||{}, loaded.avatar||{});
+    merged.avatarSlots = Array.isArray(loaded.avatarSlots) ? loaded.avatarSlots.slice(0,4) : [null,null,null,null];
+    while(merged.avatarSlots.length<4) merged.avatarSlots.push(null);
+    merged.avatarSlots = merged.avatarSlots.map(v => v && typeof v === 'object' ? Object.assign({}, fresh.avatar||{}, v) : null);
+    merged.avatarSlotNames = Array.isArray(loaded.avatarSlotNames) ? loaded.avatarSlotNames.slice(0,4) : ['Character 1','Character 2','Character 3','Character 4'];
+    while(merged.avatarSlotNames.length<4) merged.avatarSlotNames.push(`Character ${merged.avatarSlotNames.length+1}`);
+    merged.activeAvatarSlot = Math.max(0,Math.min(3,Number(loaded.activeAvatarSlot)||0));
     // Retired Dinosaur character: keep legacy saved purchase data intact, but
     // never expose or select the retired model in the current UI.
     if(merged.avatar.character==='char:dino') merged.avatar.character='char:student_m';
@@ -3796,6 +3809,13 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       S.weeklyScore=0;
     }
     S.avatar = Object.assign(defaultAvatar(), S.avatar || {});
+    if(!Array.isArray(S.avatarSlots)) S.avatarSlots=[null,null,null,null];
+    while(S.avatarSlots.length<4) S.avatarSlots.push(null);
+    S.avatarSlots=S.avatarSlots.slice(0,4).map(v=>v&&typeof v==='object'?Object.assign(defaultAvatar(),v):null);
+    if(!Array.isArray(S.avatarSlotNames)) S.avatarSlotNames=['Character 1','Character 2','Character 3','Character 4'];
+    while(S.avatarSlotNames.length<4) S.avatarSlotNames.push(`Character ${S.avatarSlotNames.length+1}`);
+    S.avatarSlotNames=S.avatarSlotNames.slice(0,4).map((n,i)=>String(n||`Character ${i+1}`).slice(0,24));
+    S.activeAvatarSlot=Math.max(0,Math.min(3,Number(S.activeAvatarSlot)||0));
     // Older builds stored Store equipment separately from the character config.
     // Migrate those values forward without clearing purchases or intentional
     // non-default avatar selections.
@@ -5890,9 +5910,14 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
            folds upward to vertical, then the forearm + wrist oscillate.
            Hand never comes closer to the body than the elbow does. */
         const w=Math.sin(s*9.5);
-        P.R.ab=1.85*env; P.R.sw=-.22*env;                  /* slightly forward so hand is seen in front of the head */
-        P.R.eb=(Math.PI-1.85+.10)*env + .42*w*env;        /* forearm ≈ vertical ± 24° */
-        P.R.wr=.30*w*env;
+        /* Deliberately use a slightly lower shoulder angle and a positive
+           outward elbow fold.  The upper arm therefore clears the torso
+           before the forearm turns upward; the wrist only adds a small
+           side-to-side flourish. */
+        P.R.ab=1.68*env; P.R.sw=-.20*env;
+        P.R.eb=(Math.PI-1.68+.18)*env + .30*w*env;
+        P.R.ef=.06*env;
+        P.R.wr=.24*w*env;
         P.L.ab=.06*env; P.hz=.10*env; P.hy=-.16*env; P.toy=-.10*env; P.tox=-.03*env;
         P.hx=-.05*env;
       },
@@ -8951,12 +8976,18 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     renderTokens();
   }
   function renderTokens(){
-    document.querySelectorAll('.token').forEach(t => t.remove());
+    document.querySelectorAll('.token,.challenge-character-token').forEach(t => t.remove());
     advState.players.forEach(p => {
       const tile = $('tile-'+Math.min(p.position, advState.boardLength-1));
       if(!tile) return;
-      const tok=document.createElement('div'); tok.className='token'; tok.style.background=p.colorHex;
-      tile.appendChild(tok);
+      if(p.isBot){
+        const tok=document.createElement('div'); tok.className='token'; tok.style.background=p.colorHex; tok.title=p.name+' bot';
+        tile.appendChild(tok);
+      }else{
+        const tok=document.createElement('div'); tok.className='challenge-character-token'; tok.setAttribute('aria-label',S.name+' character position');
+        tile.appendChild(tok);
+        try{ renderAvatarInto(tok,S.avatar,{sizeClass:'tiny'}); }catch(e){ tok.textContent='🧑'; }
+      }
     });
   }
   function renderPlayersRow(){
@@ -10587,5 +10618,110 @@ new MutationObserver(ms=>{for(const m of ms)if(m.type==='attributes'&&m.attribut
 })();
 </script>
 
+
+<script>
+/* ================================================================
+   ADAPT COCU — CHARACTER SLOT + STABILITY UPGRADE LAYER
+   This layer intentionally extends the existing systems rather than
+   replacing them. It is safe to run against older saves.
+================================================================ */
+(function(){
+  'use strict';
+  const $u=id=>document.getElementById(id);
+  function clone(v){try{return JSON.parse(JSON.stringify(v));}catch(_){return v;}}
+  function ensureSlots(){
+    if(!window.S) return;
+    if(!Array.isArray(S.avatarSlots)) S.avatarSlots=[null,null,null,null];
+    while(S.avatarSlots.length<4) S.avatarSlots.push(null);
+    S.avatarSlots=S.avatarSlots.slice(0,4);
+    if(!Array.isArray(S.avatarSlotNames)) S.avatarSlotNames=['Character 1','Character 2','Character 3','Character 4'];
+    while(S.avatarSlotNames.length<4) S.avatarSlotNames.push('Character '+(S.avatarSlotNames.length+1));
+    S.avatarSlotNames=S.avatarSlotNames.slice(0,4);
+    S.activeAvatarSlot=Math.max(0,Math.min(3,Number(S.activeAvatarSlot)||0));
+  }
+  function save(){try{window.saveState&&window.saveState();}catch(_){} }
+  function renderSlots(){
+    ensureSlots(); const host=$u('avatar-slot-grid'), status=$u('avatar-slot-status'); if(!host)return;
+    host.innerHTML='';
+    S.avatarSlots.forEach((slot,i)=>{
+      const b=document.createElement('button'); b.type='button'; b.className='avatar-slot'+(i===S.activeAvatarSlot?' active':'');
+      b.innerHTML='<strong>'+String(S.avatarSlotNames[i]||('Character '+(i+1))).replace(/[<>&]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]))+'</strong><small>'+(slot?'Saved':'Empty')+'</small>';
+      b.onclick=()=>switchSlot(i); host.appendChild(b);
+    });
+    if(status) status.textContent='Active: '+(S.avatarSlotNames[S.activeAvatarSlot]||('Character '+(S.activeAvatarSlot+1)));
+  }
+  function snapshotCurrent(){
+    ensureSlots();
+    try{ if(typeof custDraft!=='undefined' && custDraft) S.avatarSlots[S.activeAvatarSlot]=clone(custDraft); else S.avatarSlots[S.activeAvatarSlot]=clone(S.avatar); }catch(_){S.avatarSlots[S.activeAvatarSlot]=clone(S.avatar);}
+  }
+  function switchSlot(i){
+    ensureSlots();
+    if(i===S.activeAvatarSlot)return;
+    snapshotCurrent();
+    S.activeAvatarSlot=i;
+    if(S.avatarSlots[i]){
+      S.avatar=clone(S.avatarSlots[i]);
+      try{custDraft=clone(S.avatar);}catch(_){}
+    }else{
+      S.avatar=typeof defaultAvatar==='function'?defaultAvatar():clone(S.avatar);
+      try{custDraft=clone(S.avatar);}catch(_){}
+    }
+    save();
+    try{renderCustomizeScreen();}catch(_){}
+    renderSlots();
+  }
+  function renameSlot(){
+    ensureSlots();
+    const cur=S.avatarSlotNames[S.activeAvatarSlot]||('Character '+(S.activeAvatarSlot+1));
+    const next=window.prompt('Rename character configuration:',cur);
+    if(next===null)return;
+    const n=String(next).trim().slice(0,24); if(!n)return;
+    S.avatarSlotNames[S.activeAvatarSlot]=n; save(); renderSlots();
+  }
+  function saveSlot(){
+    ensureSlots(); snapshotCurrent();
+    try{ S.avatar=Object.assign(defaultAvatar(),clone(S.avatarSlots[S.activeAvatarSlot])); }catch(_){ }
+    save(); renderSlots();
+  }
+  function clearSlot(){
+    ensureSlots();
+    if(!window.confirm('Clear this saved character configuration?'))return;
+    S.avatarSlots[S.activeAvatarSlot]=null;
+    if(typeof defaultAvatar==='function') S.avatar=defaultAvatar();
+    try{custDraft=clone(S.avatar);}catch(_){}
+    save(); try{renderCustomizeScreen();}catch(_){} renderSlots();
+  }
+  function install(){
+    ensureSlots();
+    const customize=$u('screen-customize');
+    if(customize && !customize.querySelector('.avatar-slot-panel')){
+      const inner=customize.querySelector('.inner');
+      const subtitle=inner && inner.querySelector('.subtitle');
+      if(inner){
+        const panel=document.createElement('div'); panel.className='avatar-slot-panel';
+        panel.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong>🧩 Saved Character Configurations</strong><span id="avatar-slot-status" style="font-size:.72rem;font-weight:800;color:var(--accent-d)"></span></div><p class="subtitle" style="margin:4px 0 8px">Save four complete looks and switch between them without affecting ownership or progression.</p><div class="avatar-slot-grid" id="avatar-slot-grid"></div><div class="avatar-slot-actions"><button type="button" class="btn" id="avatar-slot-rename">Rename</button><button type="button" class="btn" id="avatar-slot-clear">Clear</button></div>';
+        (subtitle?subtitle.nextSibling:inner.firstChild)?.before(panel);
+        if(!panel.parentNode) inner.insertBefore(panel,inner.children[2]||inner.firstChild);
+        $u('avatar-slot-rename').onclick=renameSlot; $u('avatar-slot-clear').onclick=clearSlot;
+      }
+    }
+    const saveBtn=$u('btn-save-avatar');
+    if(saveBtn && !saveBtn.dataset.slotBound){
+      saveBtn.dataset.slotBound='1';
+      saveBtn.addEventListener('click',()=>setTimeout(saveSlot,30));
+    }
+    renderSlots();
+  }
+  /* Install after the app's own boot code has created S and initialized the
+     customize screen. The interval self-removes as soon as the panel exists. */
+  let tries=0; const timer=setInterval(()=>{tries++;try{if(window.S){install();if($u('avatar-slot-panel')||document.querySelector('.avatar-slot-panel'))clearInterval(timer);}}catch(_){}if(tries>80)clearInterval(timer);},250);
+  window.addEventListener('beforeunload',()=>{try{if(window.S){snapshotCurrent();save();}}catch(_){}},{once:true});
+
+  /* Small global stability hooks: record unexpected runtime errors without
+     replacing the app's existing handlers or interrupting gameplay. */
+  window.addEventListener('error',e=>{try{window.__adaptCoCuLastError={message:e.message||'error',time:Date.now()};}catch(_){}},{passive:true});
+  window.addEventListener('unhandledrejection',e=>{try{window.__adaptCoCuLastRejection={message:String(e.reason||'rejection'),time:Date.now()};}catch(_){}},{passive:true});
+})();
+</script>
 </body>
 </html>
