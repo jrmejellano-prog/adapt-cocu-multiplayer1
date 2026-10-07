@@ -1529,6 +1529,41 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 .ar-bot{background:#eef;border-radius:8px;padding:1px 6px;font-weight:800;color:#5b34b8;margin-left:4px}
 @media (max-width:520px){.ar-opt{font-size:.72rem;padding:5px 6px;min-height:42px}.ar-q{font-size:.76rem}.ar-zone{padding:6px}}
 </style>
+<style id="cocu-plus-css">
+/* ===== Adapt CoCu Plus: additive visual upgrade ===== */
+#app-header{background:linear-gradient(110deg,var(--accent),#7b5cff,var(--accent-d),var(--accent));background-size:300% 100%;animation:cpHead 14s ease infinite}
+@keyframes cpHead{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+.btn-primary{position:relative;overflow:hidden;box-shadow:0 5px 0 rgba(0,0,0,.14),0 8px 18px rgba(80,60,200,.2)}
+.btn-primary::after{content:"";position:absolute;inset:0 auto 0 -60%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);transition:left .6s}
+.btn-primary:hover::after{left:120%}
+.card{transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(60,70,140,.14)}
+.ach-item{transition:transform .2s,box-shadow .25s}.ach-item:hover{transform:translateY(-1px)}
+.ach-item.unlocked{box-shadow:0 0 0 2px rgba(255,200,60,.35),0 6px 18px rgba(255,190,40,.25);background:linear-gradient(135deg,#fffdf3,#f0fffb)}
+.ach-item.unlocked .ai{animation:cpPop 2.6s ease-in-out infinite}
+.ach-progress-fill{background:linear-gradient(90deg,var(--teal),#6ee7c8,var(--teal));background-size:200% 100%;animation:cpFlow 2.5s linear infinite;transition:width .6s}
+@keyframes cpFlow{to{background-position:-200% 0}}@keyframes cpPop{0%,100%{transform:scale(1)}50%{transform:scale(1.18) rotate(-6deg)}}
+#cocu-fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+#cocu-fx span{position:absolute;bottom:-40px;opacity:.16;animation:cpRise linear infinite}
+@keyframes cpRise{to{transform:translateY(-115vh) rotate(360deg)}}
+.cp-panel{border-radius:18px;padding:14px;margin:0 0 14px;color:#fff;background:linear-gradient(135deg,#5b3df5,#8a63ff 55%,#ff7ac6);box-shadow:0 10px 24px rgba(91,61,245,.3);position:relative;overflow:hidden}
+.cp-panel::before{content:"";position:absolute;width:150px;height:150px;right:-40px;top:-60px;border-radius:50%;background:rgba(255,255,255,.14)}
+.cp-rank{display:flex;align-items:center;gap:12px}.cp-badge{font-size:2.3rem;width:62px;height:62px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.6);animation:cpPop 3s ease-in-out infinite}
+.cp-rt{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.25rem;line-height:1.1}.cp-rs{font-size:.74rem;font-weight:700;opacity:.9}
+.cp-bar{height:10px;border-radius:6px;background:rgba(255,255,255,.28);margin-top:8px;overflow:hidden}.cp-bar i{display:block;height:100%;background:linear-gradient(90deg,#ffe28a,#fff);border-radius:6px;transition:width .7s}
+.cp-chip{margin:8px 0;padding:8px 12px;border-radius:14px;font-weight:800;font-size:.8rem;display:flex;justify-content:space-between;color:#fff;background:linear-gradient(120deg,#5b3df5,#ff7ac6)}
+.cp-q{background:#fff;border:3px solid #dbe3f5;border-radius:16px;padding:12px;margin:0 0 14px}
+.cp-q h3{margin:0 0 4px;font-family:'Baloo 2',sans-serif;font-size:1rem}.cp-q small{display:block;color:#5b6b8a;font-weight:700;margin-bottom:8px}
+.cp-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px dashed #dbe3f5}.cp-row:first-of-type{border-top:0}
+.cp-ic{font-size:1.4rem}.cp-m{flex:1;min-width:0}.cp-m b{display:block;font-size:.84rem}.cp-m em{font-style:normal;font-size:.7rem;font-weight:800;color:#8a6a00}
+.cp-pb{height:7px;border-radius:5px;background:#eef1fb;margin-top:5px;overflow:hidden}.cp-pb i{display:block;height:100%;background:linear-gradient(90deg,#ff9a3c,#ffd23c)}
+.cp-go{all:unset;cursor:pointer;font-weight:900;font-size:.75rem;padding:7px 12px;border-radius:12px;background:linear-gradient(135deg,#19c3a3,#32e0b5);color:#fff;box-shadow:0 3px 0 #0e8c75}
+.cp-go[disabled]{background:#e4e8f5;color:#9aa6c4;box-shadow:none;cursor:default}
+.cp-up{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(20,10,60,.7);animation:cpFade .3s}
+.cp-up div{background:linear-gradient(135deg,#5b3df5,#ff7ac6);color:#fff;border-radius:26px;padding:28px 34px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:cpBoing .6s}
+.cp-up .b{font-size:4rem}.cp-up h2{margin:4px 0;font-family:'Baloo 2',sans-serif}.cp-up button{all:unset;cursor:pointer;margin-top:12px;background:#fff;color:#5b3df5;font-weight:900;padding:9px 22px;border-radius:14px}
+@keyframes cpFade{from{opacity:0}}@keyframes cpBoing{0%{transform:scale(.3)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#cocu-fx{display:none}*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
 </head>
 <body>
 
@@ -2483,6 +2518,92 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     {key:'challengemaster',icon:'🏅',name:'Challenge Master',coins:150,xp:300,desc:'Reach 90% accuracy in a Challenge Mode game.',target:90,get:s=>s.bestChallengeAccuracy||0,cat:'Challenge'},
     {key:'challengelegend',icon:'🏆',name:'Challenge Legend',coins:300,xp:600,desc:'Reach 2,500 points in Challenge Mode.',target:2500,get:s=>s.bestChallengeScore||0,cat:'Challenge'}
   ];
+
+  /* ================= ADAPT COCU PLUS (additive upgrade) =================
+     More awards, a Rank ladder, Daily Quests and a Daily Streak. Uses only
+     existing stats; its own small record lives under one localStorage key. */
+  const COCU_RANKS=[{n:'Rookie',i:'🌱',x:0},{n:'Explorer',i:'🧭',x:250},{n:'Scholar',i:'📘',x:1000},{n:'Strategist',i:'🧠',x:2500},{n:'Champion',i:'🏅',x:5000},{n:'Master',i:'👑',x:10000},{n:'Legend',i:'🌌',x:20000}];
+  function cocuRank(s){ const x=(s&&s.xpEarnedTotal)||0; let k=0; COCU_RANKS.forEach((r,j)=>{ if(x>=r.x) k=j; }); const r=COCU_RANKS[k], nx=COCU_RANKS[k+1]; return {i:k,r:r,next:nx,pct:nx?Math.min(100,Math.round((x-r.x)/(nx.x-r.x)*100)):100,x:x}; }
+  const CP_KEY='cocu_plus_v1';
+  function cpLoad(){ try{ return JSON.parse(localStorage.getItem(CP_KEY)||'{}')||{}; }catch(e){ return {}; } }
+  function cpSave(d){ try{ localStorage.setItem(CP_KEY,JSON.stringify(d)); }catch(e){} }
+  function cpDay(o){ const d=new Date(Date.now()-(o||0)*864e5); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  const CP_POOL=[
+    {id:'g2',ic:'🎮',t:'Play 2 games',k:'g',n:2,c:25,x:60},{id:'g4',ic:'🕹️',t:'Play 4 games',k:'g',n:4,c:50,x:120},
+    {id:'p300',ic:'⭐',t:'Earn 300 points',k:'p',n:300,c:30,x:70},{id:'p800',ic:'💫',t:'Earn 800 points',k:'p',n:800,c:60,x:140},
+    {id:'x200',ic:'🚀',t:'Earn 200 XP',k:'x',n:200,c:35,x:80},{id:'l1',ic:'📚',t:'Complete a lesson',k:'l',n:1,c:40,x:100},
+    {id:'c100',ic:'🪙',t:'Earn 100 coins',k:'c',n:100,c:30,x:75}];
+  function cpSnap(s){ return {g:s.gamesPlayed||0,p:s.totalPoints||0,x:s.xpEarnedTotal||0,l:s.lessonsCompleted||0,c:s.coinsEarnedTotal||0}; }
+  function cpDaily(){
+    const d=cpLoad(), today=cpDay(); if(!d.days) d.days=0; if(!d.best) d.best=0;
+    if(d.day!==today){
+      d.days = d.day===cpDay(1) ? d.days+1 : 1; d.best=Math.max(d.best,d.days); d.day=today;
+      let seed=0; for(const ch of today) seed=(seed*31+ch.charCodeAt(0))%9973;
+      const pool=CP_POOL.slice(), q=[]; for(let i=0;i<3;i++){ q.push(pool.splice((seed+i*7)%pool.length,1)[0].id); }
+      d.quests=q; d.claimed={}; d.sweep=false; d.base=cpSnap(S); cpSave(d);
+    }
+    return d;
+  }
+  function cpProg(q,d){ const b=d.base||{}, cur=cpSnap(S); return Math.max(0,Math.min(q.n,(cur[q.k]||0)-(b[q.k]||0))); }
+  function cpClaim(id){
+    const d=cpDaily(), q=CP_POOL.find(z=>z.id===id); if(!q||d.claimed[id]||cpProg(q,d)<q.n) return;
+    d.claimed[id]=1; d.done=(d.done||0)+1; cpSave(d); addCoins(q.c); addXP(q.x); sfx('achieve'); launchConfetti();
+    if(d.quests.every(z=>d.claimed[z])&&!d.sweep){ d.sweep=true; d.sweeps=(d.sweeps||0)+1; cpSave(d); addCoins(100); addXP(150); showInfo('🧹 Daily Sweep!','All 3 daily quests complete! Bonus: +100 coins and +150 XP.'); }
+    checkAchievements(); cpRender();
+  }
+  function cpRankUpCheck(){
+    const d=cpLoad(), r=cocuRank(S);
+    if(d.rank===undefined){ d.rank=r.i; cpSave(d); return; }
+    if(r.i>d.rank){ d.rank=r.i; cpSave(d); const o=document.createElement('div'); o.className='cp-up'; o.innerHTML='<div><div class="b">'+r.r.i+'</div><h2>RANK UP!</h2><p>You are now a <b>'+r.r.n+'</b></p><button>Awesome!</button></div>'; o.querySelector('button').onclick=()=>o.remove(); document.body.appendChild(o); sfx('achieve'); launchConfetti(); }
+  }
+  function cpRender(){
+    try{
+      const d=cpDaily(), r=cocuRank(S), host=$('cocu-plus');
+      const nx=r.next?('Next: '+r.next.i+' '+r.next.n+' at '+r.next.x+' XP'):'Highest rank reached!';
+      if(host){
+        host.innerHTML='<div class="cp-panel"><div class="cp-rank"><div class="cp-badge">'+r.r.i+'</div><div style="flex:1"><div class="cp-rs">YOUR RANK</div><div class="cp-rt">'+r.r.n+'</div><div class="cp-rs">'+r.x+' XP · '+nx+'</div></div><div style="text-align:center"><div style="font-size:1.5rem">🔥</div><div class="cp-rs">'+d.days+'-day<br>streak</div></div></div><div class="cp-bar"><i style="width:'+r.pct+'%"></i></div></div>'
+        +'<div class="cp-q"><h3>🗓️ Daily Quests</h3><small>Resets every day · finish all 3 for a Sweep bonus</small>'
+        +d.quests.map(id=>{ const q=CP_POOL.find(z=>z.id===id), p=cpProg(q,d), ok=p>=q.n, cl=!!d.claimed[id];
+          return '<div class="cp-row"><span class="cp-ic">'+q.ic+'</span><div class="cp-m"><b>'+q.t+'</b><em>+'+q.c+' 🪙 · +'+q.x+' ⭐</em><div class="cp-pb"><i style="width:'+(p/q.n*100)+'%"></i></div></div><button class="cp-go" data-q="'+id+'"'+((ok&&!cl)?'':' disabled')+'>'+(cl?'✔ Done':ok?'Claim':p+'/'+q.n)+'</button></div>'; }).join('')+'</div>';
+        host.querySelectorAll('.cp-go').forEach(b=>b.addEventListener('click',()=>cpClaim(b.dataset.q)));
+      }
+      const chip=$('cocu-chip'); if(chip) chip.innerHTML='<span>'+r.r.i+' '+r.r.n+' · 🔥 '+d.days+'-day streak</span><span>'+(d.quests.filter(z=>d.claimed[z]).length)+'/3 quests</span>';
+      cpRankUpCheck();
+    }catch(e){ console.warn('Plus render:',e); }
+  }
+  function cpInit(){
+    try{
+      const list=$('achievement-list'); if(list && !$('cocu-plus')){ const h=document.createElement('div'); h.id='cocu-plus'; list.parentNode.insertBefore(h,list); new MutationObserver(cpRender).observe(list,{childList:true}); }
+      const pct=$('menu-progress-pct'); if(pct && !$('cocu-chip')){ const bar=pct.closest('.progress-bar-label')||pct.parentElement; const c=document.createElement('div'); c.id='cocu-chip'; c.className='cp-chip'; bar.parentNode.insertBefore(c,bar); }
+      const hx=$('header-xp'); if(hx) new MutationObserver(cpRender).observe(hx,{childList:true,characterData:true,subtree:true});
+      if(!$('cocu-fx')){ const fx=document.createElement('div'); fx.id='cocu-fx'; fx.setAttribute('aria-hidden','true'); const em=['📚','🎮','⭐','🪙','🧠','🏆','✨']; for(let i=0;i<12;i++){ const s=document.createElement('span'); s.textContent=em[i%em.length]; s.style.cssText='left:'+(i*8.5%100)+'%;font-size:'+(18+(i*7)%22)+'px;animation-duration:'+(16+(i*5)%14)+'s;animation-delay:-'+(i*3)+'s'; fx.appendChild(s); } document.body.appendChild(fx); }
+      cpRender();
+    }catch(e){ console.warn('Plus init:',e); }
+  }
+  const CP_ACH=[
+    ['rk3','📘','Rising Scholar',50,120,'Reach the Scholar rank.',3,s=>cocuRank(s).i+1,'Ranks'],
+    ['rk5','🏅','Champion Rank',150,300,'Reach the Champion rank.',5,s=>cocuRank(s).i+1,'Ranks'],
+    ['rk7','🌌','Living Legend',400,800,'Reach the Legend rank.',7,s=>cocuRank(s).i+1,'Ranks'],
+    ['dd3','📅','Daily Dedication',40,100,'Play 3 days in a row.',3,()=>cpLoad().best||0,'Dedication'],
+    ['dd7','🔥','Weekly Warrior',120,250,'Play 7 days in a row.',7,()=>cpLoad().best||0,'Dedication'],
+    ['dd14','💪','Fortnight Hero',300,600,'Play 14 days in a row.',14,()=>cpLoad().best||0,'Dedication'],
+    ['qh5','🗓️','Quest Hunter',60,150,'Claim 5 daily quests.',5,()=>cpLoad().done||0,'Dedication'],
+    ['qm25','🗺️','Quest Master',250,500,'Claim 25 daily quests.',25,()=>cpLoad().done||0,'Dedication'],
+    ['sw1','🧹','Clean Sweep',60,150,'Finish all 3 quests in one day.',1,()=>cpLoad().sweeps||0,'Dedication'],
+    ['sw7','🧼','Sweep Champion',250,500,'Complete 7 Daily Sweeps.',7,()=>cpLoad().sweeps||0,'Dedication'],
+    ['ms5','🔍','Mystery Solver',60,150,'Solve 5 Speculation puzzles.',5,s=>s.speculationSolved||0,'Mastery'],
+    ['ms25','🕵️','Master Detective',200,400,'Solve 25 Speculation puzzles.',25,s=>s.speculationSolved||0,'Mastery'],
+    ['ca1','⚔️','Challenge Accepted',40,100,'Score in Challenge Mode.',1,s=>s.bestChallengeScore>0?1:0,'Mastery'],
+    ['cent','💯','Centurion',500,900,'Complete 100 games.',100,s=>s.gamesPlayed||0,'Mastery'],
+    ['ms30','⚡','Mega Streak',200,400,'Get 30 correct answers in a row.',30,s=>s.bestCorrectStreak||0,'Mastery'],
+    ['st2k','🚀','Score Titan',150,300,'Reach 2,000 points in a single game.',2000,s=>s.bestScore||0,'Mastery'],
+    ['th2k','💰','Treasure Hoard',100,200,'Earn 2,000 coins in total.',2000,s=>s.coinsEarnedTotal||0,'Wealth'],
+    ['ct5k','🏦','Coin Tycoon',250,500,'Earn 5,000 coins in total.',5000,s=>s.coinsEarnedTotal||0,'Wealth']
+  ];
+  CP_ACH.forEach(a=>ACHIEVEMENTS.push({key:'cp_'+a[0],icon:a[1],name:a[2],coins:a[3],xp:a[4],desc:a[5],target:a[6],get:a[7],cat:a[8]}));
+  // Start after the app finishes loading its saved game state.
+  setTimeout(()=>{ try{ cpDaily(); cpInit(); if(typeof checkAchievements==='function') checkAchievements(); }catch(e){ console.warn('Plus start:',e); } },1200);
+
 
   /* ================= PET DATA ================= */
   const PETS = [
@@ -7037,6 +7158,18 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
      anyone who can read the storage API, and a 4–6 digit PIN can be brute
      forced offline. It stops casual impersonation, not a determined attacker.
   */
+  // Returns 'sha256:<hex>' when Web Crypto is available (secure context),
+  // otherwise the 'fnv:' fallback hash. (This helper was missing, which made
+  // every call throw a ReferenceError and silently broke Dashboard unlock.)
+  async function sha256Hex(str){
+    try{
+      if(window.crypto && window.crypto.subtle && window.TextEncoder){
+        const buf=await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(str)));
+        return 'sha256:'+Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      }
+    }catch(e){}
+    return fnvHexPin(String(str));
+  }
   function fnvHexPin(str){
     let h1=0xdeadbeef, h2=0x41c6ce57;
     for(let i=0;i<str.length;i++){ const ch=str.charCodeAt(i); h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677); }
@@ -7266,7 +7399,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   async function verifyBuiltinTeacherCode(code){
     // Phone keyboards often capitalise the first letter; the PIN is lowercase.
     const tries=[...new Set([String(code), String(code).toLowerCase()])];
-    for(const t of tries){ if(TEACHER_BUILTIN_HASHES.includes(await sha256Hex(t))) return true; }
+    for(const t0 of tries){ const t=t0.trim(); if(TEACHER_BUILTIN_HASHES.includes(await sha256Hex(t)) || TEACHER_BUILTIN_HASHES.includes(fnvHexPin(t))) return true; }
     return false;
   }
   const TEACHER_TOKEN_KEY='adaptcocu_teacher_token_v2';
