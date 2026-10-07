@@ -4343,7 +4343,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       closeMobileMenu();
       if(name!=='spec-play'){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
       const previous=document.querySelector('.screen.active');
-      if(previous && previous.id !== 'screen-'+name && !S.settings.reducedMotion){ previous.classList.add('screen-leaving'); setTimeout(()=>previous.classList.remove('screen-leaving'),180); }
+      const reducedMotion = !!(S && S.settings && S.settings.reducedMotion);
+      if(previous && previous.id !== 'screen-'+name && !reducedMotion){ previous.classList.add('screen-leaving'); setTimeout(()=>previous.classList.remove('screen-leaving'),180); }
       SCREENS.forEach(n => $('screen-'+n)?.classList.toggle('active', n===name));
       const gameScreens = ['adventure','trivia','quickgame','challenge','spec-play'];
       const showGameMenu = gameScreens.includes(name);
@@ -7329,10 +7330,17 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const u=getWebAppUrl(); if(!u) return; sfx('click'); window.open(u,'_blank','noopener');
   });
   function openTeacherEntry(){
-    if(!isAppOnline()){ showScreen('teacher-gate'); renderTeacherGate(); return; }
-    if(isTeacherSessionActive()){ openTeacherDashboard(); return; }
-    showScreen('teacher-gate');
-    renderTeacherGate();
+    try{
+      if(!isAppOnline()){ showScreen('teacher-gate'); renderTeacherGate(); return; }
+      if(isTeacherSessionActive()){ openTeacherDashboard(); return; }
+      showScreen('teacher-gate');
+      renderTeacherGate();
+    }catch(err){
+      console.error('Teacher entry failed:', err);
+      showScreen('teacher-gate');
+      const msg = $('teacher-gate-error');
+      if(msg) msg.textContent = 'Teacher Dashboard could not be opened. Please try again.';
+    }
   }
   let teacherGateMode='checking'; // checking | unreachable | unconfigured | setup | login
   async function renderTeacherGate(){
@@ -7417,9 +7425,33 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   /* ---- Dashboard state / rendering ---- */
   let teacherFilter = { q:'', section:'all', mode:'all', sort:'recent' };
   function openTeacherDashboard(){
+    // Always switch to the dashboard immediately. The local roster is usable
+    // even while the remote sync is loading or temporarily unavailable.
     showScreen('teacher-dashboard');
-    try{ renderTeacherDashboard(); }catch(e){ console.error('Teacher Dashboard render failed:', e); }
-    fetchRemoteRosterAndMerge().then(ok => { if(ok){ try{ renderTeacherDashboard(); }catch(e){} } }).catch(()=>{});
+    const dashSub = $('teacher-dash-sub');
+    try{
+      renderTeacherDashboard();
+      if(dashSub) dashSub.textContent = 'Student Records loaded. Sync Progress to retrieve the latest online records.';
+    }catch(e){
+      console.error('Teacher Dashboard render failed:', e);
+      const list = $('teacher-roster-list');
+      if(list){
+        list.innerHTML = '<div class="card history-empty"><strong>Dashboard loaded, but the student list could not be rendered.</strong><p>Please use Sync Progress or reload the dashboard.</p></div>';
+      }
+    }
+
+    // Sync in the background; never block the initial dashboard view.
+    fetchRemoteRosterAndMerge().then(ok => {
+      if(ok){
+        try{ renderTeacherDashboard(); }catch(e){ console.error('Teacher Dashboard refresh failed:', e); }
+        if(dashSub) dashSub.textContent = 'Student Records synchronized from the Adapt CoCu online server.';
+      }else if(dashSub){
+        dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
+      }
+    }).catch(err => {
+      console.warn('Teacher Dashboard sync failed:', err);
+      if(dashSub) dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
+    });
   }
   function rosterEntries(){ return Object.values(readLocalRoster()).filter(Boolean); }
   function isRecentlyActive(ts){ return !!ts && (Date.now()-Number(ts)) <= 14*24*60*60*1000; }
@@ -7509,7 +7541,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     sfx('click'); openTeacherReport(btn.dataset.teacherReport);
   });
   $('teacher-logout')?.addEventListener('click', () => { setTeacherSessionActive(false); showScreen('profile'); });
-  $('teacher-dashboard-back')?.addEventListener('click', () => { sfx('click'); showScreen('profile'); });
+  $('teacher-dashboard-back')?.addEventListener('click', () => {
+    sfx('click');
+    showScreen('profile');
+    try{ openProfile(); }catch(e){}
+  });
 
   /* ---- Import / Export ---- */
   $('btn-export-my-progress')?.addEventListener('click', () => {
