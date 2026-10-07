@@ -2159,7 +2159,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       </div>
       <div class="card" id="teacher-gate-form">
         <label class="field-label" for="teacher-gate-code">Access Code</label>
-        <input type="password" id="teacher-gate-code" autocomplete="off" style="width:100%;padding:10px;border-radius:10px;border:2px solid #dbe3f5;margin-bottom:10px">
+        <input type="password" id="teacher-gate-code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;padding:10px;border-radius:10px;border:2px solid #dbe3f5;margin-bottom:10px">
         <div id="teacher-gate-setupkey-row" style="display:none">
           <label class="field-label" for="teacher-gate-setupkey">Administrator Setup Key</label>
           <input type="password" id="teacher-gate-setupkey" autocomplete="off" style="width:100%;padding:10px;border-radius:10px;border:2px solid #dbe3f5;margin-bottom:10px">
@@ -7199,8 +7199,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(!mpHasBackend()) return false;
     // Authoritative path: the central server returns every student's record
     // to an authorized Dashboard session only.
-    const auth = await teacherApi('/api/teacher/roster');
-    if(auth && auth.status===401){ setTeacherSessionActive(false); showScreen('teacher-gate'); renderTeacherGate(); return false; }
+    // Only a real server-issued session talks to the teacher roster endpoint.
+    // A built-in-PIN session ('builtin') skips it, and a 401 from any other
+    // server must never throw the teacher back out of an unlocked Dashboard.
+    const auth = teacherToken()==='builtin' ? null : await teacherApi('/api/teacher/roster');
+    if(auth && auth.status===401 && teacherToken() && teacherToken()!=='builtin'){ setTeacherSessionActive(false); showScreen('teacher-gate'); renderTeacherGate(); return false; }
     if(auth && auth.json && auth.json.ok && Array.isArray(auth.json.students)){
       auth.json.students.forEach(snap => mergeSnapshotIntoRoster(snap));
       return true;
@@ -7259,7 +7262,12 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
      with the app, so every device has the same passcode and nobody is ever
      asked to create one. */
   const TEACHER_BUILTIN_HASHES = ["sha256:73e7bf57a16289b9c3426a08c2c37631409a79f8f91d2879201a55173524e82a","fnv:baf38cf2a8c4a9e0"];
-  async function verifyBuiltinTeacherCode(code){ return TEACHER_BUILTIN_HASHES.includes(await sha256Hex(code)); }
+  async function verifyBuiltinTeacherCode(code){
+    // Phone keyboards often capitalise the first letter; the PIN is lowercase.
+    const tries=[...new Set([String(code), String(code).toLowerCase()])];
+    for(const t of tries){ if(TEACHER_BUILTIN_HASHES.includes(await sha256Hex(t))) return true; }
+    return false;
+  }
   const TEACHER_TOKEN_KEY='adaptcocu_teacher_token_v2';
   const TEACHER_SESSION_KEY=TEACHER_TOKEN_KEY;
   function teacherToken(){ try{ return sessionStorage.getItem(TEACHER_TOKEN_KEY)||''; }catch(e){ return ''; } }
@@ -7410,8 +7418,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   let teacherFilter = { q:'', section:'all', mode:'all', sort:'recent' };
   function openTeacherDashboard(){
     showScreen('teacher-dashboard');
-    renderTeacherDashboard();
-    fetchRemoteRosterAndMerge().then(ok => { if(ok) renderTeacherDashboard(); });
+    try{ renderTeacherDashboard(); }catch(e){ console.error('Teacher Dashboard render failed:', e); }
+    fetchRemoteRosterAndMerge().then(ok => { if(ok){ try{ renderTeacherDashboard(); }catch(e){} } }).catch(()=>{});
   }
   function rosterEntries(){ return Object.values(readLocalRoster()).filter(Boolean); }
   function isRecentlyActive(ts){ return !!ts && (Date.now()-Number(ts)) <= 14*24*60*60*1000; }
