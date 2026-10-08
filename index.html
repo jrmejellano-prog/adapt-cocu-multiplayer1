@@ -1564,6 +1564,23 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 @keyframes cpFade{from{opacity:0}}@keyframes cpBoing{0%{transform:scale(.3)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){#cocu-fx{display:none}*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
+<style id="cocu-connect-css">
+.cn-hb{all:unset;cursor:pointer;position:relative;font-size:1.05rem;padding:4px 7px;border-radius:12px;background:rgba(255,255,255,.18)}
+.cn-hb b{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;background:#ff4d6d;color:#fff;font-size:.65rem;display:grid;place-items:center;padding:0 3px}
+.cn-hb b[hidden]{display:none}
+.cn-ov{position:fixed;inset:0;z-index:9998;background:rgba(20,10,60,.55);display:flex;align-items:flex-start;justify-content:center;padding:70px 12px 12px;animation:cpFade .2s}
+.cn-box{width:min(440px,100%);max-height:80vh;overflow:auto;background:#fff;border-radius:20px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.35);color:#25305a}
+.cn-box h2{margin:0 0 6px;font-family:'Baloo 2',sans-serif;display:flex;justify-content:space-between;align-items:center}
+.cn-x{all:unset;cursor:pointer;font-size:1.3rem;padding:0 6px}
+.cn-st{font-size:.76rem;font-weight:800;padding:7px 10px;border-radius:10px;background:#eef6ff;margin:6px 0 10px}.cn-st.off{background:#fff1f0;color:#b3261e}
+.cn-it{display:flex;gap:10px;padding:10px;border-radius:14px;border:2px solid #e6ebfa;margin-bottom:8px;cursor:pointer}.cn-it.un{background:#f6f3ff;border-color:#c9b8ff}
+.cn-it .ic{font-size:1.5rem}.cn-it b{display:block;font-size:.88rem}.cn-it p{margin:2px 0;font-size:.8rem;font-weight:600;color:#55648a}.cn-it small{font-size:.66rem;color:#8a97b5;font-weight:700}
+.cn-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #dbe3f5;font-size:.85rem;font-weight:700}.cn-row span:first-child{color:#6a78a0}
+.cn-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.cn-btns .btn{flex:1;min-width:120px}
+.cn-ta{width:100%;box-sizing:border-box;min-height:90px;border:3px solid #dbe3f5;border-radius:12px;padding:10px;font:600 .9rem inherit;margin-top:8px}
+.cn-tb{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}.cn-tb .btn{flex:1;min-width:130px;font-size:.8rem;padding:9px}
+.cn-mini{margin-top:8px}
+</style>
 </head>
 <body>
 
@@ -2603,6 +2620,166 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   CP_ACH.forEach(a=>ACHIEVEMENTS.push({key:'cp_'+a[0],icon:a[1],name:a[2],coins:a[3],xp:a[4],desc:a[5],target:a[6],get:a[7],cat:a[8]}));
   // Start after the app finishes loading its saved game state.
   setTimeout(()=>{ try{ cpDaily(); cpInit(); if(typeof checkAchievements==='function') checkAchievements(); }catch(e){ console.warn('Plus start:',e); } },1200);
+
+  /* ================= ADAPT COCU CONNECT =================
+     Account panel, Log Out, notification bell, teacher messaging and soft-delete.
+     Uses the SAME server key-value store the app already syncs with
+     (notif:<id>, notifread:<id>, deleted:<id>); localStorage is only an offline cache. */
+  const cnDeleted={};
+  const CN_CK='cocu_notif_cache_v1';
+  function cnId(){ return (S&&S.playerCodename)||''; }
+  function cnJ(v,d){ try{ const x=typeof v==='string'?JSON.parse(v):v; return x==null?d:x; }catch(e){ return d; } }
+  function cnCache(){ const c=cnJ(localStorage.getItem(CN_CK+':'+cnId()),null)||{}; return {items:c.items||[],read:c.read||[],newCount:0,lastPull:c.lastPull||0}; }
+  function cnSave(c){ try{ localStorage.setItem(CN_CK+':'+cnId(),JSON.stringify({items:c.items,read:c.read,lastPull:c.lastPull})); }catch(e){} }
+  function cnOnline(){ try{ return mpHasBackend(); }catch(e){ return false; } }
+  function cnOv(html,wide){ const o=document.createElement('div'); o.className='cn-ov'; o.innerHTML='<div class="cn-box">'+html+'</div>'; o.addEventListener('click',e=>{ if(e.target===o||e.target.closest('.cn-x')) o.remove(); }); document.body.appendChild(o); return o; }
+  async function cnGet(key){ const r=await mpApi('/api/mp/key?key='+encodeURIComponent(key)); return r===null?{fail:true}:{v:r.value}; }
+  async function cnAppend(id,msg){
+    const g=await cnGet('notif:'+id); if(g.fail) return false;
+    let a=cnJ(g.v,[]); if(!Array.isArray(a)) a=[]; if(a.some(m=>m.id===msg.id)) return true;
+    a.push(msg); return await mpStSet('notif:'+id, JSON.stringify(a.slice(-60)));
+  }
+  function cnBadge(){ const b=$('cn-badge'); if(!b) return; const n=cnId()?cnCache().items.filter(m=>!cnCache().read.includes(m.id)).length:0; b.textContent=n>9?'9+':n; b.hidden=!n; }
+  let cnStatus={state:'idle',n:0};
+  async function cnPull(){
+    const id=cnId(); if(!id){ cnBadge(); return; }
+    const c=cnCache();
+    if(!cnOnline()){ cnStatus={state:'offline',n:0}; cnBadge(); return; }
+    const [a,b]=await Promise.all([cnGet('notif:'+id),cnGet('notifread:'+id)]);
+    if(a.fail||b.fail){ cnStatus={state:'offline',n:0}; cnBadge(); return; }
+    const before=new Set(c.items.map(m=>m.id)), rem=cnJ(a.v,[]), rd=cnJ(b.v,[]);
+    const map={}; c.items.concat(Array.isArray(rem)?rem:[]).forEach(m=>{ if(m&&m.id) map[m.id]=m; });
+    c.items=Object.values(map).sort((x,y)=>y.ts-x.ts).slice(0,50);
+    c.read=[...new Set(c.read.concat(Array.isArray(rd)?rd:[]))];
+    const n=c.items.filter(m=>!before.has(m.id)).length; c.lastPull=Date.now(); cnSave(c);
+    cnStatus={state:'synced',n:before.size?n:0}; cnBadge();
+  }
+  async function cnMarkRead(ids){
+    const c=cnCache(); c.read=[...new Set(c.read.concat(ids))]; cnSave(c); cnBadge();
+    if(cnOnline()) mpStSet('notifread:'+cnId(), JSON.stringify(c.read));
+  }
+  function cnSystem(id,icon,title,body){
+    const c=cnCache(); if(c.items.some(m=>m.id===id)) return;
+    const m={id,from:'system',icon,title,body,ts:Date.now()}; c.items.unshift(m); cnSave(c);
+    if(cnOnline()) cnAppend(cnId(),m);
+  }
+  function cnScan(){
+    try{
+      const id=cnId(); if(!id) return; const d=cpLoad();
+      [[3,'🔥'],[7,'🔥'],[14,'💪'],[30,'🏆']].forEach(([n,ic])=>{ if((d.days||0)>=n) cnSystem('sys-streak-'+n,ic,n+'-Day Streak!','You have kept your Adapt CoCu streak going for '+n+' days.'); });
+      const k='cocu_ach_seen:'+id, seen=cnJ(localStorage.getItem(k),null), now=Object.keys(S.achievementsCollected||{});
+      if(seen) now.filter(x=>!seen.includes(x)).forEach(x=>{ const a=ACHIEVEMENTS.find(z=>z.key===x); if(a) cnSystem('sys-ach-'+x,a.icon,'Achievement Unlocked: '+a.name,a.desc+' (+'+a.xp+' XP, +'+a.coins+' coins)'); });
+      localStorage.setItem(k,JSON.stringify(now));
+    }catch(e){}
+  }
+  const cnAgo=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?'Just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'; };
+  function cnPanel(){
+    if(!cnId()){ showInfo('🔔 Notifications','Finish setting up your player profile to receive notifications.'); return; }
+    cnScan(); const draw=()=>{
+      const c=cnCache(), off=!cnOnline()||cnStatus.state==='offline';
+      const st=off?'<div class="cn-st off">📡 Offline<br>Some notifications may be unavailable until you reconnect.</div>':'<div class="cn-st">🟢 Synced'+(cnStatus.n?' · New notifications received: '+cnStatus.n:'')+'</div>';
+      const items=c.items.length?c.items.map(m=>'<div class="cn-it'+(c.read.includes(m.id)?'':' un')+'" data-id="'+escapeHtml(m.id)+'"><span class="ic">'+escapeHtml(m.icon||'🔔')+'</span><div><b>'+escapeHtml(m.title)+'</b><p>'+escapeHtml(m.body)+'</p><small>'+escapeHtml(m.from==='teacher'?'Teacher':m.from==='system'?'Adapt CoCu':'Student')+' · '+cnAgo(m.ts)+'</small></div></div>').join(''):'<p style="text-align:center;color:#8a97b5;font-weight:700">No notifications yet.</p>';
+      ov.querySelector('.cn-box').innerHTML='<h2>🔔 Notifications <button class="cn-x">×</button></h2>'+st+items+'<div class="cn-btns"><button class="btn btn-block" id="cn-all">✔ Mark all as read</button></div>';
+      ov.querySelectorAll('.cn-it').forEach(el=>el.addEventListener('click',()=>{ cnMarkRead([el.dataset.id]); draw(); }));
+      ov.querySelector('#cn-all').onclick=()=>{ cnMarkRead(cnCache().items.map(m=>m.id)); draw(); };
+    };
+    const ov=cnOv(''); draw(); cnPull().then(()=>{ if(document.body.contains(ov)) draw(); });
+  }
+  function cnAccount(){
+    const on=cnOnline(), synced=on&&S.lastSyncStatus==='synced';
+    const ov=cnOv('<h2>👤 Account <button class="cn-x">×</button></h2>'
+      +'<div class="cn-row"><span>Name</span><span>'+escapeHtml(S.name||'Player')+'</span></div>'
+      +'<div class="cn-row"><span>Student ID</span><span>'+escapeHtml(cnId()||'—')+'</span></div>'
+      +'<div class="cn-row"><span>Status</span><span id="cn-as">'+(!on?'🔴 Offline':synced?'🟢 Synced':'🟡 Waiting to sync')+'</span></div>'
+      +'<div class="cn-row"><span>Last Sync</span><span id="cn-al">'+(S.lastSyncAt?cnAgo(S.lastSyncAt):'Not yet')+'</span></div>'
+      +'<div class="cn-row"><span>Recovery PIN</span><span>'+(S.accountSecured?'✅ Set':'⚠️ Not set')+'</span></div>'
+      +'<div class="cn-btns"><button class="btn btn-primary" id="cn-sync">🔄 Sync Now</button><button class="btn" id="cn-out">🚪 Log Out</button></div>');
+    ov.querySelector('#cn-sync').onclick=async()=>{ ov.querySelector('#cn-as').textContent='⏳ Syncing…'; try{ await pushProgressSnapshot(); await pushAccountBackup(); await pullAccountBackupIfNewer(); await cnPull(); }catch(e){} ov.remove(); cnAccount(); };
+    ov.querySelector('#cn-out').onclick=()=>{ ov.remove(); cnLogout(); };
+  }
+  function cnLogout(){
+    if(!S.accountSecured){ showInfo('Set a Recovery PIN first','So you can log back in and keep your progress, save a Recovery PIN in Profile → Account Recovery. Then you can log out safely.'); return; }
+    const ov=cnOv('<h2>Log out? <button class="cn-x">×</button></h2><p style="font-weight:700">Your Adapt CoCu progress will remain saved. Use “I Already Have an Account” with your Student ID and PIN to come back.</p><div class="cn-btns"><button class="btn" id="cn-no">Cancel</button><button class="btn btn-primary" id="cn-yes">Log Out</button></div>');
+    ov.querySelector('#cn-no').onclick=()=>ov.remove();
+    ov.querySelector('#cn-yes').onclick=async()=>{
+      ov.querySelector('#cn-yes').disabled=true;
+      try{ await pushProgressSnapshot(); await pushAccountBackup(); }catch(e){}
+      if(cnOnline()){ const rem=await fetchAccountRecord(cnId()); if(!rem){ ov.remove(); showInfo('Could not log out yet','Your progress has not reached the server. Tap Sync Now while online, then try again.'); return; } }
+      try{ clearTimeout(saveTimer); }catch(e){}
+      S=safeDefaultState();
+      try{ localStorage.removeItem(SAVE_KEY); localStorage.removeItem(CP_KEY); sessionStorage.clear(); }catch(e){}
+      try{ if(window.storage&&window.storage.delete) await window.storage.delete(SAVE_KEY,false); }catch(e){}
+      try{ const db=await getSaveDB(); if(db) await new Promise(r=>{ const t=db.transaction('state','readwrite'); t.objectStore('state').delete(SAVE_KEY); t.oncomplete=t.onerror=t.onabort=()=>r(); }); }catch(e){}
+      location.reload();
+    };
+  }
+  function cnCompose(ids,label){
+    if(!isTeacherSessionActive()){ showInfo('Teacher access required','Unlock the Teacher Dashboard first.'); return; }
+    const ov=cnOv('<h2>✉️ Message '+escapeHtml(label)+' <button class="cn-x">×</button></h2><textarea class="cn-ta" maxlength="300" placeholder="Write your message…"></textarea><div class="cn-btns"><button class="btn btn-primary" id="cn-send">Send</button></div>');
+    ov.querySelector('#cn-send').onclick=async()=>{
+      const body=ov.querySelector('.cn-ta').value.trim(); if(!body) return;
+      let ok=0; const stamp=Date.now();
+      for(const id of ids){ if(await cnAppend(id,{id:'t-'+stamp+'-'+Math.random().toString(36).slice(2,6),from:'teacher',icon:'👩‍🏫',title:'Teacher Message',body,ts:stamp})) ok++; }
+      ov.remove(); showInfo(ok?'✅ Sent':'Not sent', ok?('Delivered to '+ok+' student'+(ok>1?'s':'')+'. They will see it on any device they log in from.'):'The server could not be reached. Check your connection and try again.');
+    };
+  }
+  async function cnLoadDeleted(){
+    if(!mpHasBackend()) return false; let ch=false;
+    const keys=await mpStListPrefix('deleted:'); const now={};
+    keys.forEach(k=>{ k=String(k&&k.key||k); if(k.startsWith('deleted:')) now[k.slice(8)]=1; });
+    Object.keys(cnDeleted).forEach(k=>{ if(!now[k]){ delete cnDeleted[k]; ch=true; } });
+    Object.keys(now).forEach(k=>{ if(!cnDeleted[k]){ cnDeleted[k]=1; ch=true; } });
+    return ch;
+  }
+  function cnDelete(id){
+    if(!isTeacherSessionActive()){ showInfo('Teacher access required','Unlock the Teacher Dashboard first.'); return; }
+    const r=readLocalRoster()[id]||{};
+    const ov=cnOv('<h2>Delete Student? <button class="cn-x">×</button></h2><p style="font-weight:700">'+escapeHtml(r.name||id)+' ('+escapeHtml(id)+')<br>This removes the student from the Teacher Dashboard. It is a safe archive: you can restore them from “Deleted”.</p><div class="cn-btns"><button class="btn" id="cn-no">Cancel</button><button class="btn btn-primary" id="cn-yes">Delete Student</button></div>');
+    ov.querySelector('#cn-no').onclick=()=>ov.remove();
+    ov.querySelector('#cn-yes').onclick=async()=>{
+      const ok=await mpStSet('deleted:'+id, JSON.stringify({at:Date.now()}));
+      ov.remove(); if(!ok){ showInfo('Not deleted','The server could not be reached, so nothing was changed.'); return; }
+      try{ const g=await cnGet(PROGRESS_INDEX_KEY); const ids=cnJ(g.v,[]); if(Array.isArray(ids)) await mpStSet(PROGRESS_INDEX_KEY, JSON.stringify(ids.filter(x=>x!==id))); }catch(e){}
+      cnDeleted[id]=1; showScreen('teacher-dashboard'); renderTeacherRoster();
+    };
+  }
+  function cnRestore(){
+    const ids=Object.keys(cnDeleted);
+    const ov=cnOv('<h2>♻️ Deleted students <button class="cn-x">×</button></h2>'+(ids.length?ids.map(i=>'<div class="cn-row"><span>'+escapeHtml(i)+'</span><button class="btn cn-mini" data-r="'+escapeHtml(i)+'">Restore</button></div>').join(''):'<p style="font-weight:700;color:#8a97b5">Nothing deleted.</p>'));
+    ov.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{ const i=b.dataset.r; await mpStDelete('deleted:'+i); delete cnDeleted[i]; await updateProgressRosterIndex(i); await fetchRemoteRosterAndMerge(); ov.remove(); renderTeacherRoster(); });
+  }
+  function cnTeacherUI(){
+    const list=$('teacher-roster-list'); if(list && !$('cn-tb')){
+      const tb=document.createElement('div'); tb.id='cn-tb'; tb.className='cn-tb';
+      tb.innerHTML='<button class="btn" id="cn-syncs">🔄 Sync Students</button><button class="btn" id="cn-all-msg">📣 Message All</button><button class="btn" id="cn-rest">♻️ Deleted</button>';
+      list.parentNode.insertBefore(tb,list);
+      $('cn-syncs').onclick=async()=>{ await fetchRemoteRosterAndMerge(); await cnLoadDeleted(); renderTeacherRoster(); };
+      $('cn-all-msg').onclick=()=>cnCompose(rosterEntries().map(r=>r.studentId),'all students');
+      $('cn-rest').onclick=async()=>{ await cnLoadDeleted(); cnRestore(); };
+      new MutationObserver(()=>{ list.querySelectorAll('.teacher-row').forEach(a=>{ if(a.querySelector('.cn-m')) return; const b=document.createElement('button'); b.type='button'; b.className='btn btn-block cn-m cn-mini'; b.textContent='✉️ Send Message'; b.onclick=()=>cnCompose([a.dataset.studentId],a.dataset.studentId); a.appendChild(b); }); }).observe(list,{childList:true});
+      cnLoadDeleted().then(ch=>{ if(ch) renderTeacherRoster(); });
+    }
+    const row=document.querySelector('#screen-teacher-report .teacher-action-row'); if(row && !$('cn-rm')){
+      const m=document.createElement('button'); m.className='btn'; m.id='cn-rm'; m.textContent='✉️ Send Message'; m.onclick=()=>cnCompose([teacherReportStudentId],teacherReportStudentId);
+      const d=document.createElement('button'); d.className='btn'; d.id='cn-rd'; d.textContent='🗑️ Delete Student'; d.onclick=()=>cnDelete(teacherReportStudentId);
+      row.appendChild(m); row.appendChild(d);
+    }
+  }
+  function cnInit(){
+    try{
+      const hs=document.querySelector('.header-stats'), net=$('net-status');
+      if(hs && !$('cn-bell')){
+        const bell=document.createElement('button'); bell.id='cn-bell'; bell.className='cn-hb'; bell.setAttribute('aria-label','Notifications'); bell.innerHTML='🔔<b id="cn-badge" hidden>0</b>'; bell.onclick=cnPanel;
+        const ac=document.createElement('button'); ac.id='cn-acct'; ac.className='cn-hb'; ac.setAttribute('aria-label','Account'); ac.textContent='👤'; ac.onclick=cnAccount;
+        hs.insertBefore(ac,net); hs.insertBefore(bell,ac);
+      }
+      cnTeacherUI(); cnScan(); cnBadge(); cnPull();
+      setInterval(()=>{ cnScan(); cnPull(); cnTeacherUI(); },45000);
+      window.addEventListener('online',()=>{ cnPull(); });
+      document.addEventListener('click',()=>setTimeout(cnTeacherUI,300),{passive:true});
+    }catch(e){ console.warn('Connect init:',e); }
+  }
+  setTimeout(cnInit,1600);
 
 
   /* ================= PET DATA ================= */
@@ -7586,7 +7763,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       if(dashSub) dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
     });
   }
-  function rosterEntries(){ return Object.values(readLocalRoster()).filter(Boolean); }
+  function rosterEntries(){ return Object.values(readLocalRoster()).filter(r=>r && !cnDeleted[r.studentId]); }
   function isRecentlyActive(ts){ return !!ts && (Date.now()-Number(ts)) <= 14*24*60*60*1000; }
   function renderTeacherClassOverview(rows){
     const wrap=$('teacher-overview'); if(!wrap) return;
