@@ -1492,7 +1492,21 @@
   .avatar-preview-wrap.profile-3d-wrap{ position:relative; top:auto; }
   /* Rarity badge is pinned top-left; give pet-card emoji room so they never collide on narrow cards. */
   .store-item .pet-store-icon{ margin-top:20px; }
+/* ---- Chat: reactions, bump, emoji picker; notification categories ---- */
+.cc-wrap{display:flex;flex-direction:column;max-width:88%}.cc-wrap.me{align-self:flex-end;align-items:flex-end}.cc-wrap.them{align-self:flex-start;align-items:flex-start}
+.cc-wrap .cc-b{max-width:100%}
+.cc-acts{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;align-items:center}
+.cc-chip{all:unset;cursor:pointer;font-size:.74rem;font-weight:800;padding:2px 8px;border-radius:12px;background:#eef1fb;border:2px solid #dbe3f5;color:#25305a}.cc-chip.me{background:#efe9ff;border-color:#8b5cf6}
+.cc-act{all:unset;cursor:pointer;font-size:.78rem;padding:2px 6px;border-radius:10px;opacity:.55;min-width:24px;text-align:center}.cc-act:hover,.cc-act:focus-visible{opacity:1;background:#eef1fb}
+.cc-b.bumped{box-shadow:0 0 0 2px #ffcf3d}
+.cc-bumped-tag{display:block;font-size:.65rem;font-weight:800;opacity:.85;margin-bottom:3px}
+.cc-bumpbar{position:sticky;top:0;z-index:2;cursor:pointer;background:#fff8dc;border:2px solid #ffcf3d;color:#6b4e00;border-radius:12px;padding:5px 9px;font-size:.76rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-rxbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}.cc-rxbar button{all:unset;cursor:pointer;font-size:1.6rem;padding:6px 8px;border-radius:12px;background:#f3f5fc}.cc-rxbar button:active{transform:scale(.92)}
+.cc-emo{max-height:132px;overflow-y:auto;background:#f6f7fd;border:2px solid #dbe3f5;border-radius:12px;padding:6px;margin-bottom:6px}.cc-emo small{display:block;font-weight:800;font-size:.65rem;color:#8a97b5;margin:2px 0}.cc-emo div{display:flex;flex-wrap:wrap;gap:2px}.cc-emo button{all:unset;cursor:pointer;font-size:1.3rem;width:34px;height:34px;text-align:center;line-height:34px;border-radius:8px;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}.cc-emo button:hover{background:#e4e8f8}
+#cc-emoji{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:1rem}
+.cn-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin:0 -2px}.cn-chip{all:unset;cursor:pointer;flex:none;font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:14px;border:2px solid #dbe3f5;color:#25305a;white-space:nowrap}.cn-chip.on{background:#8b5cf6;border-color:#8b5cf6;color:#fff}.cn-chip i{font-style:normal;background:#ff5a5a;color:#fff;border-radius:9px;padding:0 5px;margin-left:3px;font-size:.62rem}
 </style>
+
 <style id="arena-css">
 .char-nameplate{margin:6px auto 4px;max-width:92%;text-align:center;background:#fff;color:#1f2b40;border:2px solid var(--purple);border-radius:14px;padding:4px 12px;box-shadow:0 3px 0 rgba(91,52,184,.25);line-height:1.15}
 .char-nameplate strong{display:block;font-family:'Baloo 2',Quicksand,sans-serif;font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1f2b40;-webkit-text-fill-color:#1f2b40}
@@ -2661,11 +2675,25 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   function cnSave(c){ try{ localStorage.setItem(CN_CK+':'+cnId(),JSON.stringify({items:c.items,read:c.read,lastPull:c.lastPull})); }catch(e){} }
   function cnOnline(){ try{ return mpHasBackend(); }catch(e){ return false; } }
   function cnOv(html,wide){ const o=document.createElement('div'); o.className='cn-ov'; o.innerHTML='<div class="cn-box">'+html+'</div>'; o.addEventListener('click',e=>{ if(e.target===o||e.target.closest('.cn-x')) o.remove(); }); document.body.appendChild(o); return o; }
-  async function cnGet(key){ const r=await mpApi('/api/mp/key?key='+encodeURIComponent(key)); return r===null?{fail:true}:{v:r.value}; }
+  async function cnGet(key){
+    if(!mpHasBackend()) return {fail:true};
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),MP_CONFIG.timeoutMs);
+    try{
+      const r=await fetch(getMpBaseUrl()+'/api/mp/key?key='+encodeURIComponent(key),{headers:{'Content-Type':'application/json'},signal:ctl.signal});
+      if(r.status===404) return {v:null};            /* key simply does not exist = not found, NOT a network failure */
+      if(!r.ok) return {fail:true};
+      const j=await r.json(); return {v:(j&&j.value!==undefined)?j.value:null};
+    }catch(e){ return {fail:true}; } finally{ clearTimeout(t); }
+  }
   async function cnAppend(id,msg){
-    const g=await cnGet('notif:'+id); if(g.fail) return false;
-    let a=cnJ(g.v,[]); if(!Array.isArray(a)) a=[]; if(a.some(m=>m.id===msg.id)) return true;
-    a.push(msg); return await mpStSet('notif:'+id, JSON.stringify(a.slice(-60)));
+    for(let i=0;i<3;i++){
+      const g=await cnGet('notif:'+id); if(g.fail) return false;
+      let a=cnJ(g.v,[]); if(!Array.isArray(a)) a=[]; if(a.some(m=>m.id===msg.id)) return true;
+      a.push(msg); if(!await mpStSet('notif:'+id, JSON.stringify(a.slice(-60)))) return false;
+      const c=await cnGet('notif:'+id); if(!c.fail&&cnJ(c.v,[]).some&&cnJ(c.v,[]).some(m=>m&&m.id===msg.id)) return true;   /* another writer overwrote us: retry */
+      await new Promise(r=>setTimeout(r,250+Math.random()*400));
+    }
+    return false;
   }
   function cnBadge(){ const b=$('cn-badge'); if(!b) return; const n=cnId()?cnCache().items.filter(m=>!cnCache().read.includes(m.id)).length:0; b.textContent=n>9?'9+':n; b.hidden=!n; }
   let cnStatus={state:'idle',n:0};
@@ -2701,15 +2729,29 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     }catch(e){}
   }
   const cnAgo=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<1?'Just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'; };
+  const CN_CATS=[['all','All'],['messages','💬 Messages'],['friends','👥 Friends'],['streaks','🔥 Streaks'],['achievements','🏆 Achievements'],['teacher','🧑‍🏫 Teacher'],['system','⚙️ System']];
+  let cnFilter='all';
+  function cnCat(m){
+    const id=String(m.id||'');
+    if(m.from==='teacher') return 'teacher';
+    if(id.startsWith('sys-streak')) return 'streaks';
+    if(id.startsWith('sys-ach')) return 'achievements';
+    if(/^(frq|fra|c-)/.test(id)) return 'friends';
+    if(/^(rx-|bump-)/.test(id)||m.from==='student') return 'messages';
+    return 'system';
+  }
   function cnPanel(){
     if(!cnId()){ showInfo('🔔 Notifications','Finish setting up your player profile to receive notifications.'); return; }
     cnScan(); const draw=()=>{
       const c=cnCache(), off=!cnOnline()||cnStatus.state==='offline';
       const st=off?'<div class="cn-st off">📡 Offline<br>Some notifications may be unavailable until you reconnect.</div>':'<div class="cn-st">🟢 Synced'+(cnStatus.n?' · New notifications received: '+cnStatus.n:'')+'</div>';
-      const items=c.items.length?c.items.map(m=>'<div class="cn-it'+(c.read.includes(m.id)?'':' un')+'" data-id="'+escapeHtml(m.id)+'"><span class="ic">'+escapeHtml(m.icon||'🔔')+'</span><div><b>'+escapeHtml(m.title)+'</b><p>'+escapeHtml(m.body)+'</p><small>'+escapeHtml(m.from==='teacher'?'Teacher':m.from==='system'?'Adapt CoCu':'Student')+' · '+cnAgo(m.ts)+'</small></div></div>').join(''):'<p style="text-align:center;color:#8a97b5;font-weight:700">No notifications yet.</p>';
-      ov.querySelector('.cn-box').innerHTML='<h2>🔔 Notifications <button class="cn-x">×</button></h2>'+st+items+'<div class="cn-btns"><button class="btn btn-block" id="cn-all">✔ Mark all as read</button></div>';
+      const vis=c.items.filter(m=>cnFilter==='all'||cnCat(m)===cnFilter);
+      const chips='<div class="cn-chips" role="tablist">'+CN_CATS.map(([k,l])=>{ const un=c.items.filter(m=>(k==='all'||cnCat(m)===k)&&!c.read.includes(m.id)).length; return '<button class="cn-chip'+(cnFilter===k?' on':'')+'" data-cat="'+k+'">'+l+(un?' <i>'+un+'</i>':'')+'</button>'; }).join('')+'</div>';
+      const items=vis.length?vis.map(m=>'<div class="cn-it'+(c.read.includes(m.id)?'':' un')+'" data-id="'+escapeHtml(m.id)+'"><span class="ic">'+escapeHtml(m.icon||'🔔')+'</span><div><b>'+escapeHtml(m.title)+'</b><p>'+escapeHtml(m.body)+'</p><small>'+escapeHtml(m.from==='teacher'?'Teacher':m.from==='system'?'Adapt CoCu':'Student')+' · '+cnAgo(m.ts)+'</small></div></div>').join(''):'<p style="text-align:center;color:#8a97b5;font-weight:700">'+(c.items.length?'Nothing in this category.':'No notifications yet.')+'</p>';
+      ov.querySelector('.cn-box').innerHTML='<h2>🔔 Notifications <button class="cn-x">×</button></h2>'+st+chips+items+'<div class="cn-btns"><button class="btn btn-block" id="cn-all">✔ Mark '+(cnFilter==='all'?'all':'these')+' as read</button></div>';
       ov.querySelectorAll('.cn-it').forEach(el=>el.addEventListener('click',()=>{ cnMarkRead([el.dataset.id]); draw(); }));
-      ov.querySelector('#cn-all').onclick=()=>{ cnMarkRead(cnCache().items.map(m=>m.id)); draw(); };
+      ov.querySelectorAll('.cn-chip').forEach(b=>b.addEventListener('click',()=>{ cnFilter=b.dataset.cat; draw(); }));
+      ov.querySelector('#cn-all').onclick=()=>{ cnMarkRead(cnCache().items.filter(m=>cnFilter==='all'||cnCat(m)===cnFilter).map(m=>m.id)); draw(); };
     };
     const ov=cnOv(''); draw(); cnPull().then(()=>{ if(document.body.contains(ov)) draw(); });
   }
@@ -2777,12 +2819,39 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const ov=cnOv('<h2>♻️ Deleted students <button class="cn-x">×</button></h2>'+(ids.length?ids.map(i=>'<div class="cn-row"><span>'+escapeHtml(i)+'</span><button class="btn cn-mini" data-r="'+escapeHtml(i)+'">Restore</button></div>').join(''):'<p style="font-weight:700;color:#8a97b5">Nothing deleted.</p>'));
     ov.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{ const i=b.dataset.r; await mpStDelete('deleted:'+i); delete cnDeleted[i]; await updateProgressRosterIndex(i); await fetchRemoteRosterAndMerge(); ov.remove(); renderTeacherRoster(); });
   }
+  function cnSetSection(id){
+    if(!isTeacherSessionActive()){ showInfo('Teacher access required','Unlock the Teacher Dashboard first.'); return; }
+    const r=rosterEntries().find(x=>x.studentId===id)||{};
+    const ov=cnOv('<h2>🏷️ Set section <button class="cn-x">×</button></h2><p style="font-weight:700">'+escapeHtml(r.name||id)+' ('+escapeHtml(id)+')<br>Currently: '+escapeHtml(r.section||'Unassigned')+'</p><input id="cn-sec" class="cn-ta" style="min-height:0;height:44px" maxlength="24" placeholder="e.g. STEM A (leave empty = Unassigned)"><div class="cn-btns"><button class="btn btn-primary" id="cn-secok">Save</button></div>');
+    ov.querySelector('#cn-secok').onclick=async()=>{
+      const v=prettySection(ov.querySelector('#cn-sec').value).slice(0,24);
+      const ok=await mpStSet('secfix:'+id,JSON.stringify({section:v,ts:Date.now(),by:'teacher'}));
+      ov.remove(); if(!ok){ showInfo('Not saved','The server could not be reached, so nothing changed.'); return; }
+      secFix[id]={section:v,ts:Date.now()}; renderTeacherRoster(); try{ renderTeacherReport(); }catch(e){}
+      showInfo('✅ Section updated', (v||'Unassigned')+' — the student’s profile updates the next time they open the app online.');
+    };
+  }
+  function cnAssign(ids,label){
+    if(!isTeacherSessionActive()){ showInfo('Teacher access required','Unlock the Teacher Dashboard first.'); return; }
+    if(!ids.length){ showInfo('No students','There are no students in this selection.'); return; }
+    const ov=cnOv('<h2>📌 Assign activity to '+escapeHtml(label)+' <button class="cn-x">×</button></h2><input id="as-t" class="cn-ta" style="min-height:0;height:44px" maxlength="60" placeholder="Activity / lesson title"><label style="font-weight:700;font-size:.85rem">Deadline <input type="date" id="as-d" class="cn-ta" style="min-height:0;height:40px"></label><textarea id="as-n" class="cn-ta" maxlength="200" placeholder="Instructions (optional)"></textarea><p id="as-e" class="cc-err"></p><div class="cn-btns"><button class="btn btn-primary" id="as-go">Send assignment</button></div><p style="font-size:.75rem;color:#8a97b5;font-weight:700">Students get a notification with the deadline. Completion is not tracked automatically.</p>');
+    ov.querySelector('#as-go').onclick=async()=>{
+      const t=ov.querySelector('#as-t').value.trim(), d=ov.querySelector('#as-d').value, n=ov.querySelector('#as-n').value.trim();
+      if(!t){ ov.querySelector('#as-e').textContent='Enter a title.'; return; }
+      let ok=0; const stamp=Date.now();
+      for(const id of ids){ if(await cnAppend(id,{id:'t-as-'+stamp+'-'+Math.random().toString(36).slice(2,6),from:'teacher',icon:'📌',title:'New activity: '+t,body:(n?n+' ':'')+(d?'Deadline: '+d+'.':''),ts:stamp})) ok++; }
+      ov.remove(); showInfo(ok?'✅ Assigned':'Not sent', ok?('Sent to '+ok+' of '+ids.length+' student(s).'):'The server could not be reached.');
+    };
+  }
+  function cnVisibleIds(){ return rosterEntries().filter(r=>{ if(teacherFilter.section==='all') return true; const k=normSectionKey(r.section); return teacherFilter.section==='__none'?!k:k===teacherFilter.section; }).map(r=>r.studentId); }
   function cnTeacherUI(){
     const list=$('teacher-roster-list'); if(list && !$('cn-tb')){
       const tb=document.createElement('div'); tb.id='cn-tb'; tb.className='cn-tb';
-      tb.innerHTML='<button class="btn" id="cn-syncs">🔄 Sync Students</button><button class="btn" id="cn-all-msg">📣 Message All</button><button class="btn" id="cn-rest">♻️ Deleted</button>';
+      tb.innerHTML='<button class="btn" id="cn-syncs">🔄 Sync Students</button><button class="btn" id="cn-all-msg">📣 Message All</button><button class="btn" id="cn-rest">♻️ Deleted</button><button class="btn" id="cn-sec-msg">📣 Message Shown Students</button><button class="btn" id="cn-assign">📌 Assign Activity</button>';
       list.parentNode.insertBefore(tb,list);
-      $('cn-syncs').onclick=async()=>{ await fetchRemoteRosterAndMerge(); await cnLoadDeleted(); renderTeacherRoster(); };
+      $('cn-syncs').onclick=async()=>{ await fetchRemoteRosterAndMerge(); await loadSecFixes(); await cnLoadDeleted(); renderTeacherRoster(); };
+      $('cn-sec-msg').onclick=()=>cnCompose(cnVisibleIds(),'the '+cnVisibleIds().length+' student(s) shown');
+      $('cn-assign').onclick=()=>cnAssign(cnVisibleIds(),'the '+cnVisibleIds().length+' student(s) shown');
       $('cn-all-msg').onclick=()=>cnCompose(rosterEntries().map(r=>r.studentId),'all students');
       $('cn-rest').onclick=async()=>{ await cnLoadDeleted(); cnRestore(); };
       new MutationObserver(()=>{ list.querySelectorAll('.teacher-row').forEach(a=>{ if(a.querySelector('.cn-m')) return; const b=document.createElement('button'); b.type='button'; b.className='btn btn-block cn-m cn-mini'; b.textContent='✉️ Send Message'; b.onclick=()=>cnCompose([a.dataset.studentId],a.dataset.studentId); a.appendChild(b); }); }).observe(list,{childList:true});
@@ -2790,6 +2859,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     }
     const row=document.querySelector('#screen-teacher-report .teacher-action-row'); if(row && !$('cn-rm')){
       const m=document.createElement('button'); m.className='btn'; m.id='cn-rm'; m.textContent='✉️ Send Message'; m.onclick=()=>cnCompose([teacherReportStudentId],teacherReportStudentId);
+      const sb=document.createElement('button'); sb.className='btn'; sb.id='cn-rs'; sb.textContent='🏷️ Set Section'; sb.onclick=()=>cnSetSection(teacherReportStudentId); row.appendChild(sb);
       const d=document.createElement('button'); d.className='btn'; d.id='cn-rd'; d.textContent='🗑️ Delete Student'; d.onclick=()=>cnDelete(teacherReportStudentId);
       row.appendChild(m); row.appendChild(d);
     }
@@ -2852,13 +2922,45 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const id=cnId();
     if(!ccD||ccDid!==id){
       const d=cnJ(localStorage.getItem(CC_CK+':'+id),null)||{};
-      ['contacts','out','inb','read','rev','mute'].forEach(k=>{ if(!d[k]||typeof d[k]!=='object') d[k]={}; });
+      ['contacts','out','inb','read','rev','mute','rx','rxin'].forEach(k=>{ if(!d[k]||typeof d[k]!=='object') d[k]={}; });
       ccD=d; ccDid=id;
     }
     return ccD;
   }
   function ccPersist(){ try{ localStorage.setItem(CC_CK+':'+ccDid,JSON.stringify(ccD)); }catch(e){} }
   const ccFresh=a=>(Array.isArray(a)?a:[]).filter(m=>m&&m.id&&typeof m.t==='string'&&Date.now()-(m.ts||0)<CC_DAYS*CC_DAY);
+  /* ---- Student ID lookup shared by Friends + Chat ----
+     Normalises harmless typing differences (spaces, case, "adapt0001", "1", "0001") and checks
+     progress:<id>, then account:<id>, then the roster index, so a real student is not reported
+     missing just because one record type is absent. */
+  /* ---- Section normalisation: "STEM A", "STEM-A", "stem a" -> one group.
+     Only formatting is normalised (case, spaces, hyphens/underscores/dots). Names are never matched. ---- */
+  function normSectionKey(raw){ return String(raw==null?'':raw).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[\s\-_.,/\\]+/g,'').trim(); }
+  function prettySection(raw){ return String(raw==null?'':raw).trim().replace(/[\s_]+/g,' ').replace(/\s*-\s*/g,'-'); }
+  function cnNormId(raw){
+    const s0=String(raw==null?'':raw).trim().replace(/[\s_\u2013\u2014]+/g,'-').replace(/-+/g,'-').toUpperCase();
+    const out=[s0], m=s0.match(/^(?:ADAPT-?)?(\d{1,4})$/);
+    if(m) out.push('ADAPT-'+m[1].padStart(4,'0'));
+    return [...new Set(out.filter(Boolean))];
+  }
+  async function cnResolveStudent(raw){
+    const cands=cnNormId(raw); if(!cands.length) return {err:'Type your classmate’s Student ID.'};
+    let failed=false;
+    for(const k of cands){
+      for(const pre of ['progress:','account:']){
+        const g=await cnGet(pre+k);
+        if(g.fail){ failed=true; continue; }
+        const v=cnJ(g.v,null);
+        if(v&&typeof v==='object'){
+          const del=await cnGet('deleted:'+k); if(!del.fail&&del.v) continue;
+          return {id:k,name:String(v.name||v.studentName||v.displayName||k)};
+        }
+      }
+    }
+    const idx=await cnGet('progress:index');
+    if(!idx.fail){ const a=cnJ(idx.v,[]); if(Array.isArray(a)){ const hit=cands.find(c=>a.includes(c)); if(hit) return {id:hit,name:hit}; } }
+    return failed?{err:'Could not reach the server. Try again.'}:{notFound:true};
+  }
   async function ccJ(key,def){ const g=await cnGet(key); return g.fail?{fail:true}:{v:cnJ(g.v,def)}; }
   async function ccDecide(peer,s){ return await mpStSet('chatok:'+cnId()+':'+peer,JSON.stringify({s,ts:Date.now()})); }
   async function ccPushList(){
@@ -2926,7 +3028,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
           if(c.st==='out'){ if(s==='accepted'){ c.st='ok'; c.ts=Date.now(); changed=true; } else if(s==='declined'||s==='blocked'){ c.st='unavail'; changed=true; } }
           else if(s!=='accepted'){ c.st=(s==='blocked')?'unavail':'ended'; changed=true; }
         }
-        if(c.st==='ok'){ const m=await ccJ('chatmsg:'+p+':'+id,[]); if(!m.fail) d.inb[p]=ccFresh(m.v); }
+        if(c.st==='ok'){ const m=await ccJ('chatmsg:'+p+':'+id,[]); if(!m.fail) d.inb[p]=ccFresh(m.v); const x=await ccJ('chatx:'+p+':'+id,null); if(!x.fail&&x.v&&typeof x.v==='object') d.rxin[p]={r:x.v.r||{},b:x.v.b||{}}; }
       }));
       ccPersist(); if(changed) ccPushList(); ccBadge(); return true;
     }catch(e){ return false; } finally{ ccBusy=false; }
@@ -2937,7 +3039,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(!cnOnline()) return {err:'You need to be online to start a chat.'};
     if(!ccSt.enabled||ccSt.banned) return {err:'Student chat is paused right now.'};
     let rec=null;
-    for(const k of [...new Set([peer,peer.toUpperCase()])]){ const r=await ccJ('progress:'+k,null); if(r.fail) return {err:'Could not reach the server. Try again.'}; if(r.v&&r.v.studentId){ rec=r.v; peer=r.v.studentId; break; } }
+    const rs=await cnResolveStudent(peer); if(rs.err) return {err:rs.err}; if(!rs.notFound){ rec={name:rs.name}; peer=rs.id; }
     if(!rec) return {err:'No student found with that ID. Ask your classmate to check their Student ID in 👤 Account.'};
     if(peer===id) return {err:'That is your own Student ID.'};
     const c=d.contacts[peer];
@@ -2987,6 +3089,65 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const ok=await mpStSet('chatreport:'+rep.id,JSON.stringify(rep));
     if(ok&&alsoBlock) await ccBlock(p);
     return ok;
+  }
+
+  /* ---- Reactions, bump, emoji picker ----
+     Single-writer design: each student writes ONLY chatx:<me>:<peer> = {r:{msgId:emoji}, b:{msgId:ts}}
+     and reads the peer's chatx:<peer>:<me>. One reaction per account per message (tap again to remove,
+     tap another to change). NOTE: this is client-enforced; true server-side validation needs backend code. */
+  const CC_REACT=['👍','❤️','😂','😮','😢','🎉','🔥'], CC_BUMP_CD=60000, CC_RECENT_KEY='cocu_emoji_recent';
+  const CC_EMOJI=['😀','😄','😁','😂','🤣','😊','😍','🤩','😎','🤔','😮','😢','😭','😡','🥳','😴','👍','👎','👏','🙌','🙏','💪','🎉','🔥','⭐','❤️','💙','💯','✅','❌','📚','🎮','🏆','🚀','🐶','🐱','🍕','⚽'];
+  const ccRx=p=>{ const d=ccData(); return d.rx[p]||(d.rx[p]={r:{},b:{}}); };
+  function ccTrimRx(x){ [x.r,x.b].forEach(o=>{ const k=Object.keys(o); if(k.length>200) k.slice(0,k.length-200).forEach(i=>delete o[i]); }); }
+  async function ccPushRx(p){ ccTrimRx(ccRx(p)); ccPersist(); if(!cnOnline()) return false; return await mpStSet('chatx:'+cnId()+':'+p,JSON.stringify(ccRx(p))); }
+  async function ccReact(p,msgId,emoji){
+    const x=ccRx(p), had=x.r[msgId], me=String(S.name||'A classmate').slice(0,24);
+    if(had===emoji) delete x.r[msgId]; else x.r[msgId]=emoji;
+    const ok=await ccPushRx(p);
+    if(!ok){ if(had===undefined) delete x.r[msgId]; else x.r[msgId]=had; ccPersist(); return {err:'Could not save your reaction. Check your connection.'}; }
+    if(had===undefined&&x.r[msgId]) cnAppend(p,{id:'rx-'+cnId()+'-'+msgId,from:'student',icon:emoji,title:'New reaction',body:me+' reacted '+emoji+' to a message in your chat.',ts:Date.now()});
+    return {ok:true};
+  }
+  async function ccBump(p,msgId){
+    const x=ccRx(p), now=Date.now(), me=String(S.name||'A classmate').slice(0,24);
+    if(x.b[msgId]){ const prev=x.b[msgId]; delete x.b[msgId]; if(!await ccPushRx(p)){ x.b[msgId]=prev; ccPersist(); return {err:'Could not update. Try again.'}; } return {ok:true,off:true}; }
+    const last=Math.max(0,...Object.values(x.b)), wait=CC_BUMP_CD-(now-last);
+    if(wait>0) return {err:'Please wait '+Math.ceil(wait/1000)+'s before bumping another message.'};
+    x.b[msgId]=now;
+    if(!await ccPushRx(p)){ delete x.b[msgId]; ccPersist(); return {err:'Could not bump. Check your connection.'}; }
+    cnAppend(p,{id:'bump-'+cnId()+'-'+msgId,from:'student',icon:'📌',title:'Message bumped',body:me+' bumped an important message in your chat.',ts:now});
+    return {ok:true};
+  }
+  function ccReactions(p,id){
+    const d=ccData(), mine=(ccRx(p).r||{})[id], theirs=((d.rxin[p]||{}).r||{})[id], cnt={};
+    [mine,theirs].forEach(e=>{ if(e) cnt[e]=(cnt[e]||0)+1; });
+    return Object.entries(cnt).map(([e,n])=>'<button class="cc-chip'+(mine===e?' me':'')+'" data-rxq="'+ccE(id)+'" data-e="'+ccE(e)+'" title="'+(mine===e?'You':'')+((mine===e&&theirs===e)?' and ':'')+(theirs===e?ccE((ccData().contacts[p]||{}).name||'They'):'')+' reacted">'+e+' '+n+'</button>').join('');
+  }
+  function ccBumpInfo(p,id){
+    const d=ccData(), mb=(ccRx(p).b||{})[id], tb=((d.rxin[p]||{}).b||{})[id];
+    if(!mb&&!tb) return '';
+    const who=(mb&&tb)?'You and '+ccE((d.contacts[p]||{}).name||'them'):mb?'You':ccE((d.contacts[p]||{}).name||'They');
+    return '<span class="cc-bumped-tag">📌 Bumped by '+who+' · '+ccAgo(Math.max(mb||0,tb||0))+'</span>';
+  }
+  function ccPickReact(ov,p,id){
+    const o2=cnOv('<h2>React <button class="cn-x">×</button></h2><div class="cc-rxbar">'+CC_REACT.map(e=>'<button data-e="'+e+'">'+e+'</button>').join('')+'</div><p id="cc-rxerr" class="cc-err"></p>');
+    o2.style.zIndex=10000;
+    o2.querySelectorAll('[data-e]').forEach(b=>b.onclick=async()=>{ b.disabled=true; const r=await ccReact(p,id,b.dataset.e); if(r.err){ o2.querySelector('#cc-rxerr').textContent=r.err; b.disabled=false; return; } o2.remove(); if(document.body.contains(ov)) ccDrawLog(ov); });
+  }
+  function ccRecent(){ try{ const a=JSON.parse(localStorage.getItem(CC_RECENT_KEY)||'[]'); return Array.isArray(a)?a.slice(0,8):[]; }catch(e){ return []; } }
+  function ccAddRecent(e){ try{ localStorage.setItem(CC_RECENT_KEY,JSON.stringify([e,...ccRecent().filter(x=>x!==e)].slice(0,8))); }catch(x){} }
+  function ccEmojiPanel(ov,ta){
+    let el=ov.querySelector('#cc-emo'); if(el){ el.remove(); return; }
+    el=document.createElement('div'); el.id='cc-emo'; el.className='cc-emo';
+    const rec=ccRecent();
+    el.innerHTML=(rec.length?'<small>Recent</small><div>'+rec.map(e=>'<button type="button" data-e="'+e+'">'+e+'</button>').join('')+'</div>':'')+'<small>Emojis</small><div>'+CC_EMOJI.map(e=>'<button type="button" data-e="'+e+'">'+e+'</button>').join('')+'</div>';
+    ta.parentNode.insertBefore(el,ta);
+    el.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{
+      const e=b.dataset.e, a=ta.selectionStart==null?ta.value.length:ta.selectionStart, z=ta.selectionEnd==null?a:ta.selectionEnd;
+      if((ta.value.length-(z-a)+e.length)>CC_LEN) return;
+      ta.value=ta.value.slice(0,a)+e+ta.value.slice(z); ta.focus(); const c=a+e.length; try{ ta.setSelectionRange(c,c); }catch(x){}
+      ccAddRecent(e);
+    });
   }
 
   /* ---- Badge ---- */
@@ -3062,13 +3223,20 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const d=ccData(), hide=!m.mine&&m.p&&!d.rev[m.id];
     const lock=m.p?'<span class="cc-lock">🔒 Private</span>':'';
     if(hide) return '<div class="cc-b them cc-cover" data-rev="'+ccE(m.id)+'">'+lock+'<span>Tap to view this private message</span></div>';
-    return '<div class="cc-b '+(m.mine?'me':'them')+'">'+lock+ccE(m.t)+(m.mine?'':'<button class="cc-flag" data-flag="'+ccE(m.id)+'" aria-label="Report this message">🚩</button>')+'</div>';
+    const bumped=ccBumpInfo(p,m.id), rx=ccReactions(p,m.id), isB=!!((ccRx(p).b||{})[m.id]);
+    return '<div class="cc-wrap '+(m.mine?'me':'them')+'"><div class="cc-b '+(m.mine?'me':'them')+(bumped?' bumped':'')+'" data-mid="'+ccE(m.id)+'">'+bumped+lock+ccE(m.t)+(m.mine?'':'<button class="cc-flag" data-flag="'+ccE(m.id)+'" aria-label="Report this message">🚩</button>')+'</div>'
+      +'<div class="cc-acts">'+rx+'<button class="cc-act" data-react="'+ccE(m.id)+'" aria-label="React to message" title="React">😊</button><button class="cc-act" data-bump="'+ccE(m.id)+'" aria-label="'+(isB?'Remove bump':'Bump message')+'" title="'+(isB?'Remove bump':'Bump this message')+'">'+(isB?'📌✓':'📌')+'</button></div></div>';
   }
   function ccDrawBanner(ov){ const el=ov.querySelector('#cc-ban'); if(el) el.innerHTML=ccBannerHtml(); }
   function ccDrawLog(ov){
     const p=ov.__st.p, log=ov.querySelector('#cc-log'); if(!log) return;
     const near=log.scrollHeight-log.scrollTop-log.clientHeight<60, d=ccData(), th=ccThread(p);
-    log.innerHTML=th.length?th.map(m=>ccBubble(m,p)).join(''):'<p class="cc-empty">No messages yet. Say hi 👋</p>';
+    const bm=th.filter(m=>!(!m.mine&&m.p&&!d.rev[m.id])&&((ccRx(p).b||{})[m.id]||((d.rxin[p]||{}).b||{})[m.id])).sort((a,b)=>Math.max((ccRx(p).b||{})[b.id]||0,((d.rxin[p]||{}).b||{})[b.id]||0)-Math.max((ccRx(p).b||{})[a.id]||0,((d.rxin[p]||{}).b||{})[a.id]||0))[0];
+    log.innerHTML=(bm?'<div class="cc-bumpbar" data-jump="'+ccE(bm.id)+'">📌 <b>Bumped:</b> '+ccE(bm.t.slice(0,70))+'</div>':'')+(th.length?th.map(m=>ccBubble(m,p)).join(''):'<p class="cc-empty">No messages yet. Say hi 👋</p>');
+    log.querySelectorAll('[data-react]').forEach(el=>el.onclick=()=>ccPickReact(ov,p,el.dataset.react));
+    log.querySelectorAll('.cc-chip').forEach(el=>el.onclick=async()=>{ const r=await ccReact(p,el.dataset.rxq,el.dataset.e); if(r.err) ccToast(r.err); if(document.body.contains(ov)) ccDrawLog(ov); });
+    log.querySelectorAll('[data-bump]').forEach(el=>el.onclick=async()=>{ el.disabled=true; const r=await ccBump(p,el.dataset.bump); if(r.err) ccToast(r.err); else ccToast(r.off?'Bump removed.':'📌 Message bumped. '+((d.contacts[p]||{}).name||'They')+' was notified.'); if(document.body.contains(ov)) ccDrawLog(ov); });
+    log.querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{ const t=log.querySelector('[data-mid="'+el.dataset.jump+'"]'); if(t) t.scrollIntoView({block:'center',behavior:'smooth'}); });
     log.querySelectorAll('[data-rev]').forEach(el=>el.onclick=()=>{ d.rev[el.dataset.rev]=1; ccPersist(); ccDrawLog(ov); });
     log.querySelectorAll('[data-flag]').forEach(el=>el.onclick=()=>ccReport(ov,p,el.dataset.flag));
     if(near) log.scrollTop=log.scrollHeight;
@@ -3082,12 +3250,13 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     ov.querySelector('.cn-box').innerHTML='<h2><span class="cc-back" id="cc-back" role="button" tabindex="0" aria-label="Back to chats">←</span><span class="cc-tt">'+ccE(c.name)+'</span><span><button class="cc-dots" id="cc-menu" aria-label="Chat options">⋯</button> <button class="cn-x">×</button></span></h2>'
       +'<div id="cc-ban">'+ccBannerHtml()+'</div><div class="cc-log" id="cc-log"></div>'
       +(msg?'<p class="cc-empty">'+msg+'</p>':'')
-      +(ok?'<div class="cc-comp"><textarea id="cc-ta" class="cn-ta" maxlength="'+CC_LEN+'" placeholder="Write a kind message…" rows="2"'+(can?'':' disabled')+'></textarea><div class="cc-bar"><button class="cc-lockbtn'+(ov.__st.priv?' on':'')+'" id="cc-priv" type="button" aria-pressed="'+(!!ov.__st.priv)+'" title="Private: they must tap to view">🔒 Private</button><span id="cc-err" class="cc-err"></span><button class="btn btn-primary" id="cc-send"'+(can?'':' disabled')+'>Send</button></div></div>':'');
+      +(ok?'<div class="cc-comp"><textarea id="cc-ta" class="cn-ta" maxlength="'+CC_LEN+'" placeholder="Write a kind message…" rows="2"'+(can?'':' disabled')+'></textarea><div class="cc-bar"><button class="cc-lockbtn" id="cc-emoji" type="button" aria-label="Insert emoji" title="Emoji"'+(can?'':' disabled')+'>😊</button><button class="cc-lockbtn'+(ov.__st.priv?' on':'')+'" id="cc-priv" type="button" aria-pressed="'+(!!ov.__st.priv)+'" title="Private: they must tap to view">🔒 Private</button><span id="cc-err" class="cc-err"></span><button class="btn btn-primary" id="cc-send"'+(can?'':' disabled')+'>Send</button></div></div>':'');
     ccDrawLog(ov);
     ov.querySelector('#cc-back').onclick=()=>{ ov.__st={view:'list'}; ccRender(ov); };
     ov.querySelector('#cc-menu').onclick=()=>ccMenu(ov,p);
     if(!ok) return;
     const ta=ov.querySelector('#cc-ta'), err=ov.querySelector('#cc-err'), pv=ov.querySelector('#cc-priv'), snd=ov.querySelector('#cc-send');
+    const eb=ov.querySelector('#cc-emoji'); if(eb) eb.onclick=()=>ccEmojiPanel(ov,ta);
     pv.onclick=()=>{ ov.__st.priv=!ov.__st.priv; pv.classList.toggle('on',ov.__st.priv); pv.setAttribute('aria-pressed',String(ov.__st.priv)); };
     const send=async()=>{
       const text=ta.value.trim(); if(!text||snd.disabled) return; err.textContent='';
@@ -3261,7 +3430,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     try{
       const r=cocuRank(S), cp=cpLoad(), p=frPrefs();
       return {id:cnId(),name:String(S.name||'Player').slice(0,24),level:level(),rank:{i:r.r.i,n:r.r.n},xp:Math.floor(S.xp||0),streak:cp.days||0,
-        ach:Object.keys(S.achievementsCollected||{}).filter(k=>S.achievementsCollected[k]).length,games:S.gamesPlayed||0,best:S.bestScore||0,active:p.active?Date.now():0,ts:Date.now()};
+        ach:Object.keys(S.achievementsCollected||{}).filter(k=>S.achievementsCollected[k]).length,games:S.gamesPlayed||0,best:S.bestScore||0,sec:normSectionKey(S.section),av:S.avatar||null,pet:(S.pets&&S.pets.equipped)||'',active:p.active?Date.now():0,ts:Date.now()};
     }catch(e){ return null; }
   }
   async function frPublish(){
@@ -3310,12 +3479,22 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       frPersist(); if(changed) frPushList(); frBadge(); return true;
     }catch(e){ return false; } finally{ frBusy=false; }
   }
+  async function frSendReq(peer,entry){
+    for(let i=0;i<3;i++){
+      const g=await ccJ('frreq:'+peer,[]); if(g.fail) return false;
+      const a=(Array.isArray(g.v)?g.v:[]).filter(x=>x&&x.from!==entry.from); a.push(entry);
+      if(!await mpStSet('frreq:'+peer,JSON.stringify(a.slice(-60)))) return false;
+      const chk=await ccJ('frreq:'+peer,[]); if(!chk.fail&&Array.isArray(chk.v)&&chk.v.some(x=>x&&x.from===entry.from&&x.id===entry.id)) return true;
+      await new Promise(r=>setTimeout(r,250+Math.random()*400));
+    }
+    return false;
+  }
   async function frRequest(raw){
     const id=cnId(), d=frData(); let peer=String(raw||'').trim();
     if(!peer) return {err:'Type your classmate’s Student ID.'};
     if(!cnOnline()) return {err:'You need to be online to add a friend.'};
     let rec=null;
-    for(const k of [...new Set([peer,peer.toUpperCase()])]){ const r=await ccJ('progress:'+k,null); if(r.fail) return {err:'Could not reach the server. Try again.'}; if(r.v&&r.v.studentId){ rec=r.v; peer=r.v.studentId; break; } }
+    const rs=await cnResolveStudent(peer); if(rs.err) return {err:rs.err}; if(!rs.notFound){ rec={name:rs.name}; peer=rs.id; }
     if(!rec) return {err:'No student found with that ID. Ask your classmate to check their Student ID in 👤 Account.'};
     if(peer===id) return {err:'That is your own Student ID.'};
     const c=d.people[peer];
@@ -3328,13 +3507,13 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const rej=!po.fail&&po.v&&(po.v.s==='blocked'||(po.v.s==='declined'&&Date.now()-(po.v.ts||0)<CC_RETRY));
     if(closed||rej) return {err:'This student isn’t taking friend requests right now. You can try again later.'};
     if(!await frDecide(peer,'accepted')) return {err:'Could not send the request. Try again.'};
-    const g=await ccJ('frreq:'+peer,[]); if(g.fail) return {err:'Could not send the request. Try again.'};
-    let a=(Array.isArray(g.v)?g.v:[]).filter(x=>x&&x.from!==id); a.push({id:'f-'+Date.now(),from:id,name:String(S.name||'Player').slice(0,24),ts:Date.now()});
-    if(!await mpStSet('frreq:'+peer,JSON.stringify(a.slice(-60)))) return {err:'Could not send the request. Try again.'};
+    if(!await frSendReq(peer,{id:'f-'+Date.now(),from:id,name:String(S.name||'Player').slice(0,24),ts:Date.now()})) return {err:'Could not send the request. Try again.'};
     d.people[peer]={name:String(rec.name||peer).slice(0,24),st:'out',ts:Date.now()}; frPersist(); frPushList(); frBadge();
+    cnAppend(peer,{id:'frq-'+id+'-'+Date.now(),from:'student',icon:'👥',title:'Friend request',body:String(S.name||'A classmate').slice(0,24)+' sent you a friend request. Open Friends to accept.',ts:Date.now()});
     return {sent:peer};
   }
-  async function frAccept(p){ const c=frData().people[p]; if(!c||!await frDecide(p,'accepted')) return false; c.st='ok'; c.ts=Date.now(); frPersist(); frPushList(); frPull(); return true; }
+  async function frAccept(p){ const c=frData().people[p]; if(!c||!await frDecide(p,'accepted')) return false; c.st='ok'; c.ts=Date.now(); frPersist(); frPushList(); frPull();
+    cnAppend(p,{id:'fra-'+cnId()+'-'+Date.now(),from:'student',icon:'🎉',title:'Friend request accepted',body:String(S.name||'A classmate').slice(0,24)+' accepted your friend request.',ts:Date.now()}); return true; }
   async function frDecline(p){ const d=frData(), c=d.people[p]; if(!c) return; await frDecide(p,'declined'); c.st='declined'; c.ts=Date.now(); delete d.cards[p]; frPersist(); frPushList(); frBadge(); }
   async function frBlock(p){ const d=frData(), c=d.people[p]; if(!c) return; await frDecide(p,'blocked'); c.st='blocked'; c.ts=Date.now(); delete d.cards[p]; frPersist(); frPushList(); frBadge(); }
   async function frUnblock(p){ const d=frData(); await mpStDelete('frok:'+cnId()+':'+p); delete d.people[p]; frPersist(); frPushList(); }
@@ -3364,6 +3543,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     h+='<h3 class="cc-h">🏆 Friends leaderboard</h3>'+(rows.length>1?rows.map((r,i)=>{ const c=r.card; return '<div class="cc-row" '+(r.me?'':'data-card="'+ccE(r.p)+'"')+'><span class="cc-av">'+(medal[i]||(i+1))+'</span><div class="cc-m"><b>'+ccE(r.name)+(r.me?' (You)':'')+'</b><p>'+(c?ccE(c.rank.i+' '+c.rank.n+' · Lv '+c.level+' · '+c.xp+' XP'+(c.streak?' · 🔥'+c.streak:'')+(c.active&&!r.me?' · active '+frAgo(c.active):'')):'Stats hidden')+'</p></div></div>'; }).join(''):'<p class="cc-empty">No friends yet. Tap “Add friend” and enter a classmate’s Student ID.</p>');
     if(pend.length) h+='<h3 class="cc-h">⏳ Waiting for a reply</h3>'+pend.map(([p,c])=>'<div class="cn-row"><span>'+ccE(c.name)+'</span><small>Request sent</small></div>').join('');
     h+='<div class="cn-btns"><button class="btn btn-primary" id="fr-new">➕ Add friend</button></div>';
+    h+='<div id="fr-sug"></div>';
     h+='<h3 class="cc-h">🔒 Your privacy</h3><label class="cc-sw"><input type="checkbox" id="fp-open"'+(pr.open?' checked':'')+'> Allow new friend requests</label><label class="cc-sw"><input type="checkbox" id="fp-share"'+(pr.share?' checked':'')+'> Share my stats card with friends<small>Level, rank, XP, streak, achievements, games. Off = friends see “Stats hidden”.</small></label><label class="cc-sw"><input type="checkbox" id="fp-active"'+(pr.active?' checked':'')+'> Show when I was last active</label>';
     if(blocked.length) h+='<h3 class="cc-h">🚫 Blocked</h3>'+blocked.map(([p,c])=>'<div class="cn-row"><span>'+ccE(c.name)+'</span><button class="btn cn-mini" data-unb="'+ccE(p)+'">Unblock</button></div>').join('');
     ov.querySelector('.cn-box').innerHTML=h;
@@ -3374,7 +3554,29 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     ov.querySelectorAll('[data-blk]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frBlock(b.dataset.blk); refresh(); });
     ov.querySelectorAll('[data-unb]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frUnblock(b.dataset.unb); refresh(); });
     ov.querySelector('#fr-new').onclick=()=>frAddDialog(ov);
+    frSuggest(ov);
     [['open','#fp-open'],['share','#fp-share'],['active','#fp-active']].forEach(([k,s])=>{ ov.querySelector(s).onchange=async e=>{ frPrefs()[k]=e.target.checked; await frSavePrefs(); }; });
+  }
+  /* Suggested players: same normalised section, only people who chose to share a stats card.
+     Never auto-adds anyone; sending a request stays an explicit tap. Cached 5 min to avoid hammering the server. */
+  let frSugCache={t:0,id:'',rows:null};
+  async function frSuggestRows(){
+    const id=cnId(); if(!id||!cnOnline()) return [];
+    if(frSugCache.rows&&frSugCache.id===id&&Date.now()-frSugCache.t<300000) return frSugCache.rows;
+    const mine=normSectionKey(S.section); if(!mine) return [];
+    const ix=await cnGet('progress:index'); if(ix.fail) return [];
+    const ids=(Array.isArray(cnJ(ix.v,[]))?cnJ(ix.v,[]):[]).filter(x=>typeof x==='string'&&x!==id&&!frData().people[x]).slice(0,40);
+    const cards=await Promise.all(ids.map(async x=>{ const c=await ccJ('friendcard:'+x,null); return (!c.fail&&c.v&&c.v.id===x&&c.v.sec===mine)?c.v:null; }));
+    const rows=cards.filter(Boolean).sort((a,b)=>(b.xp||0)-(a.xp||0)).slice(0,5);
+    frSugCache={t:Date.now(),id,rows}; return rows;
+  }
+  async function frSuggest(ov){
+    const box=ov.querySelector('#fr-sug'); if(!box) return;
+    const rows=await frSuggestRows();
+    if(!rows.length||!document.body.contains(ov)||ov.__st.view!=='list') return;
+    const b=ov.querySelector('#fr-sug'); if(!b) return;
+    b.innerHTML='<h3 class="cc-h">✨ Suggested players</h3><p class="cc-empty" style="margin:0 0 6px">Classmates in your section who share their stats. Nobody is added until they accept.</p>'+rows.map(c=>'<div class="cc-row"><div class="cc-m"><b>'+ccE(c.name)+'</b> <small>('+ccE(c.id)+')</small><p>'+ccE(c.rank.i+' '+c.rank.n+' · Lv '+c.level+' · '+c.xp+' XP'+(c.streak?' · 🔥'+c.streak:'')+' · 🏆'+(c.ach||0))+'</p></div><button class="btn cn-mini" data-sug="'+ccE(c.id)+'">Add friend</button></div>').join('')+'<p id="fr-sugerr" class="cc-err"></p>';
+    b.querySelectorAll('[data-sug]').forEach(bt=>bt.onclick=async()=>{ bt.disabled=true; const r=await frRequest(bt.dataset.sug); if(r.err){ b.querySelector('#fr-sugerr').textContent=r.err; bt.disabled=false; return; } frSugCache.rows=null; ccToast(r.sent?'✅ Friend request sent.':r.accepted?'🎉 You’re now friends!':'Request already sent.'); if(document.body.contains(ov)&&ov.__st.view==='list') frDrawList(ov); });
   }
   function frDrawCard(ov){
     const p=ov.__st.p, d=frData(), c=d.people[p];
@@ -3385,9 +3587,10 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       +(k?'<div class="cc-me"><b>'+ccE(k.rank.i+' '+k.rank.n)+'</b> · Level '+k.level+'<small>'+(k.active?'Active '+frAgo(k.active):'Last active hidden')+'</small></div>'
         +'<h3 class="cc-h">You vs '+ccE(c.name)+'</h3>'+(me?cmp('⭐ XP',me.xp,k.xp)+cmp('🎚️ Level',me.level,k.level)+cmp('🔥 Streak (days)',me.streak,k.streak)+cmp('🏆 Achievements',me.ach,k.ach)+cmp('🎮 Games played',me.games,k.games)+cmp('🚀 Best score',me.best,k.best):'')
         :'<p class="cc-empty">'+ccE(c.name)+' isn’t sharing their stats right now.</p>')
-      +'<div class="cn-btns"><button class="btn btn-primary" id="fc-cheer">👏 Cheer</button><button class="btn" id="fc-msg">💬 Message</button></div><p id="fc-err" class="cc-err"></p>'
+      +(k&&k.av?'<div id="fc-char" style="width:150px;height:190px;margin:8px auto;border-radius:14px;overflow:hidden;background:#eef3ff;display:flex;align-items:center;justify-content:center;font-size:3rem">🧍</div>'+(k.pet?'<p class="cc-empty" style="text-align:center;margin:0">Equipped pet: '+ccE(String(k.pet).replace(/^pet:/,''))+'</p>':''):'')+'<div class="cn-btns"><button class="btn btn-primary" id="fc-cheer">👏 Cheer</button><button class="btn" id="fc-msg">💬 Message</button></div><p id="fc-err" class="cc-err"></p>'
       +'<div class="cn-btns"><button class="btn" id="fc-rm">Remove friend</button><button class="btn" id="fc-blk">🚫 Block</button></div>';
     ov.querySelector('#fc-back').onclick=()=>{ ov.__st={view:'list'}; frDrawList(ov); };
+    try{ const ch=ov.querySelector('#fc-char'); if(ch&&k&&k.av&&typeof renderAvatarInto==='function'){ ch.textContent=''; renderAvatarInto(ch,Object.assign(defaultAvatar(),k.av),{}); } }catch(e){ const ch=ov.querySelector('#fc-char'); if(ch) ch.textContent='🧍'; }
     const err=ov.querySelector('#fc-err');
     ov.querySelector('#fc-cheer').onclick=async e=>{ e.target.disabled=true; const r=await frCheer(p); if(r.ok){ ccToast('👏 Cheer sent to '+c.name+'!'); } else err.textContent=r.err; };
     ov.querySelector('#fc-msg').onclick=async e=>{ e.target.disabled=true; const r=await ccRequest(p); if(r.open){ ov.remove(); ccOpen(r.open); return; } if(r.sent){ ccToast('✅ Chat request sent. It opens once they accept.'); } else err.textContent=r.err||'Could not start a chat.'; e.target.disabled=false; };
@@ -3418,7 +3621,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     try{
       const o=$('fr-open'), a=$('fr-add');
       if(o) o.onclick=frOpen; if(a) a.onclick=()=>frAddDialog(null);
-      frBadge(); frPull().then(()=>frPublish());
+      frBadge();
+      try{ if(S&&S.onboarded&&S.playerCodename){ queueProgressSync(); cnGet('secfix:'+S.playerCodename).then(g=>{ const v=!g.fail&&cnJ(g.v,null); if(v&&typeof v.section==='string'&&(v.ts||0)>(S.secFixTs||0)){ S.secFixTs=v.ts; S.section=v.section.slice(0,24); try{ saveState(); }catch(e){} queueProgressSync(); frPublish(); } }); } }catch(e){} frPull().then(()=>frPublish());
       setInterval(()=>{ if(!document.hidden) frPull().then(()=>frPublish()); },60000);
       window.addEventListener('online',()=>{ frPull(); });
     }catch(e){ console.warn('Friends init:',e); }
@@ -7219,13 +7423,39 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     }
     sfx('click');
   }
+  /* Context-aware questions. Answers only use data this device actually has (your own progress,
+     or the teacher roster when a teacher session is unlocked). Nothing is invented. */
+  const botAsked=new Set();
+  function botScreen(){ const a=document.querySelector('.screen.active'); return a?String(a.id||'').replace('screen-',''):''; }
+  function botCtx(){
+    const sc=botScreen(), L=[];
+    const xp=()=>Math.floor(S.xp||0);
+    const mine={ q:'How much XP do I have?', a:()=>`You have ${xp()} XP and you're Level ${level()}. Every 100 XP is one level.` };
+    if(/^teacher/.test(sc)){
+      if(!isTeacherSessionActive()) return [];
+      L.push({q:'How many students are active?', a:()=>{ const r=rosterEntries(), n=r.filter(x=>x.lastActive&&Date.now()-Number(x.lastActive)<864e5).length; return r.length?`${n} of ${r.length} synced students were active in the last 24 hours.`:'No student records are loaded yet. Tap Sync Progress first.'; }});
+      L.push({q:'Which students have incomplete lessons?', a:()=>{ const r=rosterEntries().filter(x=>!(x.lessonsCompleted>0)); return r.length?`${r.length} student(s) have no completed lessons yet: `+r.slice(0,8).map(x=>x.name||x.studentId).join(', ')+(r.length>8?'…':''):'Every loaded student has completed at least one lesson.'; }});
+      L.push({q:'Show students grouped by section', a:()=>{ const g={}; rosterEntries().forEach(x=>{ const k=normSectionKey(x.section)?prettySection(x.section):'Unassigned'; g[k]=(g[k]||0)+1; }); const e=Object.entries(g); return e.length?e.map(([k,n])=>`${k}: ${n}`).join(' · '):'No student records are loaded yet.'; }});
+      return L;
+    }
+    if(sc==='menu'||sc===''){ L.push({q:'What can I do in Adapt CoCu?', a:()=>'Play Challenge Mode, Quick Game, Lessons and Speculation, customize your character in Store, check Trophies, and add classmates in Profile → Friends.'}); L.push({q:'How do I earn XP?', a:()=>'XP comes from finishing games and lessons and answering questions correctly. Achievements give bonus XP too.'}); L.push(mine); }
+    else if(/lesson/.test(sc)){ L.push({q:'Can you explain this lesson in simpler words?', a:()=>'I can’t read the lesson text itself. Try this: restate the main idea in one sentence, then find one example in the lesson that matches it.'}); L.push({q:'Can you give me an example?', a:()=>'Pick one term from the lesson and use it in a sentence about your own day. If it fits naturally, you understand it.'}); L.push({q:'Can you quiz me on what I learned?', a:()=>'Finish the lesson, then play Challenge Mode or Speculation — they ask real questions from your subjects.'}); }
+    else if(sc==='challenge'||sc==='adventure'){ L.push({q:'How do I improve my strategy?', a:()=>'Read every choice before answering, use power-ups on hard questions, and keep your streak going for bonus rewards.'}); L.push({q:'Can you explain my last incorrect answer?', a:()=>'I can’t see your last question. Open History to review past answers and their explanations.'}); }
+    else if(/^spec/.test(sc)){ L.push({q:'Can you give me a hint?', a:()=>'I can’t see the current question. Rule out the options you know are wrong first, then use a hint power-up if you have one.'}); L.push({q:'How do I approach this question?', a:()=>'Underline the key word, predict the answer before reading options, then match.'}); }
+    else if(sc==='store'){ L.push({q:'How do I earn coins?', a:()=>'Finish games and trivia, claim your daily reward, and collect achievement rewards in Trophies.'}); L.push({q:'How many coins do I have?', a:()=>`You have ${Math.floor(S.coins||0)} coins.`}); }
+    else if(sc==='profile'){ L.push({q:'How do I add a friend?', a:()=>'Open 👥 My Friends → Add friend and enter their Student ID (ADAPT-####). They have to accept.'}); L.push({q:'What is my Student ID?', a:()=>S.playerCodename?`Your Student ID is ${S.playerCodename}.`:'You get a Student ID after you finish setting your name and section.'}); }
+    else L.push(mine);
+    return L;
+  }
   function renderChatSuggestions(){
     const row = $('chat-suggest'); row.innerHTML='';
-    ASSISTANT_FAQ.forEach(f => {
+    const items=botCtx().concat(ASSISTANT_FAQ).filter((f,i,a)=>!botAsked.has(f.q)&&a.findIndex(x=>x.q===f.q)===i).slice(0,5);
+    items.forEach(f => {
       const b=document.createElement('button'); b.className='chat-suggest'; b.textContent=f.q;
       b.addEventListener('click', () => sendChatMessage(f.q));
       row.appendChild(b);
     });
+    if(!$('chat-clear')){ const c=document.createElement('button'); c.id='chat-clear'; c.className='chat-suggest'; c.textContent='🧹 Clear chat'; c.onclick=()=>{ $('chat-log').innerHTML=''; botAsked.clear(); appendChatBubble('bot','Chat cleared. Tap a question to start again.'); renderChatSuggestions(); }; row.parentNode.appendChild(c); }
   }
   function appendChatBubble(who, text){
     const log = $('chat-log');
@@ -7252,12 +7482,14 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const typing = document.createElement('div'); typing.className='chat-typing'; typing.innerHTML='<span></span><span></span><span></span>';
     log.appendChild(typing);
     requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
-    const answer = findFaqAnswer(text);
+    botAsked.add(text);
+    const cx=botCtx().find(f=>f.q===text);
+    let answer; try{ answer = cx ? cx.a() : findFaqAnswer(text); }catch(e){ answer='Sorry, I couldn’t work that out. Please try another question.'; }
     const delay = Math.min(1400, 350 + answer.length*8);
     setTimeout(() => {
       typing.remove();
       appendChatBubble('bot', answer);
-      chatBusy = false;
+      chatBusy = false; try{ renderChatSuggestions(); }catch(e){}
     }, S.settings.reducedMotion ? 50 : delay);
   }
   $('btn-assist-close').addEventListener('click', closeAssistant);
@@ -8409,7 +8641,14 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       if(dashSub) dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
     });
   }
-  function rosterEntries(){ return Object.values(readLocalRoster()).filter(r=>r && !cnDeleted[r.studentId]); }
+  /* Teacher section corrections live on the server as secfix:<id>; applied on top of what the student typed. */
+  var secFix={};
+  async function loadSecFixes(){
+    if(!mpHasBackend()) return;
+    const keys=(await mpStListPrefix('secfix:')).map(k=>String(k&&k.key||k)).filter(k=>k.startsWith('secfix:'));
+    await Promise.all(keys.map(async k=>{ const g=await cnGet(k); if(!g.fail){ const v=cnJ(g.v,null); if(v&&typeof v.section==='string') secFix[k.slice(7)]=v; } }));
+  }
+  function rosterEntries(){ return Object.values(readLocalRoster()).filter(r=>r && !cnDeleted[r.studentId]).map(r=>secFix[r.studentId]?Object.assign({},r,{section:secFix[r.studentId].section}):r); }
   function isRecentlyActive(ts){ return !!ts && (Date.now()-Number(ts)) <= 14*24*60*60*1000; }
   function renderTeacherClassOverview(rows){
     const wrap=$('teacher-overview'); if(!wrap) return;
@@ -8433,9 +8672,13 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   }
   function renderTeacherFilters(rows){
     const sectionSel=$('teacher-filter-section');
-    const sections=[...new Set(rows.map(r=>r.section).filter(Boolean))].sort();
-    sectionSel.innerHTML = '<option value="all">All Sections</option>' + sections.map(s=>`<option value="${escapeHtml(s)}"${teacherFilter.section===s?' selected':''}>${escapeHtml(s)}</option>`).join('');
-    if(!sections.includes(teacherFilter.section)) teacherFilter.section='all';
+    const groups={}; let unassigned=0;
+    rows.forEach(r=>{ const k=normSectionKey(r.section); if(!k){ unassigned++; return; } const g=groups[k]||(groups[k]={n:0,labels:{}}); g.n++; const l=prettySection(r.section); g.labels[l]=(g.labels[l]||0)+1; });
+    const keys=Object.keys(groups).sort();
+    const lab=k=>Object.entries(groups[k].labels).sort((a,b)=>b[1]-a[1])[0][0];
+    sectionSel.innerHTML = '<option value="all">All Sections</option>' + keys.map(k=>`<option value="${escapeHtml(k)}"${teacherFilter.section===k?' selected':''}>${escapeHtml(lab(k))} (${groups[k].n})</option>`).join('') + (unassigned?`<option value="__none"${teacherFilter.section==='__none'?' selected':''}>Unassigned (${unassigned})</option>`:'');
+    if(teacherFilter.section!=='all' && teacherFilter.section!=='__none' && !groups[teacherFilter.section]) teacherFilter.section='all';
+    if(teacherFilter.section==='__none' && !unassigned) teacherFilter.section='all';
     sectionSel.value=teacherFilter.section;
   }
   function renderTeacherRecent(rows){
@@ -8453,7 +8696,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     renderTeacherRecent(rows);
     renderTeacherFilters(rows);
     let filtered = rows.filter(r => {
-      if(teacherFilter.section!=='all' && r.section!==teacherFilter.section) return false;
+      if(teacherFilter.section!=='all'){ const k=normSectionKey(r.section); if(teacherFilter.section==='__none'?!!k:k!==teacherFilter.section) return false; }
       if(teacherFilter.mode!=='all' && !((r.byMode||{})[teacherFilter.mode]||{}).count) return false;
       if(teacherFilter.q){ const q=teacherFilter.q.toLowerCase(); if(!(String(r.name||'').toLowerCase().includes(q) || String(r.studentId||'').toLowerCase().includes(q))) return false; }
       return true;
