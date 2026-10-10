@@ -2820,6 +2820,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     ov.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{ const i=b.dataset.r; await mpStDelete('deleted:'+i); delete cnDeleted[i]; await updateProgressRosterIndex(i); await fetchRemoteRosterAndMerge(); ov.remove(); renderTeacherRoster(); });
   }
   function cnSetSection(id){
+    if(!id){ showInfo('Open a student first','Open a student’s report, then tap Set Section.'); return; }
     if(!isTeacherSessionActive()){ showInfo('Teacher access required','Unlock the Teacher Dashboard first.'); return; }
     const r=rosterEntries().find(x=>x.studentId===id)||{};
     const ov=cnOv('<h2>🏷️ Set section <button class="cn-x">×</button></h2><p style="font-weight:700">'+escapeHtml(r.name||id)+' ('+escapeHtml(id)+')<br>Currently: '+escapeHtml(r.section||'Unassigned')+'</p><input id="cn-sec" class="cn-ta" style="min-height:0;height:44px" maxlength="24" placeholder="e.g. STEM A (leave empty = Unassigned)"><div class="cn-btns"><button class="btn btn-primary" id="cn-secok">Save</button></div>');
@@ -2936,6 +2937,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   /* ---- Section normalisation: "STEM A", "STEM-A", "stem a" -> one group.
      Only formatting is normalised (case, spaces, hyphens/underscores/dots). Names are never matched. ---- */
   function normSectionKey(raw){ return String(raw==null?'':raw).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[\s\-_.,/\\]+/g,'').trim(); }
+  /* Grade is read from the saved section text only when it clearly says one (Grade 11, G12, 11-STEM A). Otherwise: unknown — never guessed. */
+  function normGrade(raw){ const t=String(raw==null?'':raw), m=t.match(/(?:grade|gr|g)\s*\.?\s*-?\s*(\d{1,2})\b/i)||t.match(/(?:^|[^\d])(7|8|9|10|11|12)(?!\d)/); const n=m?parseInt(m[1],10):0; return (n>=7&&n<=12)?String(n):''; }
   function prettySection(raw){ return String(raw==null?'':raw).trim().replace(/[\s_]+/g,' ').replace(/\s*-\s*/g,'-'); }
   function cnNormId(raw){
     const s0=String(raw==null?'':raw).trim().replace(/[\s_\u2013\u2014]+/g,'-').replace(/-+/g,'-').toUpperCase();
@@ -3514,6 +3517,12 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   }
   async function frAccept(p){ const c=frData().people[p]; if(!c||!await frDecide(p,'accepted')) return false; c.st='ok'; c.ts=Date.now(); frPersist(); frPushList(); frPull();
     cnAppend(p,{id:'fra-'+cnId()+'-'+Date.now(),from:'student',icon:'🎉',title:'Friend request accepted',body:String(S.name||'A classmate').slice(0,24)+' accepted your friend request.',ts:Date.now()}); return true; }
+  async function frCancel(p){
+    const me=cnId(), d=frData(), c=d.people[p]; if(!c||c.st!=='out') return;
+    await mpStDelete('frok:'+me+':'+p);
+    const g=await ccJ('frreq:'+p,[]); if(!g.fail&&Array.isArray(g.v)) await mpStSet('frreq:'+p,JSON.stringify(g.v.filter(x=>x&&x.from!==me)));
+    delete d.people[p]; frPersist(); frPushList(); frBadge(); frSugCache.rows=null;
+  }
   async function frDecline(p){ const d=frData(), c=d.people[p]; if(!c) return; await frDecide(p,'declined'); c.st='declined'; c.ts=Date.now(); delete d.cards[p]; frPersist(); frPushList(); frBadge(); }
   async function frBlock(p){ const d=frData(), c=d.people[p]; if(!c) return; await frDecide(p,'blocked'); c.st='blocked'; c.ts=Date.now(); delete d.cards[p]; frPersist(); frPushList(); frBadge(); }
   async function frUnblock(p){ const d=frData(); await mpStDelete('frok:'+cnId()+':'+p); delete d.people[p]; frPersist(); frPushList(); }
@@ -3541,7 +3550,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(reqs.length) h+='<h3 class="cc-h">👋 Friend requests</h3>'+reqs.map(([p,c])=>'<div class="cc-req"><b>'+ccE(c.name)+'</b> <small>('+ccE(p)+')</small> wants to be friends.<br><small>Friends can see the stats card you share. You can change that below.</small><div class="cn-btns"><button class="btn btn-primary" data-acc="'+ccE(p)+'">Accept</button><button class="btn" data-dec="'+ccE(p)+'">Not now</button><button class="btn" data-blk="'+ccE(p)+'">Block</button></div></div>').join('');
     const rows=frRows();
     h+='<h3 class="cc-h">🏆 Friends leaderboard</h3>'+(rows.length>1?rows.map((r,i)=>{ const c=r.card; return '<div class="cc-row" '+(r.me?'':'data-card="'+ccE(r.p)+'"')+'><span class="cc-av">'+(medal[i]||(i+1))+'</span><div class="cc-m"><b>'+ccE(r.name)+(r.me?' (You)':'')+'</b><p>'+(c?ccE(c.rank.i+' '+c.rank.n+' · Lv '+c.level+' · '+c.xp+' XP'+(c.streak?' · 🔥'+c.streak:'')+(c.active&&!r.me?' · active '+frAgo(c.active):'')):'Stats hidden')+'</p></div></div>'; }).join(''):'<p class="cc-empty">No friends yet. Tap “Add friend” and enter a classmate’s Student ID.</p>');
-    if(pend.length) h+='<h3 class="cc-h">⏳ Waiting for a reply</h3>'+pend.map(([p,c])=>'<div class="cn-row"><span>'+ccE(c.name)+'</span><small>Request sent</small></div>').join('');
+    if(pend.length) h+='<h3 class="cc-h">⏳ Waiting for a reply</h3>'+pend.map(([p,c])=>'<div class="cn-row"><span>'+ccE(c.name)+' <small>('+ccE(p)+')</small></span><button class="btn cn-mini" data-cancel="'+ccE(p)+'">Cancel request</button></div>').join('');
     h+='<div class="cn-btns"><button class="btn btn-primary" id="fr-new">➕ Add friend</button></div>';
     h+='<div id="fr-sug"></div>';
     h+='<h3 class="cc-h">🔒 Your privacy</h3><label class="cc-sw"><input type="checkbox" id="fp-open"'+(pr.open?' checked':'')+'> Allow new friend requests</label><label class="cc-sw"><input type="checkbox" id="fp-share"'+(pr.share?' checked':'')+'> Share my stats card with friends<small>Level, rank, XP, streak, achievements, games. Off = friends see “Stats hidden”.</small></label><label class="cc-sw"><input type="checkbox" id="fp-active"'+(pr.active?' checked':'')+'> Show when I was last active</label>';
@@ -3552,6 +3561,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     ov.querySelectorAll('[data-acc]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frAccept(b.dataset.acc); refresh(); });
     ov.querySelectorAll('[data-dec]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frDecline(b.dataset.dec); refresh(); });
     ov.querySelectorAll('[data-blk]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frBlock(b.dataset.blk); refresh(); });
+    ov.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frCancel(b.dataset.cancel); refresh(); });
     ov.querySelectorAll('[data-unb]').forEach(b=>b.onclick=async()=>{ b.disabled=true; await frUnblock(b.dataset.unb); refresh(); });
     ov.querySelector('#fr-new').onclick=()=>frAddDialog(ov);
     frSuggest(ov);
@@ -3570,12 +3580,23 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const rows=cards.filter(Boolean).sort((a,b)=>(b.xp||0)-(a.xp||0)).slice(0,5);
     frSugCache={t:Date.now(),id,rows}; return rows;
   }
+  async function frPreview(id,name,onSend,sendLabel){
+    const c=await ccJ('friendcard:'+id,null), k=(!c.fail&&c.v&&c.v.id===id)?c.v:null;
+    const o=cnOv('<h2>👤 '+ccE(name||id)+' <button class="cn-x">×</button></h2><div class="cc-me">Student ID: <b>'+ccE(id)+'</b>'+(k&&k.sec?'<small>Section matches a group on file</small>':'')+'</div>'
+      +(k?'<div id="pv-char" style="width:130px;height:160px;margin:6px auto;border-radius:14px;overflow:hidden;background:#eef3ff;display:flex;align-items:center;justify-content:center;font-size:3rem">🧍</div><div class="cc-me"><b>'+ccE(k.rank.i+' '+k.rank.n)+'</b> · Level '+k.level+'<small>'+k.xp+' XP · 🔥 '+(k.streak||0)+' day streak · 🏆 '+(k.ach||0)+' achievements · 🎮 '+(k.games||0)+' games</small></div>'+(k.pet?'<p class="cc-empty" style="text-align:center;margin:0">Equipped pet: '+ccE(String(k.pet).replace(/^pet:/,''))+'</p>':''):'<p class="cc-empty">This player isn’t sharing a stats card.</p>')
+      +(onSend?'<p id="pv-err" class="cc-err"></p><div class="cn-btns"><button class="btn btn-primary" id="pv-go">'+ccE(sendLabel||'Send friend request')+'</button></div>':''));
+    o.style.zIndex=10001;
+    try{ const ch=o.querySelector('#pv-char'); if(ch&&k&&k.av&&typeof renderAvatarInto==='function'){ ch.textContent=''; renderAvatarInto(ch,Object.assign(defaultAvatar(),k.av),{}); } }catch(e){ const ch=o.querySelector('#pv-char'); if(ch) ch.textContent='🧍'; }
+    const go=o.querySelector('#pv-go'); if(go) go.onclick=async()=>{ go.disabled=true; const r=await onSend(); if(r&&r.err){ o.querySelector('#pv-err').textContent=r.err; go.disabled=false; } else o.remove(); };
+    return o;
+  }
   async function frSuggest(ov){
     const box=ov.querySelector('#fr-sug'); if(!box) return;
-    const rows=await frSuggestRows();
+    const rows=(await frSuggestRows()).filter(c=>!frData().people[c.id]);
     if(!rows.length||!document.body.contains(ov)||ov.__st.view!=='list') return;
     const b=ov.querySelector('#fr-sug'); if(!b) return;
-    b.innerHTML='<h3 class="cc-h">✨ Suggested players</h3><p class="cc-empty" style="margin:0 0 6px">Classmates in your section who share their stats. Nobody is added until they accept.</p>'+rows.map(c=>'<div class="cc-row"><div class="cc-m"><b>'+ccE(c.name)+'</b> <small>('+ccE(c.id)+')</small><p>'+ccE(c.rank.i+' '+c.rank.n+' · Lv '+c.level+' · '+c.xp+' XP'+(c.streak?' · 🔥'+c.streak:'')+' · 🏆'+(c.ach||0))+'</p></div><button class="btn cn-mini" data-sug="'+ccE(c.id)+'">Add friend</button></div>').join('')+'<p id="fr-sugerr" class="cc-err"></p>';
+    b.innerHTML='<h3 class="cc-h">✨ Suggested players</h3><p class="cc-empty" style="margin:0 0 6px">Classmates in your section who share their stats. Nobody is added until they accept.</p>'+rows.map(c=>'<div class="cc-row"><div class="cc-m"><b>'+ccE(c.name)+'</b> <small>('+ccE(c.id)+')</small><p>'+ccE(c.rank.i+' '+c.rank.n+' · Lv '+c.level+' · '+c.xp+' XP'+(c.streak?' · 🔥'+c.streak:'')+' · 🏆'+(c.ach||0))+'</p></div><button class="btn cn-mini" data-view="'+ccE(c.id)+'" data-vn="'+ccE(c.name)+'">View</button> <button class="btn cn-mini" data-sug="'+ccE(c.id)+'">Add friend</button></div>').join('')+'<p id="fr-sugerr" class="cc-err"></p>';
+    b.querySelectorAll('[data-view]').forEach(bt=>bt.onclick=()=>frPreview(bt.dataset.view,bt.dataset.vn,null));
     b.querySelectorAll('[data-sug]').forEach(bt=>bt.onclick=async()=>{ bt.disabled=true; const r=await frRequest(bt.dataset.sug); if(r.err){ b.querySelector('#fr-sugerr').textContent=r.err; bt.disabled=false; return; } frSugCache.rows=null; ccToast(r.sent?'✅ Friend request sent.':r.accepted?'🎉 You’re now friends!':'Request already sent.'); if(document.body.contains(ov)&&ov.__st.view==='list') frDrawList(ov); });
   }
   function frDrawCard(ov){
@@ -3599,16 +3620,21 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   }
   function frAddDialog(ov){
     if(!cnId()){ showInfo('👥 Friends','Finish setting up your player profile to add friends.'); return; }
-    const o2=cnOv('<h2>➕ Add friend <button class="cn-x">×</button></h2><p style="font-weight:700;font-size:.85rem">Enter your classmate’s Student ID. They’ll get a request and become your friend only if they accept.</p><input id="fr-id" class="cn-ta" style="min-height:0;height:44px" maxlength="40" autocomplete="off" autocapitalize="off" placeholder="Student ID"><p id="fr-err" class="cc-err"></p><div class="cn-btns"><button class="btn btn-primary" id="fr-go">Send friend request</button></div>');
+    const o2=cnOv('<h2>➕ Add friend <button class="cn-x">×</button></h2><p style="font-weight:700;font-size:.85rem">Enter your classmate’s Student ID. They’ll get a request and become your friend only if they accept.</p><input id="fr-id" class="cn-ta" style="min-height:0;height:44px" maxlength="40" autocomplete="off" autocapitalize="off" placeholder="Student ID"><p id="fr-err" class="cc-err"></p><div class="cn-btns"><button class="btn btn-primary" id="fr-go">🔍 Search player</button></div>');
     o2.style.zIndex=10000;
     const go=o2.querySelector('#fr-go'), err=o2.querySelector('#fr-err');
+    const done=r=>{ ccToast(r.sent?'✅ Friend request sent.':r.accepted?'🎉 You’re now friends!':r.st==='ok'?'You’re already friends.':'Request already sent.'); if(ov&&document.body.contains(ov)&&ov.__st.view==='list') frDrawList(ov); };
     go.onclick=async()=>{
       go.disabled=true; err.textContent='';
-      const r=await frRequest(o2.querySelector('#fr-id').value);
-      if(r.err){ err.textContent=r.err; go.disabled=false; return; }
-      o2.remove();
-      ccToast(r.sent?'✅ Friend request sent.':r.accepted?'🎉 You’re now friends!':r.st==='ok'?'You’re already friends.':'Request already sent.');
-      if(ov&&document.body.contains(ov)&&ov.__st.view==='list') frDrawList(ov);
+      const raw=o2.querySelector('#fr-id').value;
+      if(!String(raw).trim()){ err.textContent='Type your classmate’s Student ID.'; go.disabled=false; return; }
+      if(!cnOnline()){ err.textContent='You need to be online to add a friend.'; go.disabled=false; return; }
+      const rs=await cnResolveStudent(raw);
+      if(rs.err){ err.textContent=rs.err; go.disabled=false; return; }
+      if(rs.notFound){ err.textContent='No player was found with that Student ID. Check the ID in their 👤 Account.'; go.disabled=false; return; }
+      if(rs.id===cnId()){ err.textContent='That is your own Student ID.'; go.disabled=false; return; }
+      go.disabled=false;
+      frPreview(rs.id,rs.name,async()=>{ const r=await frRequest(rs.id); if(r.err) return r; o2.remove(); done(r); return r; });
     };
   }
   function frOpen(){
@@ -8611,7 +8637,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   $('teacher-gate-back')?.addEventListener('click', () => { sfx('click'); showScreen('profile'); });
 
   /* ---- Dashboard state / rendering ---- */
-  let teacherFilter = { q:'', section:'all', mode:'all', sort:'recent' };
+  let teacherFilter = { q:'', grade:'all', section:'all', mode:'all', sort:'recent' };
   function openTeacherDashboard(){
     // Always switch to the dashboard immediately. The local roster is usable
     // even while the remote sync is loading or temporarily unavailable.
@@ -8667,11 +8693,21 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       ['Completed ≥1 Activity', completed],
       ['Class Avg. Accuracy', avgAccuracy+'%'],
       ['Total Activities Logged', totalActivities],
-      ['Most Played Mode', mostPlayed]
+      ['Most Played Mode', mostPlayed],
+      ['Inactive (14+ days)', total-active],
+      ['Lessons Completed', rows.reduce((n,r)=>n+(r.lessonsCompleted||0),0)],
+      ['Achievements Earned', rows.reduce((n,r)=>n+(r.achievementsEarnedCount||0),0)],
+      ['Unassigned Section', rows.filter(r=>!normSectionKey(r.section)).length]
     ].map(([l,v]) => `<div class="stat-box"><div class="sv">${escapeHtml(v)}</div><div class="sl">${escapeHtml(l)}</div></div>`).join('');
   }
   function renderTeacherFilters(rows){
     const sectionSel=$('teacher-filter-section');
+    let gradeSel=$('teacher-filter-grade');
+    if(!gradeSel){ gradeSel=document.createElement('select'); gradeSel.id='teacher-filter-grade'; sectionSel.parentNode.insertBefore(gradeSel,sectionSel); gradeSel.addEventListener('change',e=>{ teacherFilter.grade=e.target.value; renderTeacherRoster(); }); }
+    const gc={}; rows.forEach(r=>{ const g=normGrade(r.section)||'?'; gc[g]=(gc[g]||0)+1; });
+    gradeSel.innerHTML='<option value="all">All Grades</option>'+Object.keys(gc).filter(g=>g!=='?').sort((a,b)=>a-b).map(g=>`<option value="${g}">Grade ${g} (${gc[g]})</option>`).join('')+(gc['?']?`<option value="?">Grade unknown (${gc['?']})</option>`:'');
+    if(teacherFilter.grade!=='all'&&!gc[teacherFilter.grade]) teacherFilter.grade='all';
+    gradeSel.value=teacherFilter.grade;
     const groups={}; let unassigned=0;
     rows.forEach(r=>{ const k=normSectionKey(r.section); if(!k){ unassigned++; return; } const g=groups[k]||(groups[k]={n:0,labels:{}}); g.n++; const l=prettySection(r.section); g.labels[l]=(g.labels[l]||0)+1; });
     const keys=Object.keys(groups).sort();
@@ -8696,6 +8732,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     renderTeacherRecent(rows);
     renderTeacherFilters(rows);
     let filtered = rows.filter(r => {
+      if(teacherFilter.grade!=='all' && (normGrade(r.section)||'?')!==teacherFilter.grade) return false;
       if(teacherFilter.section!=='all'){ const k=normSectionKey(r.section); if(teacherFilter.section==='__none'?!!k:k!==teacherFilter.section) return false; }
       if(teacherFilter.mode!=='all' && !((r.byMode||{})[teacherFilter.mode]||{}).count) return false;
       if(teacherFilter.q){ const q=teacherFilter.q.toLowerCase(); if(!(String(r.name||'').toLowerCase().includes(q) || String(r.studentId||'').toLowerCase().includes(q))) return false; }
