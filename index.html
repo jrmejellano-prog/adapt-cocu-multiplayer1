@@ -546,6 +546,9 @@
     .store-item .sprice{ font-size:0.72rem; font-weight:800; color:var(--accent-d); }
     .store-item button{ margin-top:6px; width:100%; padding:6px 4px; font-size:0.72rem; border-radius:10px; }
     .store-item.owned{ opacity:0.6; }
+    /* Pet cards: ownership is shown with a tint + border, never by fading the animal. */
+    .store-item.store-pet.owned{ opacity:1; background:#f3f8ff; border-color:#b9cdf0; }
+    .store-item.store-pet.owned.equipped{ border-color:var(--teal); }
     .store-item.equipped{ border-color:var(--teal); }
     .swatch-item{ width:100%; aspect-ratio:1/1; border-radius:10px; margin-bottom:2px; }
 
@@ -597,6 +600,17 @@
     }
     #mobile-menu-btn:active{ transform:scale(.95); }
     .mobile-menu-panel{ display:none; }
+    /* Grouped drawer: one section open at a time, scrolls instead of running off-screen */
+    .mobile-menu-panel{ max-height:calc(100vh - 76px); max-height:calc(100dvh - 76px); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+    .mm-group{ display:flex; flex-direction:column; gap:4px; width:100%; }
+    .mm-head{ all:unset; box-sizing:border-box; width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:44px; padding:8px 12px; cursor:pointer; font-weight:800; font-size:.8rem; letter-spacing:.02em; color:#fff; background:rgba(255,255,255,.14); border-radius:12px; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+    .mm-head:focus-visible, .mobile-menu-panel .hbtn:focus-visible{ outline:3px solid #fff; outline-offset:2px; }
+    .mm-head i{ font-style:normal; transition:transform .18s; }
+    .mm-group.open .mm-head i{ transform:rotate(180deg); }
+    .mm-items{ display:none; flex-direction:column; gap:4px; padding-left:0; margin-left:8px; }
+    .mm-items .hbtn{ width:calc(100% - 8px); box-sizing:border-box; }
+    .mm-group.open .mm-items{ display:flex; }
+    @media (prefers-reduced-motion:reduce){ .mm-head i{ transition:none; } }
 
     /* Prevent anything from creating horizontal scrolling */
     html,body,#app-main,.screen,.inner{ max-width:100%; }
@@ -1171,9 +1185,17 @@
   .chat-typing span:nth-child(3){ animation-delay:.3s; }
   @keyframes chat-dot{ 0%,60%,100%{ transform:translateY(0); opacity:.5;} 30%{ transform:translateY(-4px); opacity:1;} }
   .chat-suggest-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:2px; max-height:36vh; overflow-y:auto; padding:2px; }
-  .chat-suggest{ all:unset; display:inline-block; box-sizing:border-box; flex:0 0 auto; max-width:100%; min-height:32px; line-height:1.25; white-space:normal; overflow-wrap:anywhere; text-align:left; -webkit-text-size-adjust:100%; touch-action:manipulation; cursor:pointer; font-size:0.72rem; font-weight:700; background:#eef1fb; border:2px solid #dbe3f5; padding:6px 10px; border-radius:12px; }
+  .chat-suggest{ all:unset; display:inline-block; box-sizing:border-box; flex:0 0 auto; max-width:100%; min-height:32px; line-height:1.25; white-space:normal; overflow-wrap:anywhere; text-align:left; -webkit-text-size-adjust:100%; touch-action:manipulation; cursor:pointer; font-size:0.85rem; font-weight:700; background:#eef1fb; border:2px solid #dbe3f5; padding:6px 10px; border-radius:12px; }
   .chat-suggest:focus-visible{ outline:3px solid var(--accent,#5b3df5); outline-offset:2px; }
   .chat-suggest:active{ transform:none; filter:brightness(.95); }
+  /* A tapped question keeps its exact size/spacing in every interaction state (hover, focus, active, visited). */
+  .chat-suggest, .chat-suggest:hover, .chat-suggest:focus, .chat-suggest:active, .chat-suggest:visited{
+    font-size:0.85rem !important; line-height:1.25 !important; min-height:36px !important; padding:7px 11px !important;
+    transform:none !important; zoom:1 !important; -webkit-text-size-adjust:none; text-size-adjust:none; user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  .chat-suggest:hover{ background:#e3e8fa; }
+  .chat-suggest:active{ background:#d6ddf6; }
+  .chat-suggest-row{ flex:0 0 auto; }
   /* FIX: the suggestion row and Clear button were shrinkable flex children of .chat-body, so as the log grew they were squeezed (smaller chips). Never shrink them; the log absorbs the space. */
   .chat-body > .chat-suggest-row, .chat-body > .chat-suggest{ flex:0 0 auto; }
   .chat-body > .chat-log{ min-height:0; }
@@ -1649,12 +1671,47 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 </div>
 
 <!-- Mobile navigation -->
-<div class="mobile-menu-panel" id="mobile-menu-panel" aria-hidden="true">
-  <button class="hbtn" id="mobile-nav-profile"><span class="hi">⭐</span>Profile</button>
-  <button class="hbtn" id="mobile-nav-trophies"><span class="hi">🏆</span>Trophies</button>
-  <button class="hbtn" id="mobile-nav-leaders"><span class="hi">📊</span>Leaders</button>
-  <button class="hbtn" id="mobile-nav-history"><span class="hi">📚</span>History</button>
+<div class="mobile-menu-panel" id="mobile-menu-panel" aria-hidden="true" role="navigation" aria-label="Main navigation">
   <button class="hbtn" id="mobile-nav-home"><span class="hi">🏠</span>Main Menu</button>
+  <div class="mm-group open">
+    <button class="mm-head" type="button" aria-expanded="true" aria-controls="mm-play"><span>🎮 Play</span><i aria-hidden="true">▾</i></button>
+    <div class="mm-items" id="mm-play">
+      <button class="hbtn" data-card="card-adventure"><span class="hi">🎯</span>Challenge Mode</button>
+      <button class="hbtn" data-card="card-quickgame"><span class="hi">⚡</span>Quick Game</button>
+      <button class="hbtn" data-card="card-speculation"><span class="hi">🔮</span>Speculation</button>
+    </div>
+  </div>
+  <div class="mm-group">
+    <button class="mm-head" type="button" aria-expanded="false" aria-controls="mm-learn"><span>📚 Learn</span><i aria-hidden="true">▾</i></button>
+    <div class="mm-items" id="mm-learn">
+      <button class="hbtn" data-card="card-lesson"><span class="hi">📚</span>Lessons</button>
+      <button class="hbtn" id="mobile-nav-history"><span class="hi">📖</span>History</button>
+    </div>
+  </div>
+  <div class="mm-group">
+    <button class="mm-head" type="button" aria-expanded="false" aria-controls="mm-social"><span>👥 Social</span><i aria-hidden="true">▾</i></button>
+    <div class="mm-items" id="mm-social">
+      <button class="hbtn" data-fn="chat"><span class="hi">💬</span>Chat</button>
+      <button class="hbtn" data-fn="friends"><span class="hi">👥</span>Friends</button>
+      <button class="hbtn" data-fn="notifs"><span class="hi">🔔</span>Notifications</button>
+      <button class="hbtn" id="mobile-nav-leaders"><span class="hi">📊</span>Leaders</button>
+    </div>
+  </div>
+  <div class="mm-group">
+    <button class="mm-head" type="button" aria-expanded="false" aria-controls="mm-rewards"><span>🏆 Rewards</span><i aria-hidden="true">▾</i></button>
+    <div class="mm-items" id="mm-rewards">
+      <button class="hbtn" id="mobile-nav-trophies"><span class="hi">🏆</span>Trophies</button>
+      <button class="hbtn" data-card="card-store"><span class="hi">🏪</span>Store</button>
+    </div>
+  </div>
+  <div class="mm-group">
+    <button class="mm-head" type="button" aria-expanded="false" aria-controls="mm-me"><span>🧑 Me</span><i aria-hidden="true">▾</i></button>
+    <div class="mm-items" id="mm-me">
+      <button class="hbtn" id="mobile-nav-profile"><span class="hi">⭐</span>Profile</button>
+      <button class="hbtn" data-card="card-customize"><span class="hi">🧑‍🎨</span>Customize</button>
+      <button class="hbtn" data-fn="settings"><span class="hi">⚙️</span>Settings</button>
+    </div>
+  </div>
 </div>
 
 <div class="breadcrumb hidden" id="breadcrumb-bar" style="padding:6px 14px 0;"></div>
@@ -3072,6 +3129,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   async function ccUnblock(p){ const d=ccData(); await mpStDelete('chatok:'+cnId()+':'+p); delete d.contacts[p]; ccPersist(); ccPushList(); }
   async function ccEnd(p){ const d=ccData(), c=d.contacts[p]; if(!c) return; await ccDecide(p,'declined'); await mpStSet('chatmsg:'+cnId()+':'+p,'[]'); c.st='declined'; c.ts=Date.now(); delete d.inb[p]; delete d.out[p]; ccPersist(); ccPushList(); ccBadge(); }
   async function ccSendMsg(p,text,priv){
+    text=String(text==null?'':text).trim(); if(!text) return {err:'Type a message first.'}; if(typeof CC_LEN==='number'&&text.length>CC_LEN) text=text.slice(0,CC_LEN);
     const id=cnId(), d=ccData(), c=d.contacts[p], now=Date.now();
     if(!c||c.st!=='ok') return {err:'This chat is not open.'};
     if(!ccSt.enabled||ccSt.banned) return {err:'Student chat is paused right now.'};
@@ -3921,6 +3979,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     function shader(gl,type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s)||'Pet shader error');return s;}
     function mesh(gl,buffers,name,v,n,idx){const b={v:gl.createBuffer(),n:gl.createBuffer(),i:gl.createBuffer(),count:idx.length};gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(n),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),gl.STATIC_DRAW);buffers[name]=b;}
     function makeBox(gl,b){const p=[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1]],f=[[0,1,2,3,[0,0,1]],[5,4,7,6,[0,0,-1]],[1,5,6,2,[1,0,0]],[4,0,3,7,[-1,0,0]],[3,2,6,7,[0,1,0]],[4,5,1,0,[0,-1,0]]],v=[],n=[],i=[];f.forEach(q=>{const base=v.length/3;for(let k=0;k<4;k++){v.push(...p[q[k]]);n.push(...q[4]);}i.push(base,base+1,base+2,base,base+2,base+3)});mesh(gl,b,'box',v,n,i);}
+    /* Low-poly sphere (320 tris vs 936), automatically used for small parts: eyes, toes, feather tips. */
+    function makeSphereLo(gl,b){const v=[],n=[],i=[],la=16,lo=10;for(let y=0;y<=lo;y++){const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,c=Math.cos(q),s=Math.sin(q);v.push(sp*c,cp,sp*s);n.push(sp*c,cp,sp*s)}}for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,bb=a+la+1;i.push(a,bb,a+1,bb,bb+1,a+1)}mesh(gl,b,'sphereLo',v,n,i);}
     function makeSphere(gl,b){const v=[],n=[],i=[],la=26,lo=18;for(let y=0;y<=lo;y++){const p=y*Math.PI/lo,sp=Math.sin(p),cp=Math.cos(p);for(let x=0;x<=la;x++){const q=x*2*Math.PI/la,c=Math.cos(q),s=Math.sin(q);v.push(sp*c,cp,sp*s);n.push(sp*c,cp,sp*s)}}for(let y=0;y<lo;y++)for(let x=0;x<la;x++){const a=y*(la+1)+x,bb=a+la+1;i.push(a,bb,a+1,bb,bb+1,a+1)}mesh(gl,b,'sphere',v,n,i);}
     /* Inverse-transpose of the model's 3x3, so stretched spheres/boxes are lit
        correctly. Using the raw model matrix for normals (the old behaviour)
@@ -3933,19 +3993,51 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     }
     function makeCyl(gl,b){const v=[],n=[],i=[],S=16;for(let k=0;k<=S;k++){const a=k/S*Math.PI*2,c=Math.cos(a),s=Math.sin(a);v.push(c,-1,s,c,1,s);n.push(c,0,s,c,0,s);}for(let k=0;k<S;k++){const q=k*2;i.push(q,q+1,q+2,q+1,q+3,q+2);}mesh(gl,b,'cyl',v,n,i);}
     function makeCone(gl,b){const v=[],n=[],i=[],S=16;for(let k=0;k<=S;k++){const a=k/S*Math.PI*2,c=Math.cos(a),s=Math.sin(a),l=Math.hypot(c,.5,s);v.push(c,-1,s,0,1,0);n.push(c/l,.5/l,s/l,c/l,.5/l,s/l);}for(let k=0;k<S;k++){const q=k*2;i.push(q,q+1,q+2);}mesh(gl,b,'cone',v,n,i);}
+    /*
+     * SURFACE MATERIALS — one entry per species family.
+     * pat: 0 none, 1 fur, 2 feather, 3 scale, 4 skin. amp = grain contrast, freq = grain
+     * density per world unit, spec/shin = specular strength / tightness. The grain is
+     * evaluated in each part's own local space, so it travels with the animal and never
+     * "swims" while the pet moves.
+     */
+    const MATS={
+      plain:{pat:0,amp:0,   freq:0, spec:.16,shin:22},
+      fur:  {pat:1,amp:.17, freq:30,spec:.07,shin:12},
+      sleek:{pat:1,amp:.07, freq:24,spec:.24,shin:30},
+      feather:{pat:2,amp:.15,freq:26,spec:.17,shin:26},
+      scale:{pat:3,amp:.09, freq:15,spec:.34,shin:34},
+      skin: {pat:4,amp:.11, freq:11,spec:.07,shin:14},
+      shell:{pat:0,amp:0,   freq:0, spec:.55,shin:55},
+      leaf: {pat:4,amp:.07, freq:16,spec:.30,shin:32}
+    };
+    ['dog','fox','cat','rabbit','panda','snowsprite'].forEach(k=>MATS[k]=MATS.fur);
+    MATS.unicorn=MATS.sleek; MATS.elephant=MATS.skin; MATS.egg=MATS.shell; MATS.plant=MATS.leaf;
+    ['bird','penguin','phoenix'].forEach(k=>MATS[k]=MATS.feather);
+    ['croc','snake','dino','dragon'].forEach(k=>MATS[k]=MATS.scale);
+    MATS.fairy=MATS.plain; MATS.starjelly={pat:0,amp:0,freq:0,spec:.45,shin:40};
     function draw(st,o,vp){
-      const gl=st.gl,b=st.buffers[o.shape];if(!b)return;const L=st.loc;
+      const gl=st.gl;let b=st.buffers[o.shape];if(!b)return;const L=st.loc;
+      if(o.shape==='sphere'){const q=o.m;if(Math.max(Math.hypot(q[0],q[1],q[2]),Math.hypot(q[4],q[5],q[6]),Math.hypot(q[8],q[9],q[10]))<.14) b=st.buffers.sphereLo||b;}
       gl.bindBuffer(gl.ARRAY_BUFFER,b.v);gl.enableVertexAttribArray(L.aPos);gl.vertexAttribPointer(L.aPos,3,gl.FLOAT,false,0,0);
       gl.bindBuffer(gl.ARRAY_BUFFER,b.n);gl.enableVertexAttribArray(L.aNormal);gl.vertexAttribPointer(L.aNormal,3,gl.FLOAT,false,0,0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.i);
       gl.uniformMatrix4fv(L.uMVP,false,mm(vp,o.m));gl.uniformMatrix3fv(L.uNM,false,nmat(o.m));
       const c=color(o.col);gl.uniform3f(L.uColor,c[0],c[1],c[2]);gl.uniform1f(L.uAlpha,o.a==null?1:o.a);gl.uniform1f(L.uEmissive,o.e||0);
+      gl.uniformMatrix4fv(L.uM,false,o.m);
+      /* Per-part surface: the species material, except tiny dark parts (eyes, nose, beak tips) which are always glossy. */
+      const m=o.m,sx=Math.hypot(m[0],m[1],m[2]),sy=Math.hypot(m[4],m[5],m[6]),sz=Math.hypot(m[8],m[9],m[10]);
+      const lum=.299*c[0]+.587*c[1]+.114*c[2], mat=st.mat||MATS.plain;
+      gl.uniform3f(L.uSz,sx,sy,sz);
+      if(lum<.16&&Math.max(sx,sy,sz)<.105){ gl.uniform4f(L.uMat,0,0,0,0); gl.uniform2f(L.uSpec,.95,64); }
+      else{ gl.uniform4f(L.uMat,st.lite?0:mat.pat,mat.amp,mat.freq,0); gl.uniform2f(L.uSpec,mat.spec,mat.shin); }
       gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);
     }
     /* Two passes: opaque parts first, then translucent glow parts sorted
        back-to-front with depth writes off, then a soft contact shadow. */
     function renderParts(st,parts,vp,eye,shadowR){
       const gl=st.gl;gl.disable(gl.BLEND);gl.depthMask(true);
+      gl.uniform3f(st.loc.uEye,eye[0],eye[1],eye[2]);
+      st.mat=MATS[st.pet&&st.pet.type]||MATS.plain; st.lite=st.canvas.width<300;
       const trans=[];
       for(let k=0;k<parts.length;k++){const o=parts[k];if(o.a!=null&&o.a<1)trans.push(o);else draw(st,o,vp);}
       gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
@@ -4117,18 +4209,18 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       const perk=b.perk||0;
       if(h.ear==='floppy'){
         const sw=Math.sin(t*2.2)*.05;
-        [-1,1].forEach(sd=>part(out,hp,sd*h.r*.93,h.hgt*.30,-h.r*.05,h.r*.17,h.hgt*.62,h.r*.34,h.earCol,perk*-.3,0,sd*(.28+sw)));
+        [-1,1].forEach(sd=>part(out,hp,sd*h.r*.93,h.hgt*.30,-h.r*.05,h.r*.17,h.hgt*.62,h.r*.34,h.earCol,perk*-.3,0,sd*(.28+sw+earTwitch(t,sd)*.25)));
       }else if(h.ear==='pointy'){
         const es=h.earSize||.28;
         [-1,1].forEach(sd=>{
-          part(out,hp,sd*h.r*.58,h.hgt*.78+es*.40,-h.r*.08,es*.62,es*.62,es*.30,h.earCol,perk*-.35,0,sd*-.28,'cone');
-          part(out,hp,sd*h.r*.58,h.hgt*.74+es*.34,-h.r*.02,es*.36,es*.42,es*.14,h.earIn||'#f3b6bd',perk*-.35,0,sd*-.28,'cone');
+          part(out,hp,sd*h.r*.58,h.hgt*.78+es*.40,-h.r*.08,es*.62,es*.62,es*.30,h.earCol,perk*-.35-earTwitch(t,sd)*.5,0,sd*-.28,'cone');
+          part(out,hp,sd*h.r*.58,h.hgt*.74+es*.34,-h.r*.02,es*.36,es*.42,es*.14,h.earIn||'#f3b6bd',perk*-.35-earTwitch(t,sd)*.5,0,sd*-.28,'cone');
         });
       }else if(h.ear==='round'){
         [-1,1].forEach(sd=>part(out,hp,sd*h.r*.66,h.hgt*.86,-h.r*.15,h.earSize*(1+perk*.25),h.earSize*(1+perk*.25),h.earSize*.6,h.earCol,0,0,0,'sphere'));
       }else if(h.ear==='long'){
         [-1,1].forEach(sd=>{
-          const e=child(hp,sd*h.r*.36,h.hgt*.80,-h.r*.10,perk*-.35-.10,0,sd*-.10,1,1,1);
+          const e=child(hp,sd*h.r*.36,h.hgt*.80,-h.r*.10,perk*-.35-.10-earTwitch(t,sd)*.6,0,sd*-.10+earTwitch(t,sd+3)*.12,1,1,1);
           part(out,e,0,h.earSize*.62,0,h.r*.20,h.earSize*.62,h.r*.11,h.earCol,0,0,0,'sphere');
           part(out,e,0,h.earSize*.60,h.r*.06,h.r*.10,h.earSize*.45,h.r*.05,h.earIn||'#f0b5b5',0,0,0,'sphere');
         });
@@ -4149,8 +4241,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       const ey=h.eyeV==null?.20:h.eyeV, eu=h.eyeU||.44;
       [-1,1].forEach(sd=>{
         const e=onHead(h,sd*eu,ey);
-        part(out,hp,e[0],e[1],e[2],h.eyeR||.05,(h.eyeR||.05)*1.1,.03,h.eyeCol||'#161211',0,0,0,'sphere');
-        part(out,hp,e[0]-sd*.012,e[1]+.02,e[2]+.02,.017,.017,.012,'#ffffff',0,0,0,'sphere');
+        eyeP(out,hp,e[0],e[1],e[2],h.eyeR||.05,b,h.eyeCol||'#161211');
       });
       quadEars(out,hp,h,s,b,t);
       if(s.headExtra) s.headExtra(out,hp,h,b,t);
@@ -4205,6 +4296,208 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     };
     const WALKERS={dog:.22,fox:.22,cat:.16,panda:.14,croc:.18,elephant:.22,unicorn:.22};
     /* ---------- extra species with fully original anatomy ---------- */
+    /* ---------- shared eye + blink helpers ---------- */
+    /* Each pet blinks on its own schedule (3.6–5.4 s), sometimes twice in a row. */
+    function blinkAmt(t,seed){
+      const T=3.6+hash(seed*1.3+.7)*1.8, tt=t+seed*1.7, ph=tt%T;
+      if(ph<.17) return Math.sin(ph/.17*Math.PI);
+      if(ph>.42&&ph<.57&&hash(Math.floor(tt/T)+seed)<.3) return Math.sin((ph-.42)/.15*Math.PI);
+      return 0;
+    }
+    /* A glossy eye with a catch-light. The lid closes by squashing the eye and hiding the highlight. */
+    function eyeP(out,par,x,y,z,r,b,col,hi){
+      const bl=1-.92*((b&&b.blink)||0);
+      part(out,par,x,y,z,r,r*1.08*bl,r*.75,col||'#121014',0,0,0,'sphere');
+      if(bl>.5) part(out,par,x-(x<0?-1:1)*r*.20,y+r*.42,z+r*.50,r*.30,r*.30,r*.22,hi||'#ffffff',0,0,0,'sphere');
+    }
+    /* A tiny involuntary ear flick; each ear/side runs on its own timer. */
+    function earTwitch(t,k){ const T=4.6+k*1.7, ph=(t+k*2.3+5)%T; return ph<.2?Math.sin(ph/.2*Math.PI)*.35:0; }
+
+    /* ================= SONGBIRD ================= */
+    function buildBird(out,main,root,b,t){
+      const C={body:'#3f8fe0',back:'#2f73c4',belly:'#c4e2f9',wing:'#2b68b4',tip:'#1f4f93',beak:'#f2a53a',leg:'#d98a2b'};
+      const bd=child(main,0,.72,0,.12,0,0,1,1,1);
+      part(out,bd,0,0,0,.46,.44,.58,C.body,0,0,0,'sphere');
+      part(out,bd,0,-.07,.11,.38,.35,.50,C.belly,0,0,0,'sphere');
+      part(out,bd,0,.19,-.07,.40,.21,.50,C.back,0,0,0,'sphere');
+      /* fanned tail feathers */
+      [-1,0,1].forEach(i=>part(out,bd,i*.09,-.04,-.72+Math.abs(i)*.04,.07,.03,.34,i?C.back:C.tip,.10,i*.16,0,'sphere'));
+      const hd=child(bd,0,.46,.30,(b.headPitch||0)-.10,b.headYaw||0,0,1,1,1);
+      part(out,hd,0,0,0,.30,.29,.30,C.body,0,0,0,'sphere');
+      part(out,hd,0,-.11,.10,.22,.15,.21,C.belly,0,0,0,'sphere');
+      part(out,hd,0,-.03,.37,.075,.17,.065,C.beak,Math.PI/2+.12,0,0,'cone');
+      [-1,1].forEach(s=>eyeP(out,hd,s*.15,.06,.255,.05,b));
+      [0,1,2].forEach(i=>part(out,hd,0,.27-i*.02,-.03-i*.09,.045,.14-i*.02,.045,C.tip,-.5-i*.2,0,0,'cone'));
+      /* wings fold along the body; the flap behaviour swings them out from the shoulder */
+      const spread=(b.flap||0)*(.5+.5*Math.sin(t*9))*.95+Math.sin(t*1.6)*.03;
+      [-1,1].forEach(s=>{
+        const sh=child(bd,s*.40,.14,.02,0,0,s*(.14+spread),1,1,1);
+        part(out,sh,0,-.25,0,.07,.34,.30,C.wing,0,0,0,'sphere');
+        part(out,sh,0,-.52,-.06,.05,.18,.22,C.tip,.12,0,0,'sphere');
+      });
+      [-1,1].forEach(s=>{
+        part(out,main,s*.14,.27,.06,.03,.25,.03,C.leg,0,0,0,'cyl');
+        [-1,0,1].forEach(k=>part(out,main,s*.14+k*.035,.04,.12,.022,.02,.10,C.leg,0,k*.25,0,'sphere'));
+      });
+      part(out,root,0,-.02,0,.84,.065,.07,'#6e4f33',0,0,0,'sphere');
+      if(b.peck) part(out,root,0,.04,.50,.05,.04,.05,'#c9a227',0,0,0,'sphere');
+    }
+
+    /* ================= PENGUIN ================= */
+    function buildPenguin(out,main,root,b,t){
+      const C={body:'#202a37',belly:'#f6f5f1',beak:'#f0a82e',feet:'#ef8f2a',gold:'#f2c94a'};
+      const bd=child(main,0,.76,0,-.05,0,Math.sin(t*1.9)*.025,1,1,1);
+      part(out,bd,0,0,0,.50,.72,.44,C.body,0,0,0,'sphere');
+      part(out,bd,0,-.07,.10,.40,.62,.38,C.belly,0,0,0,'sphere');
+      const spread=(b.flap||0)*(.5+.5*Math.sin(t*9))*.9+Math.sin(t*1.5)*.03;
+      [-1,1].forEach(s=>{
+        const sh=child(bd,s*.46,.30,0,0,0,s*(.20+spread),1,1,1);
+        part(out,sh,0,-.30,0,.07,.40,.21,C.body,0,0,0,'sphere');
+      });
+      const hd=child(bd,0,.76,.03,b.headPitch||0,b.headYaw||0,0,1,1,1);
+      part(out,hd,0,0,0,.31,.29,.31,C.body,0,0,0,'sphere');
+      [-1,1].forEach(s=>part(out,hd,s*.15,-.04,.16,.11,.13,.11,C.belly,0,0,0,'sphere'));
+      part(out,hd,0,-.07,.34,.07,.15,.05,C.beak,Math.PI/2+.18,0,0,'cone');
+      part(out,bd,0,.62,.12,.22,.09,.20,C.gold,0,0,0,'sphere');
+      [-1,1].forEach(s=>eyeP(out,hd,s*.13,.06,.27,.042,b));
+      [-1,1].forEach(s=>part(out,main,s*.20,.04,.17,.14,.04,.22,C.feet,0,0,0,'sphere'));
+      part(out,root,0,-.05,0,.72,.06,.72,'#d4e8f6',0,0,0,'sphere');
+    }
+
+    /* ================= TINY RAPTOR ================= */
+    function buildDino(out,main,root,b,t){
+      const C={body:'#5fae52',back:'#3f8a3d',belly:'#dbe8a6',spike:'#2f6f33',claw:'#efe6cf',eye:'#f2d23a',leg:'#4d9a47'};
+      const walk=b.walk||0, sit=b.sit||0;
+      const bd=child(main,0,.82,0,.16,0,0,1,1,1);
+      part(out,bd,0,0,0,.46,.44,.70,C.body,0,0,0,'sphere');
+      part(out,bd,0,-.13,.10,.36,.34,.56,C.belly,0,0,0,'sphere');
+      part(out,bd,0,.18,-.05,.38,.24,.60,C.back,0,0,0,'sphere');
+      for(let i=0;i<5;i++) part(out,bd,0,.40-i*.012,.34-i*.18,.05,.09,.07,C.spike,0,0,0,'cone');
+      part(out,bd,0,.30,.52,.20,.26,.24,C.body,0,0,0,'sphere');
+      const roar=Math.max(0,-(b.headPitch||0));
+      const hd=child(bd,0,.54,.72,-.14+(b.headPitch||0)*.6,b.headYaw||0,0,1,1,1);
+      part(out,hd,0,0,0,.26,.22,.30,C.body,0,0,0,'sphere');
+      part(out,hd,0,-.04,.30,.17,.14,.26,C.body,0,0,0,'sphere');
+      const jaw=child(hd,0,-.12,.08,roar*1.3,0,0,1,1,1);
+      part(out,jaw,0,-.03,.22,.15,.055,.24,C.belly,0,0,0,'sphere');
+      if(roar>.2) part(out,jaw,0,.02,.22,.12,.02,.19,'#8f2f3a',0,0,0,'sphere');
+      [-1,1].forEach(s=>part(out,hd,s*.07,.0,.54,.022,.02,.02,'#1a2a18',0,0,0,'sphere'));
+      [-1,1].forEach(s=>{
+        eyeP(out,hd,s*.17,.09,.19,.06,b,C.eye);
+        if(!b.blink||b.blink<.5) part(out,hd,s*.195,.09,.235,.014,.05,.012,'#101010',0,0,0,'sphere');
+      });
+      [-1,1].forEach(s=>{
+        const ar=child(bd,s*.30,-.10,.44,.7+Math.sin(t*2+s)*.08,0,s*.35,1,1,1);
+        part(out,ar,0,-.12,0,.05,.13,.05,C.body,0,0,0,'cyl');
+        part(out,ar,0,-.26,.02,.05,.05,.07,C.claw,0,0,0,'sphere');
+      });
+      [-1,1].forEach(s=>{
+        const hip=child(main,s*.30,.80,-.08,-sit*.5+Math.sin(t*4.5)*.45*walk*s,0,0,1,1,1);
+        part(out,hip,0,-.16,.0,.17,.24,.20,C.body,0,0,0,'sphere');
+        const shin=child(hip,0,-.30,.04,-.45,0,0,1,1,1);
+        part(out,shin,0,-.20,0,.07,.22,.07,C.leg,0,0,0,'cyl');
+        const ft=child(shin,0,-.42,0,.45+sit*.2,0,0,1,1,1);
+        part(out,ft,0,-.02,.12,.11,.045,.19,C.body,0,0,0,'sphere');
+        part(out,ft,0,-.02,.30,.03,.03,.07,C.claw,Math.PI/2,0,0,'cone');
+        part(out,ft,0,.00,-.02,.025,.065,.03,C.claw,.4,0,0,'cone');
+      });
+      let tp=child(bd,0,-.02,-.58,-.18,Math.sin(t*1.4)*.20*b.tailWag*1.6,0,1,1,1);
+      for(let i=0;i<4;i++){
+        const k=1-i*.2;
+        part(out,tp,0,0,-.22*k,.20*k,.18*k,.30*k,i%2?C.body:C.back,0,0,0,'sphere');
+        tp=child(tp,0,0,-.40*k,.04,Math.sin(t*1.4+(i+1)*.6)*.18*b.tailWag*1.6,0,1,1,1);
+      }
+    }
+
+    /* ================= POCKET DRAGON ================= */
+    function buildDragon(out,main,root,b,t){
+      const C={body:'#7456d1',back:'#5a3fb3',belly:'#f1d98a',horn:'#f4d27a',wing:'#b79cf5',bone:'#5a3fb3',eye:'#ffd24a',spike:'#f4c542',claw:'#f7efd2'};
+      const bd=child(main,0,.72,0,.10,0,0,1,1,1);
+      part(out,bd,0,0,0,.50,.46,.66,C.body,0,0,0,'sphere');
+      part(out,bd,0,-.10,.12,.38,.36,.54,C.belly,0,0,0,'sphere');
+      for(let i=0;i<5;i++) part(out,bd,0,.42-i*.02,.36-i*.17,.06,.11-i*.008,.07,C.spike,0,0,0,'cone');
+      part(out,bd,0,.36,.50,.22,.28,.22,C.body,0,0,0,'sphere');
+      const roar=Math.max(0,-(b.headPitch||0));
+      const hd=child(bd,0,.60,.62,-.10+(b.headPitch||0)*.7,b.headYaw||0,0,1,1,1);
+      part(out,hd,0,0,0,.30,.26,.32,C.body,0,0,0,'sphere');
+      part(out,hd,0,-.07,.30,.18,.13,.22,C.body,0,0,0,'sphere');
+      const jaw=child(hd,0,-.14,.10,roar*1.2,0,0,1,1,1);
+      part(out,jaw,0,-.02,.24,.15,.06,.22,C.belly,0,0,0,'sphere');
+      if(roar>.2){ part(out,jaw,0,.03,.22,.11,.02,.17,'#8f2f3a',0,0,0,'sphere'); part(out,hd,0,-.10,.66+roar*.1,.07,.07,.07,'#ffb347',0,0,0,'sphere',{e:1}); }
+      [-1,1].forEach(s=>part(out,hd,s*.07,-.02,.50,.025,.02,.02,'#1a1030',0,0,0,'sphere'));
+      [-1,1].forEach(s=>{
+        eyeP(out,hd,s*.17,.07,.22,.06,b,C.eye);
+        if(!b.blink||b.blink<.5) part(out,hd,s*.19,.07,.265,.013,.045,.01,'#101010',0,0,0,'sphere');
+        part(out,hd,s*.15,.26,-.02,.05,.20,.05,C.horn,-.65,0,s*-.25,'cone');
+        part(out,hd,s*.30,.0,-.10,.03,.14,.18,C.wing,0,0,s*.3,'sphere');
+      });
+      const wf=Math.sin(t*7)*.5*Math.max(.18,b.flap||0)+Math.sin(t*1.3)*.04;
+      [-1,1].forEach(s=>{
+        const sh=child(bd,s*.36,.34,-.06,0,s*.45,s*(.50+wf),1,1,1);
+        part(out,sh,s*.36,0,0,.38,.045,.07,C.bone,0,0,0,'sphere');
+        part(out,sh,s*.40,-.01,-.20,.36,.02,.26,C.wing,0,0,0,'sphere');
+        part(out,sh,s*.64,-.01,-.12,.16,.02,.18,C.wing,0,0,0,'sphere');
+      });
+      let tp=child(bd,0,-.06,-.58,-.15,Math.sin(t*1.5)*.30*b.tailWag*1.5,0,1,1,1);
+      for(let i=0;i<4;i++){
+        const k=1-i*.2;
+        part(out,tp,0,0,-.20*k-.02,.18*k,.16*k,.26*k,i%2?C.back:C.body,0,0,0,'sphere');
+        tp=child(tp,0,0,-.40*k,.05,Math.sin(t*1.5+(i+1)*.7)*.22*b.tailWag*1.5,0,1,1,1);
+      }
+      part(out,tp,0,0,-.10,.12,.03,.14,C.spike,0,0,0,'sphere');
+      [-1,1].forEach(s=>{
+        part(out,main,s*.30,.22,.14,.11,.20,.12,C.back,0,0,0,'cyl');
+        part(out,main,s*.30,.05,.24,.17,.06,.22,C.body,0,0,0,'sphere');
+        part(out,main,s*.34,.24,-.22,.13,.22,.15,C.back,0,0,0,'cyl');
+        part(out,main,s*.34,.05,-.12,.19,.06,.22,C.body,0,0,0,'sphere');
+      });
+    }
+
+    /* ================= STAR FAIRY ================= */
+    function buildFairy(out,main,root,b,t){
+      const C={skin:'#ffd7c0',hair:'#8d4fe0',dress:'#f58ad8',dress2:'#ffb3ea',wing:'#e6f4ff',wing2:'#ffd6f6',star:'#ffe27a',shoe:'#c75fcc'};
+      part(out,main,0,.80,0,.20,.26,.17,C.dress,0,0,0,'sphere');
+      part(out,main,0,.52,0,.36,.30,.36,C.dress2,0,0,0,'cone');
+      part(out,main,0,.40,0,.37,.06,.37,C.dress,0,0,0,'sphere');
+      [-1,1].forEach(s=>{
+        const kick=Math.sin(t*3+s*1.6)*.14;
+        const lg=child(main,s*.09,.34,0,kick,0,0,1,1,1);
+        part(out,lg,0,-.15,0,.04,.15,.04,C.skin,0,0,0,'cyl');
+        part(out,lg,0,-.31,.04,.06,.035,.09,C.shoe,0,0,0,'sphere');
+      });
+      [-1,1].forEach(s=>{
+        const wave=s>0?.50+Math.sin(t*2.4)*.16:.34+Math.sin(t*1.7)*.05;
+        const ar=child(main,s*.22,.90,0,0,0,s*wave,1,1,1);
+        part(out,ar,0,-.16,0,.04,.16,.04,C.skin,0,0,0,'cyl');
+        part(out,ar,0,-.33,0,.05,.05,.05,C.skin,0,0,0,'sphere');
+      });
+      const hd=child(main,0,1.16,0,b.headPitch||0,b.headYaw||0,0,1,1,1);
+      part(out,hd,0,0,0,.25,.25,.25,C.skin,0,0,0,'sphere');
+      part(out,hd,0,.05,-.07,.28,.27,.27,C.hair,0,0,0,'sphere');
+      part(out,hd,0,.18,.09,.25,.10,.17,C.hair,.2,0,0,'sphere');
+      part(out,hd,0,.34,-.04,.11,.11,.11,C.hair,0,0,0,'sphere');
+      [-1,1].forEach(s=>{
+        eyeP(out,hd,s*.10,-.01,.215,.058,b,'#3b2a6b');
+        part(out,hd,s*.16,-.08,.19,.05,.03,.02,'#ff9fb2',0,0,0,'sphere');
+        part(out,hd,s*.26,-.04,-.05,.05,.17,.05,C.hair,0,0,s*.2,'sphere');
+      });
+      part(out,hd,0,-.11,.235,.03,.012,.01,'#c2556a',0,0,0,'sphere');
+      part(out,hd,0,.46,0,.07,.07,.02,C.star,0,0,t*1.2,'box',{e:.7});
+      part(out,hd,0,.46,0,.07,.07,.02,C.star,0,0,t*1.2+Math.PI/4,'box',{e:.7});
+      const wf=Math.sin(t*14)*.30;
+      [-1,1].forEach(s=>{
+        const up=child(main,s*.07,.98,-.14,0,s*(.50+wf),s*.30,1,1,1);
+        part(out,up,s*.30,.10,0,.32,.27,.025,C.wing,0,0,0,'sphere',{e:.5});
+        part(out,up,s*.28,.10,.02,.22,.18,.02,C.wing2,0,0,0,'sphere',{e:.5});
+        const lo=child(main,s*.07,.90,-.14,0,s*(.42+wf),s*-.45,1,1,1);
+        part(out,lo,s*.22,-.04,0,.22,.17,.025,C.wing,0,0,0,'sphere',{e:.5});
+      });
+      for(let i=0;i<6;i++){
+        const a=t*1.6+i*1.05;
+        part(out,root,Math.cos(a)*.62,.85+Math.sin(a*1.3)*.45,Math.sin(a)*.62,.035,.035,.035,'#fff4b0',0,0,0,'sphere',{e:1});
+      }
+    }
+
     function buildUnicorn(out,root,b,t,bob){
       const s=UNI; quad(out,root,b,t,s,bob);
     }
@@ -4226,7 +4519,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       const head=child(main,0,1.16,.20,(b.headPitch||0),b.headYaw||0,0,1,1,1);
       part(out,head,0,0,0,.24,.23,.25,'#f5602c',0,0,0,'sphere');
       part(out,head,0,-.04,.24,.06,.05,.14,'#ffd23f',0,0,0,'cone');
-      [-1,1].forEach(sd=>{ part(out,head,sd*.11,.05,.19,.04,.05,.03,'#171010',0,0,0,'sphere'); part(out,head,sd*.11,.065,.215,.014,.014,.01,'#fff',0,0,0,'sphere'); });
+      [-1,1].forEach(sd=>eyeP(out,head,sd*.11,.05,.19,.045,b,'#171010'));
       for(let i=0;i<3;i++) part(out,head,0,.22+i*.05,-.06-i*.06,.04,.16+i*.04,.03,i===1?'#ffd23f':'#ff7a2a',-.4-i*.25,0,0,'cone');
       [-1,1].forEach(sd=>{
         const w=child(main,sd*.36,.90,-.02,0,0,sd*(-.35-flap),1,1,1);
@@ -4254,7 +4547,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       part(out,main,0,1.08,0,.38,.36,.38,'#f9fdff',0,0,0,'sphere');
       const head=child(main,0,1.62,0,(b.headPitch||0),(b.headYaw||0)+Math.sin(t*.9)*.12,0,1,1,1);
       part(out,head,0,0,0,.29,.28,.29,'#ffffff',0,0,0,'sphere');
-      [-1,1].forEach(sd=>{ part(out,head,sd*.11,.06,.25,.035,.035,.03,'#1b2233',0,0,0,'sphere'); });
+      [-1,1].forEach(sd=>eyeP(out,head,sd*.11,.06,.25,.04,b,'#1b2233'));
       part(out,head,0,-.01,.34,.045,.045,.20,'#ff8a2b',1.5708,0,0,'cone');
       for(let i=0;i<5;i++){ const a=(i-2)*.32; part(out,head,Math.sin(a)*.17,-.13-Math.abs(i-2)*.008,Math.cos(a)*.24,.022,.022,.02,'#1b2233',0,0,0,'sphere'); }
       /* scarf + tail, arms that wave */
@@ -4276,7 +4569,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       part(out,main,0,0,0,.62*pulse,.46/pulse,.62*pulse,'#e58cff',0,0,0,'sphere',{a:1,e:.35});
       part(out,main,0,.02,0,.34,.26,.34,'#ffe98a',0,0,0,'sphere',{a:1,e:1});
       part(out,main,0,-.06,0,.66*pulse,.05,.66*pulse,'#c66bf0',0,0,0,'sphere',{a:1,e:.5});
-      [-1,1].forEach(sd=>{ part(out,main,sd*.20,.10,.52,.055,.07,.03,'#2a1848',0,0,0,'sphere'); part(out,main,sd*.20,.125,.545,.018,.018,.012,'#fff',0,0,0,'sphere'); });
+      [-1,1].forEach(sd=>eyeP(out,main,sd*.20,.10,.52,.06,b,'#2a1848'));
       part(out,main,0,-.02,.56,.045,.03,.02,'#2a1848',0,0,0,'sphere');
       for(let k=0;k<6;k++){
         const a=k/6*Math.PI*2; let p=child(main,Math.cos(a)*.38,-.20,Math.sin(a)*.38,0,0,0,1,1,1);
@@ -4291,7 +4584,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 
     function build(st,pet,now){
       const t=now/1000, type=pet?.type||'plant', out=[], root=trs(0,0,0,st.pitch,st.rotation,0,1,1,1);
-      const b=behaviour(st,type,t,pet?.id);
+      const b=behaviour(st,type,t,pet?.id); b.blink=blinkAmt(t,st.seed||0);
       const bob=Math.sin(t*2.4)*.035+b.breathe+b.hop+Math.abs(Math.sin(t*4.5))*.03*(b.walk||0);
       /* `main` carries the whole pet. A sit lowers and tilts the WHOLE rig
          together, so the body, legs and tail stay attached. */
@@ -4328,91 +4621,45 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
         }
       }else if(QUADS[type]){
         quad(out,root,b,t,QUADS[type],bob);
-      }else if(type==='bird'||type==='penguin'){
-        const body=type==='penguin'?'#303846':'#4c9fe8';
-        part(out,main,0,.72,0,.55,.78,.55,body,0,0,0,'sphere');
-        part(out,main,0,.25,.46,.34,.42,.10,type==='penguin'?'#f5f5f2':'#f6d34a',0,0,0,'sphere');
-        const head=child(main,0,.85,.04,b.headPitch,b.headYaw,0,1,1,1);
-        part(out,head,0,0,0,.46,.44,.46,body,0,0,0,'sphere');
-        part(out,head,-.17,.02,.40,.06,.08,.04,'#151515',0,0,0,'sphere');part(out,head,.17,.02,.40,.06,.08,.04,'#151515',0,0,0,'sphere');
-        part(out,head,0,-.04,.46,.10,.07,.18,'#f2b134',0,0,0,'sphere');
-        /* Wings flap only during the flap behaviour, plus a small settle. */
-        const flap=Math.sin(t*9)*.55*b.flap + Math.sin(t*1.6)*.05;
-        part(out,main,-.54,.68,0,.12,.42,.35,body,0,0,flap);
-        part(out,main,.54,.68,0,.12,.42,.35,body,0,0,-flap);
-        /* Feet grip a perch so the bird is standing on something. */
-        [-1,1].forEach(s=>part(out,main,s*.18,.02,.06,.09,.06,.22,'#e08f2a'));
-        part(out,root,0,-.08,0,.70,.07,.14,'#7b5a3a');
-        if(b.peck) part(out,root,0,-.02,.42,.10,.07,.10,'#c9a227',0,0,0,'sphere');
-      }else if(type==='dino'){
-        const body=child(main,0,.62,0,0,0,0,1,1,1);
-        part(out,body,0,0,0,.82,.52,.52,'#68b85b',0,0,0,'sphere');
-        addLegs(body,'#579c4d','#3f6d38',b.sit);
-        const head=child(body,0,.62,.42,-.08+b.headPitch,b.headYaw,0,1,1,1);
-        part(out,head,0,0,0,.48,.40,.60,'#72c766',0,0,0,'sphere');
-        part(out,head,-.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.08,.48,.06,.07,.04,'#171717',0,0,0,'sphere');
-        for(let i=0;i<4;i++)part(out,body,(i-1.5)*.22,.46,-.35-(i%2)*.02,.10,.18,.08,'#3f7f39',0,0,0,'sphere');
-        const tailBase=child(body,0,.05,-.50,0,Math.sin(t*1.4)*.22*b.tailWag*1.6,0,1,1,1);
-        part(out,tailBase,0,0,-.28,.22,.22,.50,'#4b963f',0,0,0,'sphere');
-        const tailTip=child(tailBase,0,0,-.62,0,Math.sin(t*1.4+.8)*.26*b.tailWag*1.6,0,1,1,1);
-        part(out,tailTip,0,0,-.24,.14,.14,.40,'#4b963f',0,0,0,'sphere');
-      }else if(type==='dragon'||type==='fairy'){
-        const bodyCol=type==='dragon'?'#7b5bd6':'#f0a7e8';
-        const wingCol=type==='dragon'?'#a0d7f7':'#ffffff';
-        part(out,main,0,.68,0,.58,.72,.52,bodyCol,0,0,0,'sphere');
-        const wf=Math.sin(t*(type==='fairy'?14:7))*.45*Math.max(.25,b.flap);
-        part(out,main,-.52,.78,0,.10,.34,.40,wingCol,0,0,.35+wf);
-        part(out,main,.52,.78,0,.10,.34,.40,wingCol,0,0,-.35-wf);
-        const head=child(main,0,.72,.35,b.headPitch,b.headYaw,0,1,1,1);
-        part(out,head,0,0,0,.45,.42,.46,bodyCol,0,0,0,'sphere');
-        part(out,head,-.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');part(out,head,.16,.05,.42,.06,.07,.04,'#171717',0,0,0,'sphere');
-        if(type==='dragon'){
-          part(out,head,-.25,.38,.02,.10,.26,.10,'#d7a84a');part(out,head,.25,.38,.02,.10,.26,.10,'#d7a84a');
-          const tail=child(main,0,.50,-.50,0,Math.sin(t*1.5)*.30*b.tailWag*1.5,0,1,1,1);
-          part(out,tail,0,0,-.30,.18,.18,.55,bodyCol,0,0,0,'sphere');
-        } else {
-          /* Fairy sparkle trail. */
-          for(let i=0;i<6;i++){
-            const a=t*1.6+i*1.05;
-            part(out,root,Math.cos(a)*.62,.85+Math.sin(a*1.3)*.45,Math.sin(a)*.62,.035,.035,.035,'#fff4b0',0,0,0,'sphere');
-          }
-        }
+      }else if(type==='bird'){ buildBird(out,main,root,b,t);
+      }else if(type==='penguin'){ buildPenguin(out,main,root,b,t);
+      }else if(type==='dino'){ buildDino(out,main,root,b,t);
+      }else if(type==='dragon'){ buildDragon(out,main,root,b,t);
+      }else if(type==='fairy'){ buildFairy(out,main,root,b,t);
       }else if(type==='elephant'){
-        /* Large barrel body on four thick legs, a trunk built from three
-           hinged segments so it can curl, plus real floppy ears. */
-        const body=child(main,0,.86,0,0,0,0,1,1,1);
-        part(out,body,0,0,0,.98,.72,.78,'#9aa3ac',0,0,0,'sphere');
-        [-1,1].forEach(side=>{
-          const hip=child(body,side*.62,-.62,.18,-b.sit*.6+Math.sin(t*4.5)*.32*(b.walk||0)*side,0,0,1,1,1);
-          part(out,hip,0,-.30,0,.26,.60,.26,'#8b939c');
-          part(out,hip,0,-.62,0,.28,.14,.30,'#6e767e');
+        /* Barrel body on four columnar legs, a trunk built from hinged segments so it
+           can curl, floppy ears that really flap, tusks, and toenails. */
+        const SK='#8f8b88',SK2='#827e7b',SK3='#76726f',EAR='#9a9491',EARIN='#c7a6a2',TOE='#d9d2c4';
+        const body=child(main,0,.86,0,0,0,0,1,1,1), walk=b.walk||0;
+        part(out,body,0,0,0,.98,.72,.78,SK,0,0,0,'sphere');
+        [[-1,.18,1],[1,.18,1],[-1,-.22,-1],[1,-.22,-1]].forEach(q=>{
+          const side=q[0], dir=q[2];
+          const hip=child(body,side*.62,-.50,q[1],-dir*(b.sit||0)*.6+dir*Math.sin(t*4.5)*.32*walk*side,0,0,1,1,1);
+          part(out,hip,0,-.17,0,.27,.21,.27,SK2,0,0,0,'cyl');
+          part(out,hip,0,-.33,.02,.29,.09,.31,SK3,0,0,0,'sphere');
+          [-1,0,1].forEach(k=>part(out,hip,k*.10,-.33,.28,.05,.04,.04,TOE,0,0,0,'sphere'));
         });
-        [-1,1].forEach(side=>{
-          const hip=child(body,side*.62,-.62,-.22,b.sit*.6-Math.sin(t*4.5)*.32*(b.walk||0)*side,0,0,1,1,1);
-          part(out,hip,0,-.30,0,.26,.60,.26,'#8b939c');
-          part(out,hip,0,-.62,0,.28,.14,.30,'#6e767e');
+        const head=child(body,0,.30,.62,b.headPitch||0,b.headYaw||0,0,1,1,1);
+        part(out,head,0,0,0,.56,.52,.52,SK,0,0,0,'sphere');
+        part(out,head,0,.28,.10,.36,.26,.30,SK,0,0,0,'sphere');
+        [-1,1].forEach(s=>{
+          const ear=child(head,s*.48,.10,0,0,-s*.12,s*(.25+(b.perk||0)*.35+Math.sin(t*1.7+s)*.05+earTwitch(t,s)*.3),1,1,1);
+          part(out,ear,s*.20,-.04,0,.34,.40,.045,EAR,0,0,0,'sphere');
+          part(out,ear,s*.20,-.04,.035,.24,.30,.02,EARIN,0,0,0,'sphere');
+          eyeP(out,head,s*.30,.10,.43,.05,b,'#1c1512');
+          part(out,head,s*.20,-.22,.46,.04,.17,.04,'#f4ecd6',Math.PI/2+.5,0,s*.1,'cone');
         });
-        const head=child(body,0,.30,.62,b.headPitch,b.headYaw,0,1,1,1);
-        part(out,head,0,0,0,.56,.52,.52,'#9aa3ac',0,0,0,'sphere');
-        /* Ears are real hinges — the perk behaviour actually flaps them. */
-        const earL=child(head,-.48,.10,0,0,0,-.25-(b.perk||0)*.35,1,1,1);
-        part(out,earL,-.20,0,0,.32,.36,.05,'#8b939c');
-        const earR=child(head,.48,.10,0,0,0,.25+(b.perk||0)*.35,1,1,1);
-        part(out,earR,.20,0,0,.32,.36,.05,'#8b939c');
-        part(out,head,-.18,.10,.44,.07,.08,.04,'#171717',0,0,0,'sphere');
-        part(out,head,.18,.10,.44,.07,.08,.04,'#171717',0,0,0,'sphere');
-        /* Trunk: three segments, each a child of the last, so it hangs
-           naturally and curls up together during the "trunk raise" beat. */
         const raise = b.headPitch<0 ? Math.min(1,-b.headPitch*1.6) : 0;
         const seg1=child(head,0,-.10,.46,-.20-raise*.9,0,0,1,1,1);
-        part(out,seg1,0,-.20,0,.15,.22,.15,'#8b939c');
+        part(out,seg1,0,-.20,0,.15,.22,.15,SK,0,0,0,'cyl');
         const seg2=child(seg1,0,-.40,0,-.15-raise*.9,0,0,1,1,1);
-        part(out,seg2,0,-.18,0,.13,.20,.13,'#848c95');
+        part(out,seg2,0,-.18,0,.13,.20,.13,SK2,0,0,0,'cyl');
         const seg3=child(seg2,0,-.36,0,-.10-raise*.6,0,0,1,1,1);
-        part(out,seg3,0,-.15,0,.11,.17,.11,'#7d858e');
-        /* Tail with a small tuft. */
+        part(out,seg3,0,-.15,0,.11,.17,.11,SK3,0,0,0,'cyl');
+        part(out,seg3,0,-.32,0,.12,.09,.12,SK3,0,0,0,'sphere');
         const tail=child(body,0,-.10,-.72,0,Math.sin(t*1.1)*.14*b.tailWag,0,1,1,1);
-        part(out,tail,0,-.20,0,.06,.36,.06,'#6e767e');
+        part(out,tail,0,-.20,0,.06,.36,.06,SK3,0,0,0,'cyl');
+        part(out,tail,0,-.58,0,.09,.09,.09,'#4f4c4a',0,0,0,'sphere');
       }else if(type==='snake'){
         /*
          * A genuine segmented spine, NOT the quadruped rig with legs hidden.
@@ -4500,11 +4747,60 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       if(!st){
         stage.innerHTML='<canvas aria-label="Interactive 3D pet preview"></canvas><div class="pet-3d-label"></div><div class="pet-3d-hint">↔↕ Drag</div>';
         const canvas=stage.querySelector('canvas'),gl=canvas.getContext('webgl',{alpha:true,antialias:true,powerPreference:'high-performance'});if(!gl)return false;
-        const V='attribute vec3 aPos;attribute vec3 aNormal;uniform mat4 uMVP;uniform mat3 uNM;varying vec3 vN;void main(){vN=normalize(uNM*aNormal);gl_Position=uMVP*vec4(aPos,1.0);}';
-        const F='precision mediump float;uniform vec3 uColor;uniform float uAlpha;uniform float uEmissive;varying vec3 vN;void main(){vec3 N=normalize(vN);vec3 L=normalize(vec3(-.45,.88,.55));vec3 L2=normalize(vec3(.72,.22,-.40));float d=max(dot(N,L),0.);float f=max(dot(N,L2),0.)*.14;float h=.5+.5*N.y;vec3 amb=mix(vec3(.36,.34,.42),vec3(.64,.68,.76),h)*.56;float rim=pow(1.-clamp(N.z,0.,1.),3.)*.10;vec3 c=uColor*(amb+.42*d+f)+vec3(rim)*(.55+uColor*.45);c=min(c,vec3(1.));c=mix(c,uColor,uEmissive);gl_FragColor=vec4(c*uAlpha,uAlpha);}';
+        const V='attribute vec3 aPos;attribute vec3 aNormal;uniform mat4 uMVP;uniform mat4 uM;uniform mat3 uNM;varying vec3 vN;varying vec3 vW;varying vec3 vL;void main(){vN=normalize(uNM*aNormal);vL=aPos;vW=(uM*vec4(aPos,1.0)).xyz;gl_Position=uMVP*vec4(aPos,1.0);}';
+        /*
+         * PET SURFACE SHADER
+         * ------------------
+         * The previous shader lit every pet at roughly half exposure with a blue-tinted
+         * ambient, so cream, white and orange coats came out grey and muddy ("faded").
+         * This one keeps the authored colour: wrap diffuse + neutral-warm key, cool fill,
+         * hemisphere ambient, floor contact darkening, an edge glow that tints with the
+         * albedo (not with grey), per-species procedural grain and a specular sheen.
+         * Output stays premultiplied and fully opaque unless a part asks for alpha.
+         */
+        const F=[
+          '#ifdef GL_FRAGMENT_PRECISION_HIGH','precision highp float;','#else','precision mediump float;','#endif',
+          'uniform vec3 uColor;uniform float uAlpha;uniform float uEmissive;uniform vec3 uEye;',
+          'uniform vec4 uMat;   /* x=pattern y=grain amount z=grain frequency */',
+          'uniform vec2 uSpec;uniform vec3 uSz;  /* spec strength+shininess, part size */',
+          'varying vec3 vN;varying vec3 vW;varying vec3 vL;',
+          'uniform sampler2D uNoise;  /* 128x128 value-noise texture, built once */',
+          'float vn(vec3 p){vec2 a=p.xy+p.z*vec2(.61,.37);vec2 c=p.zy+p.x*vec2(.43,.83)+17.;',
+          ' float n=(texture2D(uNoise,a*.0078125).r+texture2D(uNoise,c*.0078125).r)*.5;return clamp((n-.5)*1.6+.5,0.,1.);}',
+          'void main(){',
+          ' vec3 N=normalize(vN);vec3 V=normalize(uEye-vW);',
+          ' vec3 base=uColor;float spec=uSpec.x;float shin=uSpec.y;float grain=0.5;',
+          ' if(uEmissive<.5&&uMat.x>.5){',
+          '  vec3 p=vL*uSz*uMat.z;',
+          '  if(uMat.x<1.5){grain=vn(p)*.6+vn(p*2.7+7.1)*.4;}',
+          '  else if(uMat.x<2.5){p.y*=.30;grain=vn(p)*.55+vn(p*3.1+3.3)*.45;grain=mix(grain,abs(sin(p.y*6.+vn(p*2.)*3.)),.35);}',
+          '  else if(uMat.x<3.5){float a=sin(p.x*1.7+p.z*.9)*sin(p.y*1.7-p.z*.6)+sin(p.z*1.7+p.x*.5)*sin(p.y*1.3+p.x*.8);grain=smoothstep(-1.1,1.1,a);grain=mix(grain,vn(p*.6),.25);}',
+          '  else{grain=vn(p*vec3(1.,.45,1.))*.65+vn(p*2.3)*.35;}',
+          '  float pale=smoothstep(.55,.95,dot(uColor,vec3(.299,.587,.114)));',
+          '  base*=1.+(grain-.5)*2.*uMat.y*(1.-.60*pale);',
+          '  spec*=.55+grain*.9;',
+          ' }',
+          ' vec3 Lk=normalize(vec3(-.38,.80,.72));vec3 Lf=normalize(vec3(.72,.22,-.40));',
+          ' float ndl=dot(N,Lk);',
+          ' float wrap=clamp((ndl+.30)/1.30,0.,1.);wrap=wrap*(2.-wrap)*.55+wrap*.45;',
+          ' float fill=max(dot(N,Lf),0.);',
+          ' float h=.5+.5*N.y;',
+          ' vec3 amb=mix(vec3(.50,.45,.43),vec3(.82,.85,.92),h);',
+          ' vec3 light=amb*.46+vec3(1.,.965,.90)*wrap*.84+vec3(.55,.62,.80)*fill*.17;',
+          ' float ao=mix(.80,1.,smoothstep(.0,.40,vW.y));',
+          ' vec3 c=base*light*ao;',
+          ' float fq=1.-clamp(dot(N,V),0.,1.);float fr=fq*fq*fq;',
+          ' c+=base*fr*.20+vec3(.80,.86,1.)*fr*.035;',
+          ' vec3 H=normalize(Lk+V);float sp=pow(max(dot(N,H),0.),shin)*spec*step(0.,ndl);',
+          ' c+=vec3(1.,.97,.92)*sp;',
+          ' float l=dot(c,vec3(.299,.587,.114));c=mix(vec3(l),c,1.10);',
+          ' c=min(c,vec3(1.));',
+          ' c=mix(c,uColor,uEmissive);',
+          ' gl_FragColor=vec4(c*uAlpha,uAlpha);',
+          '}'].join('\n');
         const setupGL=()=>{const program=gl.createProgram();gl.attachShader(program,shader(gl,gl.VERTEX_SHADER,V));gl.attachShader(program,shader(gl,gl.FRAGMENT_SHADER,F));gl.linkProgram(program);gl.useProgram(program);
-        const buffers={};makeBox(gl,buffers);makeSphere(gl,buffers);makeCyl(gl,buffers);makeCone(gl,buffers);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
-        const loc={};['aPos','aNormal'].forEach(n=>loc[n]=gl.getAttribLocation(program,n));['uMVP','uNM','uColor','uAlpha','uEmissive'].forEach(n=>loc[n]=gl.getUniformLocation(program,n));return {program,buffers,loc};};const R0=setupGL();const program=R0.program,buffers=R0.buffers,loc=R0.loc;
+        const buffers={};makeBox(gl,buffers);makeSphere(gl,buffers);makeSphereLo(gl,buffers);makeCyl(gl,buffers);makeCone(gl,buffers);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
+        const loc={};['aPos','aNormal'].forEach(n=>loc[n]=gl.getAttribLocation(program,n));['uMVP','uM','uNM','uColor','uAlpha','uEmissive','uEye','uMat','uSpec','uSz','uNoise'].forEach(n=>loc[n]=gl.getUniformLocation(program,n));/* one-time noise texture for the fur/feather/scale/skin grain (replaces per-pixel hash noise: far cheaper) */gl.useProgram(program);{const NT=128,nd=new Uint8Array(NT*NT);let sd=20240611;for(let i=0;i<nd.length;i++){sd=(Math.imul(sd,1664525)+1013904223)>>>0;nd[i]=sd>>>24;}const tx=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tx);gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);gl.texImage2D(gl.TEXTURE_2D,0,gl.LUMINANCE,NT,NT,0,gl.LUMINANCE,gl.UNSIGNED_BYTE,nd);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);gl.uniform1i(loc.uNoise,0);}return {program,buffers,loc};};const R0=setupGL();const program=R0.program,buffers=R0.buffers,loc=R0.loc;
         st={gl,program,canvas,buffers,loc,pet,rotation:0,pitch:-.08,drag:false,lastX:0,lastY:0,velX:0,velY:0,raf:0,seed:Math.random()*100};
         stage.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;st.drag=true;st.velX=0;st.velY=0;st.lastX=e.clientX;st.lastY=e.clientY;stage.classList.add('dragging');try{stage.setPointerCapture(e.pointerId)}catch(_){}});
         stage.addEventListener('pointermove',e=>{if(!st.drag)return;const dx=e.clientX-st.lastX,dy=e.clientY-st.lastY;st.rotation+=dx*.012;st.pitch=Math.max(-.7,Math.min(.7,st.pitch-dy*.010));st.velX=dx*.012*.5;st.velY=-dy*.010*.5;st.lastX=e.clientX;st.lastY=e.clientY});
@@ -4552,7 +4848,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
             } else { st.velX=0; st.velY=0; }
           }
           gl.depthMask(true);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-          const far=({egg:.74,unicorn:1.0,phoenix:1.02,elephant:1.06,snowsprite:1.0,dragon:1.04,dog:.80,fox:.80,cat:.82,rabbit:.82,panda:.80,croc:.58,snake:.62,plant:.9,bird:.92,penguin:.92,fairy:.95,starjelly:.95,dino:.95})[st.pet.type]||1, eye=[0,1.8*far,6*far];
+          const far=({egg:.74,unicorn:1.0,phoenix:1.02,elephant:1.06,snowsprite:1.0,dragon:1.04,dog:.80,fox:.80,cat:.82,rabbit:.82,panda:.80,croc:.58,snake:.62,plant:.9,bird:.92,penguin:.92,fairy:.95,starjelly:.95,dino:.95})[st.pet.type]||1, eye=[0,1.8*far*.88,6*far*.88];
           const vp=mm(perspective(Math.PI/4.5,Math.max(.6,r.width/Math.max(1,r.height)),.1,20),lookAt(eye,[0,.85*far,0],[0,1,0]));
           const sr=({elephant:1.15,croc:1.05,unicorn:1.0,phoenix:.8,snowsprite:.7,starjelly:.6,egg:.55})[st.pet.type]||.85;
           renderParts(st,build(st,st.pet,now),vp,eye,sr);
@@ -5321,6 +5617,28 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   $('mobile-nav-trophies').addEventListener('click', () => { closeMobileMenu(); $('nav-trophies').click(); });
   $('mobile-nav-leaders').addEventListener('click', () => { closeMobileMenu(); $('nav-leaders').click(); });
   $('mobile-nav-home').addEventListener('click', () => { closeMobileMenu(); goToMainMenu(); });
+  /* Grouped drawer behaviour: accordion headers + item routing through existing, already-working handlers */
+  (function initMobileGroups(){
+    const panel=mobileMenuPanel; if(!panel) return;
+    panel.querySelectorAll('.mm-head').forEach(h=>h.addEventListener('click',()=>{
+      const g=h.parentElement, willOpen=!g.classList.contains('open');
+      panel.querySelectorAll('.mm-group').forEach(x=>{ x.classList.remove('open'); x.querySelector('.mm-head').setAttribute('aria-expanded','false'); });
+      if(willOpen){ g.classList.add('open'); h.setAttribute('aria-expanded','true'); }
+      sfx('click');
+    }));
+    panel.querySelectorAll('[data-card]').forEach(b=>b.addEventListener('click',()=>{
+      const id=b.getAttribute('data-card'); goToMainMenu();
+      setTimeout(()=>{ const c=$(id); if(c) c.click(); },60);
+    }));
+    panel.querySelectorAll('[data-fn]').forEach(b=>b.addEventListener('click',()=>{
+      const f=b.getAttribute('data-fn'); closeMobileMenu(); sfx('click');
+      try{ if(f==='chat') ccOpen(); else if(f==='friends') frOpen(); else if(f==='notifs') cnPanel(); else if(f==='settings') $('btn-gear').click(); }
+      catch(e){ console.warn('Drawer action failed:',f,e); }
+    }));
+    /* Esc closes the drawer; tapping outside closes it too */
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape' && panel.classList.contains('open')){ closeMobileMenu(); mobileMenuBtn.focus(); } });
+    document.addEventListener('click',e=>{ if(panel.classList.contains('open') && !panel.contains(e.target) && !mobileMenuBtn.contains(e.target)) closeMobileMenu(); });
+  })();
   document.addEventListener('click', e => {
     if(!mobileMenuPanel.classList.contains('open')) return;
     if(!mobileMenuPanel.contains(e.target) && e.target !== mobileMenuBtn) closeMobileMenu();
@@ -11524,7 +11842,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   function renderPetStoreGrid(grid){
     ensurePetState(); tickPetLifecycle();
     // Pet Food is a consumable, not an equippable pet — shown as its own card.
-    const foodDiv=document.createElement('div'); foodDiv.className='store-item owned';
+    const foodDiv=document.createElement('div'); foodDiv.className='store-item store-pet';
     foodDiv.innerHTML=`<div class="sii pet-store-icon">${PET_FOOD_PACK.icon}</div><div class="sname">${PET_FOOD_PACK.name}</div><div class="sprice">🪙${PET_FOOD_PACK.price}</div><p class="subtitle">+${PET_FOOD_PACK.amount} Pet Food · You have ${S.pets.food.current}/${S.pets.food.max}</p>`;
     const foodBtn=document.createElement('button'); foodBtn.className='btn'; foodBtn.textContent='Buy';
     foodBtn.disabled = S.coins<PET_FOOD_PACK.price || S.pets.food.current>=S.pets.food.max;
@@ -11533,7 +11851,7 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     PETS.forEach(item=>{
       const owned=S.pets.owned.includes(item.id), equipped=!S.pets.unequipped && S.pets.equipped===item.id;
       const active = !owned || petIsActive(item.id);
-      const div=document.createElement('div'); div.className='store-item'+(owned?' owned':'')+(equipped?' equipped':'')+(!active?' inactive':'');
+      const div=document.createElement('div'); div.className='store-item store-pet'+(owned?' owned':'')+(equipped?' equipped':'')+(!active?' inactive':'');
       const statusLine = owned && !active ? `<p class="subtitle" style="font-weight:800">🪦 Deceased</p>` : `<p class="subtitle">Animated ${item.type} companion</p>`;
       const petRarity = (item.rarity||'common').replace(/^./,c=>c.toUpperCase());
       div.innerHTML=`<div class="rarity-badge" style="background:${RARITY_COLORS[petRarity]||RARITY_COLORS.Common}">${petRarity}</div><div class="sii pet-store-icon pet-${item.type}${!active?' pet-inactive':''}">${!active?'🪦':item.icon}</div><div class="sname">${escapeHtml(item.name)}</div><div class="sprice">${item.price===0?'Free':'🪙'+item.price}</div>${statusLine}`;
