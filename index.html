@@ -1547,6 +1547,32 @@
 .cn-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin:0 -2px}.cn-chip{all:unset;cursor:pointer;flex:none;font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:14px;border:2px solid #dbe3f5;color:#25305a;white-space:nowrap}.cn-chip.on{background:#8b5cf6;border-color:#8b5cf6;color:#fff}.cn-chip i{font-style:normal;background:#ff5a5a;color:#fff;border-radius:9px;padding:0 5px;margin-left:3px;font-size:.62rem}
 </style>
 
+<style id="menu-groups-css">
+/* ===== Main-menu category groups ===== */
+.menu-groups{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.menu-group{border:3px solid #dbe3f5;border-radius:18px;background:rgba(255,255,255,.7);overflow:hidden}
+.menu-group[open]{background:rgba(255,255,255,.9)}
+.menu-group-head{list-style:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 14px;cursor:pointer;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1rem;user-select:none;-webkit-tap-highlight-color:transparent}
+.menu-group-head::-webkit-details-marker{display:none}
+.menu-group-head small{flex:1;font-family:inherit;font-weight:700;font-size:.72rem;opacity:.6;text-align:right}
+.menu-group-head i{font-style:normal;transition:transform .18s}
+.menu-group[open]>.menu-group-head i{transform:rotate(180deg)}
+.menu-group-head:focus-visible{outline:3px solid var(--accent,#5b3df5);outline-offset:-3px}
+.menu-group .menu-grid{margin:0;padding:0 12px 12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media (max-width:560px){.menu-group .menu-grid{grid-template-columns:1fr 1fr}.menu-group-head small{display:none}.menu-group-head{flex-wrap:nowrap}.menu-group-head span{flex:1}}
+@media (prefers-reduced-motion:reduce){.menu-group-head i{transition:none}}
+.menu-group .menu-card{min-height:88px;padding:10px 8px}</style>
+<style id="desktop-drawer-css">
+/* The ☰ button is visible on desktop (all:unset overrode display:none) but the drawer only existed on phones. Give it a desktop dropdown. */
+#mobile-menu-btn{display:flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:rgba(255,255,255,.18);color:#fff;font-size:1.25rem}
+#mobile-menu-btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media (min-width:640px){
+  .mobile-menu-panel{position:fixed;top:66px;left:14px;width:min(300px,calc(100vw - 28px));display:none;flex-direction:column;gap:6px;padding:8px;background:var(--accent);border-radius:15px;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:60}
+  .mobile-menu-panel.open{display:flex}
+  .mobile-menu-panel .hbtn{width:100%;min-width:0;flex-direction:row;justify-content:flex-start;gap:10px;padding:10px 12px;font-size:.84rem}
+  .mobile-menu-panel .hbtn .hi{font-size:1.05rem}
+}
+</style>
 <style id="arena-css">
 .char-nameplate{margin:6px auto 4px;max-width:92%;text-align:center;background:#fff;color:#1f2b40;border:2px solid var(--purple);border-radius:14px;padding:4px 12px;box-shadow:0 3px 0 rgba(91,52,184,.25);line-height:1.15}
 .char-nameplate strong{display:block;font-family:'Baloo 2',Quicksand,sans-serif;font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1f2b40;-webkit-text-fill-color:#1f2b40}
@@ -1816,15 +1842,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
           <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%;"></div></div>
         </div>
       </div>
-      <div class="menu-grid">
-        <button class="menu-card mc-challenge" id="card-adventure"><span class="mi">🎯</span><span class="mn">Challenge Mode</span></button>
-        <button class="menu-card mc-speculation" id="card-speculation"><span class="mi">🔮</span><span class="mn">Speculation</span></button>
-        <button class="menu-card mc-quickgame" id="card-quickgame"><span class="mi">⚡</span><span class="mn">Quick Game</span></button>
-        <button class="menu-card" id="card-lesson"><span class="mi">📚</span><span class="mn">Lessons</span></button>
-        <button class="menu-card mc-history" id="card-history"><span class="mi">📖</span><span class="mn">History</span></button>
-        <button class="menu-card mc-store" id="card-store"><span class="mi">🏪</span><span class="mn">Store</span></button>
-        <button class="menu-card mc-customize" id="card-customize"><span class="mi">🧑‍🎨</span><span class="mn">Customize</span></button>
-      </div>
+      <div class="menu-groups" id="menu-groups"><details class="menu-group" data-grp="play" open><summary class="menu-group-head"><span>🎮 Play</span><small>Game modes</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card mc-challenge" id="card-adventure"><span class="mi">🎯</span><span class="mn">Challenge Mode</span></button><button class="menu-card mc-speculation" id="card-speculation"><span class="mi">🔮</span><span class="mn">Speculation</span></button><button class="menu-card mc-quickgame" id="card-quickgame"><span class="mi">⚡</span><span class="mn">Quick Game</span></button></div></details><details class="menu-group" data-grp="learn" open><summary class="menu-group-head"><span>📚 Learn</span><small>Lessons & review</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card" id="card-lesson"><span class="mi">📚</span><span class="mn">Lessons</span></button><button class="menu-card mc-history" id="card-history"><span class="mi">📖</span><span class="mn">History</span></button></div></details><details class="menu-group" data-grp="shop" open><summary class="menu-group-head"><span>🛍️ Store & Style</span><small>Pets, items, looks</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card mc-store" id="card-store"><span class="mi">🏪</span><span class="mn">Store</span></button><button class="menu-card mc-customize" id="card-customize"><span class="mi">🧑‍🎨</span><span class="mn">Customize</span></button></div></details><details class="menu-group" data-grp="social"><summary class="menu-group-head"><span>👥 Social</span><small>Friends & messages</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card " id="card-social-chat"><span class="mi">💬</span><span class="mn">Chat</span></button><button class="menu-card " id="card-social-friends"><span class="mi">👥</span><span class="mn">Friends</span></button><button class="menu-card " id="card-social-notifs"><span class="mi">🔔</span><span class="mn">Notifications</span></button></div></details><details class="menu-group" data-grp="rewards"><summary class="menu-group-head"><span>🏆 Rewards & Progress</span><small>Trophies, ranks</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card " id="card-rew-trophies"><span class="mi">🏆</span><span class="mn">Trophies</span></button><button class="menu-card " id="card-rew-leaders"><span class="mi">📊</span><span class="mn">Leaders</span></button><button class="menu-card " id="card-me-profile"><span class="mi">⭐</span><span class="mn">Profile</span></button></div></details><details class="menu-group" data-grp="teacher"><summary class="menu-group-head"><span>🧑‍🏫 Teacher</span><small>Authorized teachers only</small><i aria-hidden="true">▾</i></summary><div class="menu-grid"><button class="menu-card " id="card-me-teacher"><span class="mi">🧑‍🏫</span><span class="mn">Teacher Dashboard</span></button></div></details></div>
       <div class="card menu-pet-card" id="menu-pet-card">
         <p class="eyebrow" style="margin:0 0 6px">🐾 Your Pets</p>
         <div class="menu-pet-row">
@@ -4260,10 +4278,10 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       else{ knee=Math.max(0,sw)*.6; thigh+=-sit*.95; knee+=sit*1.55; }
       const hip=child(main,side*s.bw*(s.legX||.62),s.hipY,fr*L*.27,thigh,0,(s.splay||0)*side,1,1,1);
       const w=s.legW, rear=fr<0;
-      part(out,hip,0,0,0,w*1.3,w*1.3,w*1.3,s.legCol,0,0,0,'sphere');
-      part(out,hip,0,-s.thigh/2,0,w*(rear?1.2:1),s.thigh/2,w*(rear?1.3:1),s.legCol,0,0,0,'cyl');
+      const jt=(rear?1.32:1.08)*w; part(out,hip,0,0,0,Math.max(w*1.3,jt),Math.max(w*1.3,jt),Math.max(w*1.3,jt),s.legCol,0,0,0,'sphere');
+      part(out,hip,0,-s.thigh/2,0,w*(rear?1.2:1),s.thigh/2*1.02,w*(rear?1.3:1),s.legCol,0,0,0,'cyl');
       const kn=child(hip,0,-s.thigh,0,knee,0,0,1,1,1);
-      part(out,kn,0,0,0,w*.98,w*.98,w*.98,s.legCol,0,0,0,'sphere');
+      const kj=(rear?1.34:1.08)*w; part(out,kn,0,0,0,kj,kj,kj,s.legCol,0,0,0,'sphere');
       part(out,kn,0,-s.shin/2,0,w*.85,s.shin/2,w*.85,s.legCol,0,0,0,'cyl');
       part(out,kn,0,-s.shin,s.paw*.35,s.paw,s.paw*.66,s.paw*1.25,s.pawCol,0,0,0,'sphere');
     }
@@ -4610,7 +4628,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       const main=child(root,0,bob+.10+Math.sin(t*2.2)*.03,0,0,0,0,1,1,1);
       const flap=Math.sin(t*(b.flap>.1?9:2.6))*(b.flap>.1?.55:.16);
       /* glowing halo behind the bird */
-      part(out,main,0,.98,-.10,.95,.95,.10,'#ff9a3c',0,0,0,'sphere',{a:.16+Math.sin(t*2)*.03,e:1});
+      /* translucent halo removed: pets must be fully solid */
       part(out,main,0,.72,0,.42,.52,.42,'#f04a2a',.35,0,0,'sphere');
       part(out,main,0,.55,.10,.30,.30,.30,'#ffb340',.35,0,0,'sphere');
       const head=child(main,0,1.16,.20,(b.headPitch||0),b.headYaw||0,0,1,1,1);
@@ -4732,6 +4750,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
         [[-1,.18,1],[1,.18,1],[-1,-.22,-1],[1,-.22,-1]].forEach(q=>{
           const side=q[0], dir=q[2];
           const hip=child(body,side*.62,-.50,q[1],-dir*(b.sit||0)*.6+dir*Math.sin(t*4.5)*.32*walk*side,0,0,1,1,1);
+          part(out,hip,0,0,0,.29,.29,.29,SK2,0,0,0,'sphere');  /* rounds off the leg's flat top cap so no stacked-shape seam shows */
           part(out,hip,0,-.17,0,.27,.21,.27,SK2,0,0,0,'cyl');
           part(out,hip,0,-.33,.02,.29,.09,.31,SK3,0,0,0,'sphere');
           [-1,0,1].forEach(k=>part(out,hip,k*.10,-.33,.28,.05,.04,.04,TOE,0,0,0,'sphere'));
@@ -4819,7 +4838,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
         }else if(pet.pattern==='starry'){ /* mythic: night-sky shell with orbiting stars */
           for(let i=0;i<14;i++){ const a=i*2.4, y=-.6+(i%7)*.2; const rr=Math.sqrt(Math.max(.02,.34-Math.abs(y)*.12)); part(out,shell,Math.cos(a)*rr*1.3,y,Math.sin(a)*rr*1.3,.045,.045,.02,pal.spot,0,a,0,'box',{e:1}); }
           for(let i=0;i<5;i++){ const a=t*1.3+i*1.26; part(out,root,Math.cos(a)*.78,.95+Math.sin(a*1.5)*.35,Math.sin(a)*.78,.05,.05,.05,'#fff3b0',0,0,0,'sphere',{a:.95,e:1}); }
-          part(out,root,0,1.0,0,.95,1.0,.95,'#7a6bff',0,0,0,'sphere',{a:.10+Math.sin(t*2)*.03,e:1});
+      /* translucent halo removed: pets must be fully solid */
         }else if(pet.pattern==='aurora'){ /* special: shimmering ribbons */
           [['#2dd4b8',0],['#ff8ac6',1.1],['#9b8cff',2.2]].forEach((q,i)=>part(out,shell,0,.05+Math.sin(t*1.5+i)*.06,0,.66,.05,.66,q[0],.5+i*.3,q[1]+t*.5,.25*i,'sphere',{a:.8,e:.8}));
           for(let i=0;i<5;i++){ const a=t*1.1+i*1.26; part(out,root,Math.cos(a)*.7,.6+i*.16,Math.sin(a)*.7,.04,.04,.04,'#eafffb',0,0,0,'sphere',{a:.9,e:1}); }
@@ -4875,7 +4894,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
           '  else{grain=vn(p*vec3(1.,.45,1.))*.65+vn(p*2.3)*.35;}',
           '  float pale=smoothstep(.55,.95,dot(uColor,vec3(.299,.587,.114)));',
           '  base*=1.+(grain-.5)*2.*uMat.y*(1.-.60*pale);',
-          '  spec*=.55+grain*.9;',
+          '  spec*=.75+grain*.35;',
           ' }',
           ' vec3 Lk=normalize(vec3(-.38,.80,.72));vec3 Lf=normalize(vec3(.72,.22,-.40));',
           ' float ndl=dot(N,Lk);',
@@ -5736,11 +5755,22 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     document.addEventListener('keydown',e=>{ if(e.key==='Escape' && panel.classList.contains('open')){ closeMobileMenu(); mobileMenuBtn.focus(); } });
     document.addEventListener('click',e=>{ if(panel.classList.contains('open') && !panel.contains(e.target) && !mobileMenuBtn.contains(e.target)) closeMobileMenu(); });
   })();
+  /* Main-menu category cards -> existing, already-working handlers (same scope as ccOpen/frOpen/cnPanel) */
+  (function wireMenuCards(){
+    const run=(id,fn)=>{ const el=$(id); if(el) el.addEventListener('click',()=>{ sfx('click'); try{ fn(); }catch(e){ console.warn('Menu action failed:',id,e); } }); };
+    run('card-social-chat',()=>ccOpen());
+    run('card-social-friends',()=>frOpen());
+    run('card-social-notifs',()=>cnPanel());
+    run('card-rew-trophies',()=>$('nav-trophies').click());
+    run('card-rew-leaders',()=>$('nav-leaders').click());
+    run('card-me-profile',()=>$('nav-profile').click());
+    run('card-me-teacher',()=>{ const b=$('btn-open-teacher-gate'); if(b) b.click(); else $('nav-profile').click(); });
+  })();
   document.addEventListener('click', e => {
     if(!mobileMenuPanel.classList.contains('open')) return;
     if(!mobileMenuPanel.contains(e.target) && e.target !== mobileMenuBtn) closeMobileMenu();
   });
-  window.addEventListener('resize', () => { if(window.innerWidth >= 640) closeMobileMenu(); });
+  window.addEventListener('resize', () => { /* dropdown is valid on every width; Esc/outside-click close it */ });
 
   /* ================= GLOBAL MAIN MENU NAVIGATION ================= */
   function goToMainMenu(){
@@ -12742,6 +12772,20 @@ new MutationObserver(ms=>{for(const m of ms)if(m.type==='attributes'&&m.attribut
      replacing the app's existing handlers or interrupting gameplay. */
   window.addEventListener('error',e=>{try{window.__adaptCoCuLastError={message:e.message||'error',time:Date.now()};}catch(_){}},{passive:true});
   window.addEventListener('unhandledrejection',e=>{try{window.__adaptCoCuLastRejection={message:String(e.reason||'rejection'),time:Date.now()};}catch(_){}},{passive:true});
+})();
+</script>
+
+<script>
+/* Main-menu groups: routes new category cards through existing handlers; remembers open/closed state. */
+(function(){
+  var KEY='cocu_menu_groups';
+  function $(i){return document.getElementById(i);}
+  function safe(fn){return function(){try{fn();}catch(e){console.warn('Menu action failed',e);}};}
+  var st={}; try{st=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){}
+  document.querySelectorAll('.menu-group').forEach(function(d){
+    var k=d.getAttribute('data-grp'); if(k in st) d.open=!!st[k];
+    d.addEventListener('toggle',function(){st[k]=d.open; try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}});
+  });
 })();
 </script>
 </body>
