@@ -1196,6 +1196,19 @@
   .chat-suggest:hover{ background:#e3e8fa; }
   .chat-suggest:active{ background:#d6ddf6; }
   .chat-suggest-row{ flex:0 0 auto; }
+  /* Store tabs: on phones wrap instead of hiding the last tab off-screen in a scroller */
+  @media (max-width:560px){ .store-tabs{ flex-wrap:wrap !important; overflow-x:visible !important; } .store-tabs .tab-btn{ flex:1 1 30%; min-height:44px; } }
+  /* chat: search / typing / edited / edit+delete */
+  .cc-sbar{ display:flex; align-items:center; gap:8px; padding:6px 0; }
+  .cc-sbar[hidden], .cc-typ[hidden]{ display:none !important; }
+  .cc-sbar input{ flex:1; min-height:0 !important; height:38px; resize:none; }
+  .cc-scount{ font-size:.75rem; font-weight:800; opacity:.7; white-space:nowrap; }
+  .cc-mark{ background:#ffe27a; color:inherit; border-radius:3px; padding:0 1px; }
+  .cc-ed{ display:block; font-size:.62rem; font-weight:700; opacity:.65; margin-top:2px; }
+  .cc-typ{ font-size:.78rem; font-weight:800; opacity:.75; padding:2px 4px 6px; font-style:italic; }
+  .chat-bubble.err{ background:#fff1f1 !important; border:1px solid #f1a9a9; }
+  .chat-retry{ all:unset; box-sizing:border-box; margin-top:6px; padding:6px 12px; min-height:32px; cursor:pointer; font-weight:800; font-size:.8rem; border-radius:999px; background:#7c4dff; color:#fff; touch-action:manipulation; }
+  .chat-retry:focus-visible{ outline:3px solid #2b2b2b; outline-offset:2px; }
   /* FIX: the suggestion row and Clear button were shrinkable flex children of .chat-body, so as the log grew they were squeezed (smaller chips). Never shrink them; the log absorbs the space. */
   .chat-body > .chat-suggest-row, .chat-body > .chat-suggest{ flex:0 0 auto; }
   .chat-body > .chat-log{ min-height:0; }
@@ -3181,7 +3194,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(wait>0) return {err:'Please wait '+Math.ceil(wait/1000)+'s before bumping another message.'};
     x.b[msgId]=now;
     if(!await ccPushRx(p)){ delete x.b[msgId]; ccPersist(); return {err:'Could not bump. Check your connection.'}; }
-    cnAppend(p,{id:'bump-'+cnId()+'-'+msgId,from:'student',icon:'📌',title:'Message bumped',body:me+' bumped an important message in your chat.',ts:now});
+    cnAppend(p,{id:'bump-'+cnId()+'-'+msgId,from:'student',icon:'📌',title:'Message pinned',body:me+' pinned an important message in your chat.',ts:now});
     return {ok:true};
   }
   function ccReactions(p,id){
@@ -3193,7 +3206,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const d=ccData(), mb=(ccRx(p).b||{})[id], tb=((d.rxin[p]||{}).b||{})[id];
     if(!mb&&!tb) return '';
     const who=(mb&&tb)?'You and '+ccE((d.contacts[p]||{}).name||'them'):mb?'You':ccE((d.contacts[p]||{}).name||'They');
-    return '<span class="cc-bumped-tag">📌 Bumped by '+who+' · '+ccAgo(Math.max(mb||0,tb||0))+'</span>';
+    return '<span class="cc-bumped-tag">📌 Pinned by '+who+' · '+ccAgo(Math.max(mb||0,tb||0))+'</span>';
   }
   function ccPickReact(ov,p,id){
     const o2=cnOv('<h2>React <button class="cn-x">×</button></h2><div class="cc-rxbar">'+CC_REACT.map(e=>'<button data-e="'+e+'">'+e+'</button>').join('')+'</div><p id="cc-rxerr" class="cc-err"></p>');
@@ -3285,27 +3298,86 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       else { ccToast('✅ Request sent. You’ll see the chat once they accept.'); ccRender(ov); }
     };
   }
-  function ccBubble(m,p){
+  /* Search highlight: escape first, wrap matches after, so message text can never inject markup. */
+  let ccHL='';
+  function ccHi(t){
+    const q=ccHL; if(!q) return ccE(t);
+    const lo=String(t).toLowerCase(); let out='', i=0, j;
+    while((j=lo.indexOf(q,i))>=0){ out+=ccE(String(t).slice(i,j))+'<mark class="cc-mark">'+ccE(String(t).slice(j,j+q.length))+'</mark>'; i=j+q.length; }
+    return out+ccE(String(t).slice(i));
+  }
+  function ccFilterQ(ov,th){
+    const q=(ov.__st&&ov.__st.q||'').trim().toLowerCase(); ccHL=q; if(!q) return th;
+    const d=ccData();
+    return th.filter(m=>!(!m.mine&&m.p&&!d.rev[m.id]) && String(m.t).toLowerCase().includes(q));   /* private, not-yet-revealed messages are never searched */
+  }
+  /* Edit / delete: single-writer storage means you can only ever change YOUR OWN messages. */
+  async function ccEditMsg(p,mid,text){
+    text=String(text==null?'':text).trim(); if(!text) return {err:'Type a message first.'}; if(text.length>CC_LEN) text=text.slice(0,CC_LEN);
+    const id=cnId(), d=ccData(), c=d.contacts[p];
+    if(!c||c.st!=='ok') return {err:'This chat is not open.'};
+    if(!ccSt.enabled||ccSt.banned) return {err:'Student chat is paused right now.'};
+    if(!cnOnline()) return {err:'You are offline. Reconnect to edit.'};
+    const chk=ccCheck(text);
+    if(chk.level==='secret') return {err:'Never share your Recovery PIN or a password.'};
+    if(chk.level==='hard') return {err:'Please reword that so it is kind.'};
+    const key='chatmsg:'+id+':'+p, rm=await ccJ(key,[]); if(rm.fail) return {err:'Could not reach the server. Try again.'};
+    const arr=ccFresh(rm.v), m=arr.find(x=>x.id===mid); if(!m) return {err:'That message no longer exists.'};
+    if(m.t===text) return {ok:m};
+    m.t=text; m.ed=Date.now();
+    if(!await mpStSet(key,JSON.stringify(arr))) return {err:'Edit not saved. Try again.'};
+    d.out[p]=arr; ccPersist(); return {ok:m};
+  }
+  async function ccDeleteMsg(p,mid){
+    const id=cnId(), d=ccData(); if(!cnOnline()) return {err:'You are offline. Reconnect to delete.'};
+    const key='chatmsg:'+id+':'+p, rm=await ccJ(key,[]); if(rm.fail) return {err:'Could not reach the server. Try again.'};
+    const arr=ccFresh(rm.v), n=arr.filter(x=>x.id!==mid);
+    if(n.length===arr.length) return {err:'That message no longer exists.'};
+    if(!await mpStSet(key,JSON.stringify(n))) return {err:'Delete not saved. Try again.'};
+    d.out[p]=n; ccPersist(); return {ok:true};
+  }
+  /* Typing indicator: writer only touches chattyp:<me>:<peer>; reader polls it only while that thread is open. */
+  function ccSetTyping(p,ts){
+    try{ const c=ccData().contacts[p]; if(!c||c.st!=='ok'||!cnOnline()||!ccSt.enabled||ccSt.banned) return;
+      Promise.resolve(mpStSet('chattyp:'+cnId()+':'+p,JSON.stringify({ts:ts}))).catch(()=>{}); }catch(e){}
+  }
+  function ccBubble0(m,p){
     const d=ccData(), hide=!m.mine&&m.p&&!d.rev[m.id];
     const lock=m.p?'<span class="cc-lock">🔒 Private</span>':'';
     if(hide) return '<div class="cc-b them cc-cover" data-rev="'+ccE(m.id)+'">'+lock+'<span>Tap to view this private message</span></div>';
     const bumped=ccBumpInfo(p,m.id), rx=ccReactions(p,m.id), isB=!!((ccRx(p).b||{})[m.id]);
-    return '<div class="cc-wrap '+(m.mine?'me':'them')+'"><div class="cc-b '+(m.mine?'me':'them')+(bumped?' bumped':'')+'" data-mid="'+ccE(m.id)+'">'+bumped+lock+ccE(m.t)+(m.mine?'':'<button class="cc-flag" data-flag="'+ccE(m.id)+'" aria-label="Report this message">🚩</button>')+'</div>'
-      +'<div class="cc-acts">'+rx+'<button class="cc-act" data-react="'+ccE(m.id)+'" aria-label="React to message" title="React">😊</button><button class="cc-act" data-bump="'+ccE(m.id)+'" aria-label="'+(isB?'Remove bump':'Bump message')+'" title="'+(isB?'Remove bump':'Bump this message')+'">'+(isB?'📌✓':'📌')+'</button></div></div>';
+    return '<div class="cc-wrap '+(m.mine?'me':'them')+'"><div class="cc-b '+(m.mine?'me':'them')+(bumped?' bumped':'')+'" data-mid="'+ccE(m.id)+'">'+bumped+lock+ccHi(m.t)+(m.ed?'<small class="cc-ed">(edited)</small>':'')+(m.mine?'':'<button class="cc-flag" data-flag="'+ccE(m.id)+'" aria-label="Report this message">🚩</button>')+'</div>'
+      +'<div class="cc-acts">'+rx+'<button class="cc-act" data-react="'+ccE(m.id)+'" aria-label="React to message" title="React">😊</button><button class="cc-act" data-bump="'+ccE(m.id)+'" aria-label="'+(isB?'Unpin message':'Pin message')+'" title="'+(isB?'Unpin message':'Pin this message')+'">'+(isB?'📌✓':'📌')+'</button></div></div>';
+  }
+  function ccBubble(m,p){
+    let h=ccBubble0(m,p);
+    if(m.mine){ const id=ccE(m.id); h=h.replace(/<\/div><\/div>$/,'<button class="cc-act" data-edit="'+id+'" aria-label="Edit message" title="Edit">\u270F\uFE0F</button><button class="cc-act" data-del="'+id+'" aria-label="Delete message" title="Delete">\uD83D\uDDD1\uFE0F</button></div></div>'); }
+    return h;
+  }
+  function ccEditDialog(ov,p,m){
+    const o2=cnOv('<h2>Edit message <button class="cn-x">\u2715</button></h2><textarea id="cc-edta" class="cn-ta" maxlength="'+CC_LEN+'" rows="3"></textarea><p id="cc-err" class="cc-err"></p><div class="cn-btns"><button class="btn btn-primary" id="cc-edsave">Save</button></div>');
+    o2.style.zIndex=10000; const ta=o2.querySelector('#cc-edta'), err=o2.querySelector('#cc-err'), sv=o2.querySelector('#cc-edsave'); ta.value=m.t; ta.focus();
+    const save=async()=>{ sv.disabled=true; err.textContent=''; const r=await ccEditMsg(p,m.id,ta.value); if(r.err){ err.textContent=r.err; sv.disabled=false; return; } o2.remove(); if(document.body.contains(ov)) ccDrawLog(ov); ccToast('Message edited.'); };
+    sv.onclick=save; ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); save(); } });
   }
   function ccDrawBanner(ov){ const el=ov.querySelector('#cc-ban'); if(el) el.innerHTML=ccBannerHtml(); }
   function ccDrawLog(ov){
     const p=ov.__st.p, log=ov.querySelector('#cc-log'); if(!log) return;
-    const near=log.scrollHeight-log.scrollTop-log.clientHeight<60, d=ccData(), th=ccThread(p);
+    const near=log.scrollHeight-log.scrollTop-log.clientHeight<60, d=ccData(), th=ccFilterQ(ov,ccThread(p));
     const bm=th.filter(m=>!(!m.mine&&m.p&&!d.rev[m.id])&&((ccRx(p).b||{})[m.id]||((d.rxin[p]||{}).b||{})[m.id])).sort((a,b)=>Math.max((ccRx(p).b||{})[b.id]||0,((d.rxin[p]||{}).b||{})[b.id]||0)-Math.max((ccRx(p).b||{})[a.id]||0,((d.rxin[p]||{}).b||{})[a.id]||0))[0];
-    log.innerHTML=(bm?'<div class="cc-bumpbar" data-jump="'+ccE(bm.id)+'">📌 <b>Bumped:</b> '+ccE(bm.t.slice(0,70))+'</div>':'')+(th.length?th.map(m=>ccBubble(m,p)).join(''):'<p class="cc-empty">No messages yet. Say hi 👋</p>');
+    log.innerHTML=(bm?'<div class="cc-bumpbar" data-jump="'+ccE(bm.id)+'">📌 <b>Pinned:</b> '+ccE(bm.t.slice(0,70))+'</div>':'')+(th.length?th.map(m=>ccBubble(m,p)).join(''):ov.__st.q?'<p class="cc-empty">No messages match \u201C'+ccE(ov.__st.q)+'\u201D.</p>':'<p class="cc-empty">No messages yet. Say hi 👋</p>');
     log.querySelectorAll('[data-react]').forEach(el=>el.onclick=()=>ccPickReact(ov,p,el.dataset.react));
     log.querySelectorAll('.cc-chip').forEach(el=>el.onclick=async()=>{ const r=await ccReact(p,el.dataset.rxq,el.dataset.e); if(r.err) ccToast(r.err); if(document.body.contains(ov)) ccDrawLog(ov); });
-    log.querySelectorAll('[data-bump]').forEach(el=>el.onclick=async()=>{ el.disabled=true; const r=await ccBump(p,el.dataset.bump); if(r.err) ccToast(r.err); else ccToast(r.off?'Bump removed.':'📌 Message bumped. '+((d.contacts[p]||{}).name||'They')+' was notified.'); if(document.body.contains(ov)) ccDrawLog(ov); });
+    log.querySelectorAll('[data-bump]').forEach(el=>el.onclick=async()=>{ el.disabled=true; const r=await ccBump(p,el.dataset.bump); if(r.err) ccToast(r.err); else ccToast(r.off?'Pin removed.':'📌 Message pinned. '+((d.contacts[p]||{}).name||'They')+' was notified.'); if(document.body.contains(ov)) ccDrawLog(ov); });
     log.querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{ const t=log.querySelector('[data-mid="'+el.dataset.jump+'"]'); if(t) t.scrollIntoView({block:'center',behavior:'smooth'}); });
     log.querySelectorAll('[data-rev]').forEach(el=>el.onclick=()=>{ d.rev[el.dataset.rev]=1; ccPersist(); ccDrawLog(ov); });
     log.querySelectorAll('[data-flag]').forEach(el=>el.onclick=()=>ccReport(ov,p,el.dataset.flag));
-    if(near) log.scrollTop=log.scrollHeight;
+    log.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>{ const m=ccThread(p).find(x=>x.id===el.dataset.edit&&x.mine); if(m) ccEditDialog(ov,p,m); });
+    log.querySelectorAll('[data-del]').forEach(el=>el.onclick=async()=>{
+      const k=await ccAsk('Delete this message?','It will be removed for both of you. This can\u2019t be undone.',[{k:'n',t:'Cancel'},{k:'y',t:'Delete',primary:true}]); if(k!=='y') return;
+      el.disabled=true; const r=await ccDeleteMsg(p,el.dataset.del); if(r.err) ccToast(r.err); else ccToast('Message deleted.'); if(document.body.contains(ov)) ccDrawLog(ov);
+    });
+    if(ov.__st.q) log.scrollTop=0; else if(near) log.scrollTop=log.scrollHeight;
     d.read[p]=Date.now(); ccPersist(); ccBadge();
   }
   function ccDrawThread(ov){
@@ -3313,13 +3385,36 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(!c){ ov.__st={view:'list'}; ccDrawList(ov); return; }
     const ok=c.st==='ok', can=ok&&ccSt.enabled&&!ccSt.banned;
     const msg=c.st==='out'?'⏳ Waiting for '+ccE(c.name)+' to accept your request.':c.st==='unavail'?'🚫 This chat is unavailable.':c.st==='ended'?'This chat has ended.':'';
-    ov.querySelector('.cn-box').innerHTML='<h2><span class="cc-back" id="cc-back" role="button" tabindex="0" aria-label="Back to chats">←</span><span class="cc-tt">'+ccE(c.name)+'</span><span><button class="cc-dots" id="cc-menu" aria-label="Chat options">⋯</button> <button class="cn-x">×</button></span></h2>'
-      +'<div id="cc-ban">'+ccBannerHtml()+'</div><div class="cc-log" id="cc-log"></div>'
+    ov.querySelector('.cn-box').innerHTML='<h2><span class="cc-back" id="cc-back" role="button" tabindex="0" aria-label="Back to chats">←</span><span class="cc-tt">'+ccE(c.name)+'</span><span><button class="cc-dots" id="cc-srch" aria-label="Search this chat" title="Search">\uD83D\uDD0D</button> <button class="cc-dots" id="cc-menu" aria-label="Chat options">⋯</button> <button class="cn-x">×</button></span></h2>'
+      +'<div id="cc-ban">'+ccBannerHtml()+'</div><div class="cc-sbar" id="cc-sbar"'+(ov.__st.sopen?'':' hidden')+'><input id="cc-sq" class="cn-ta" type="search" maxlength="60" autocomplete="off" placeholder="Search this chat\u2026" aria-label="Search messages in this chat"><span id="cc-scount" class="cc-scount" aria-live="polite"></span></div><div class="cc-log" id="cc-log"></div><div class="cc-typ" id="cc-typ" aria-live="polite" hidden></div>'
       +(msg?'<p class="cc-empty">'+msg+'</p>':'')
       +(ok?'<div class="cc-comp"><textarea id="cc-ta" class="cn-ta" maxlength="'+CC_LEN+'" placeholder="Write a kind message…" rows="2"'+(can?'':' disabled')+'></textarea><div class="cc-bar"><button class="cc-lockbtn" id="cc-emoji" type="button" aria-label="Insert emoji" title="Emoji"'+(can?'':' disabled')+'>😊</button><button class="cc-lockbtn'+(ov.__st.priv?' on':'')+'" id="cc-priv" type="button" aria-pressed="'+(!!ov.__st.priv)+'" title="Private: they must tap to view">🔒 Private</button><span id="cc-err" class="cc-err"></span><button class="btn btn-primary" id="cc-send"'+(can?'':' disabled')+'>Send</button></div></div>':'');
     ccDrawLog(ov);
     ov.querySelector('#cc-back').onclick=()=>{ ov.__st={view:'list'}; ccRender(ov); };
     ov.querySelector('#cc-menu').onclick=()=>ccMenu(ov,p);
+    (function wireSearch(){
+      const sb=ov.querySelector('#cc-sbar'), sq=ov.querySelector('#cc-sq'), sc=ov.querySelector('#cc-scount'), btn=ov.querySelector('#cc-srch');
+      const count=()=>{ const q=(ov.__st.q||'').trim(); sc.textContent=q?(ccThread(p).filter(m=>!(!m.mine&&m.p&&!ccData().rev[m.id])&&String(m.t).toLowerCase().includes(q.toLowerCase())).length+' found'):''; };
+      sq.value=ov.__st.q||''; count();
+      btn.onclick=()=>{ ov.__st.sopen=!ov.__st.sopen; sb.hidden=!ov.__st.sopen; if(ov.__st.sopen){ sq.focus(); } else { ov.__st.q=''; sq.value=''; count(); ccDrawLog(ov); } };
+      sq.oninput=()=>{ ov.__st.q=sq.value.trim().toLowerCase(); count(); ccDrawLog(ov); };
+      sq.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.stopPropagation(); btn.onclick(); btn.focus(); } });
+    })();
+    (function typingPoll(){
+      if(ov.__typT) return;
+      const el=()=>ov.querySelector('#cc-typ');
+      const show=(on,name)=>{ const e=el(); if(!e) return; e.hidden=!on; if(on) e.textContent=name+' is typing\u2026'; };
+      const tick=async()=>{
+        if(!document.body.contains(ov)||ov.__st.view!=='thread'){ clearInterval(ov.__typT); ov.__typT=0; return; }
+        const q=ov.__st.p, pc=ccData().contacts[q];
+        if(!pc||pc.st!=='ok'||!cnOnline()||ccData().mute[q]||!ccSt.enabled||ccSt.banned){ show(false); return; }
+        const r=await ccJ('chattyp:'+q+':'+cnId(),null); if(r.fail||!r.v||!r.v.ts){ show(false); return; }
+        const L=ov.__typLast||(ov.__typLast={}), now=Date.now(), prev=L[q];
+        if(!prev||prev.ts!==r.v.ts){ L[q]={ts:r.v.ts,seen:(prev||Math.abs(now-r.v.ts)<6000)?now:0}; }
+        show(L[q].seen>0&&now-L[q].seen<6500,pc.name);
+      };
+      ov.__typT=setInterval(tick,3000);
+    })();
     if(!ok) return;
     const ta=ov.querySelector('#cc-ta'), err=ov.querySelector('#cc-err'), pv=ov.querySelector('#cc-priv'), snd=ov.querySelector('#cc-send');
     const eb=ov.querySelector('#cc-emoji'); if(eb) eb.onclick=()=>ccEmojiPanel(ov,ta);
@@ -3333,9 +3428,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       if(r.kinds.length&&!priv){ const k=await ccAsk('🔒 This looks private','Your message seems to include '+r.kinds.map(ccE).join(', ')+'. Only share this with people you trust. Mark it Private so '+ccE(c.name)+' has to tap to view it?',[{k:'e',t:'Edit message'},{k:'n',t:'Send normally'},{k:'p',t:'Send as 🔒 Private',primary:true}]); if(k==='p') priv=true; else if(k!=='n') return; }
       snd.disabled=true; const res=await ccSendMsg(p,text,priv); snd.disabled=false;
       if(res.err){ err.textContent=res.err; if(/no longer|not open/.test(res.err)) ccDrawThread(ov); return; }
-      ta.value=''; ov.__st.priv=false; pv.classList.remove('on'); pv.setAttribute('aria-pressed','false'); ccDrawLog(ov); ta.focus();
+      ta.value=''; ccSetTyping(p,0); ov.__st.priv=false; pv.classList.remove('on'); pv.setAttribute('aria-pressed','false'); ccDrawLog(ov); ta.focus();
       if(r.care) ccToast('💙 If you’re feeling really low, please also tell a trusted adult or your teacher.');
     };
+    let lastTyp=0;
+    ta.addEventListener('input',()=>{ const n=Date.now(); if(ta.value.trim()){ if(n-lastTyp>2500){ lastTyp=n; ccSetTyping(p,n); } } else if(lastTyp){ lastTyp=0; ccSetTyping(p,0); } });
     snd.onclick=send; ta.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
   }
   async function ccMenu(ov,p){
@@ -5837,6 +5934,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   };
   function showScreen(name){
     try{
+      if((name==='teacher-dashboard'||name==='teacher-report') && !isTeacherSessionActive()){ name='teacher-gate'; setTimeout(()=>{ try{ renderTeacherGate(); }catch(e){} },0); }
       closeMobileMenu();
       if(name!=='spec-play'){ gamePaused=false; $('modal-pause')?.classList.remove('active'); }
       const previous=document.querySelector('.screen.active');
@@ -7804,7 +7902,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       b.addEventListener('click', () => sendChatMessage(f.q));
       row.appendChild(b);
     });
-    if(!$('chat-clear')){ const c=document.createElement('button'); c.id='chat-clear'; c.className='chat-suggest'; c.textContent='🧹 Clear chat'; c.onclick=()=>{ $('chat-log').innerHTML=''; botAsked.clear(); appendChatBubble('bot','Chat cleared. Tap a question to start again.'); renderChatSuggestions(); }; row.parentNode.appendChild(c); }
+    if(!$('chat-clear')){ const c=document.createElement('button'); c.id='chat-clear'; c.className='chat-suggest'; c.textContent='🧹 Clear chat'; const lbl=c.textContent;
+      c.onclick=()=>{ if(!c.dataset.arm){ c.dataset.arm='1'; c.textContent='\u26A0\uFE0F Tap again to clear'; setTimeout(()=>{ delete c.dataset.arm; c.textContent=lbl; },3000); return; } delete c.dataset.arm; c.textContent=lbl; $('chat-log').innerHTML=''; botAsked.clear(); appendChatBubble('bot','Chat cleared. Tap a question to start again.'); renderChatSuggestions(); }; row.parentNode.appendChild(c); }
   }
   function appendChatBubble(who, text){
     const log = $('chat-log');
@@ -7822,22 +7921,29 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(best) return best.a;
     return "I don't have a scripted answer for that yet — try tapping one of the questions below. " + randomFrom(ASSISTANT_TIPS);
   }
-  function sendChatMessage(text){
+  function sendChatMessage(text, isRetry){
     text = (text||'').trim();
     if(!text || chatBusy) return;
-    appendChatBubble('user', text);
+    if(!isRetry) appendChatBubble('user', text);
     chatBusy = true;
     const log = $('chat-log');
     const typing = document.createElement('div'); typing.className='chat-typing'; typing.innerHTML='<span></span><span></span><span></span>';
     log.appendChild(typing);
     requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
-    botAsked.add(text);
     const cx=botCtx().find(f=>f.q===text);
-    let answer; try{ answer = cx ? cx.a() : findFaqAnswer(text); }catch(e){ answer='Sorry, I couldn’t work that out. Please try another question.'; }
-    const delay = Math.min(1400, 350 + answer.length*8);
+    let answer, failed=false;
+    try{ answer = cx ? cx.a() : findFaqAnswer(text); if(typeof answer!=='string' || !answer) throw new Error('empty answer'); }
+    catch(e){ failed=true; answer=''; console.warn('Assistant could not answer:', e); }
+    if(!failed) botAsked.add(text);          /* a failed question stays available instead of silently disappearing */
+    const delay = failed ? 400 : Math.min(1400, 350 + answer.length*8);
     setTimeout(() => {
       typing.remove();
-      appendChatBubble('bot', answer);
+      if(failed){
+        const b=appendChatBubble('bot', 'Sorry, I couldn\u2019t work that out just now.'); b.classList.add('err');
+        const r=document.createElement('button'); r.type='button'; r.className='chat-retry'; r.textContent='\u21BB Retry';
+        r.addEventListener('click', () => { b.remove(); chatBusy=false; sendChatMessage(text, true); });
+        b.appendChild(document.createElement('br')); b.appendChild(r);
+      } else appendChatBubble('bot', answer);
       chatBusy = false; try{ renderChatSuggestions(); }catch(e){}
     }, S.settings.reducedMotion ? 50 : delay);
   }
