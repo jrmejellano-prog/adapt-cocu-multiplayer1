@@ -3486,7 +3486,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const ov=cnOv(''); ov.__st=(typeof first==='string'&&d.contacts[first])?{view:'thread',p:first,priv:false}:{view:'list'};
     ccRender(ov);
     const tick=()=>ccPull().then(()=>{ if(document.body.contains(ov)) ccRender(ov,true); });
-    tick(); const t=setInterval(()=>{ if(!document.body.contains(ov)){ clearInterval(t); ccBadge(); return; } tick(); },8000);
+    tick(); const loop=()=>{ if(!document.body.contains(ov)){ ccBadge(); return; } tick(); setTimeout(loop, (ov.__st&&ov.__st.view==='thread')?3500:8000); }; setTimeout(loop,(ov.__st&&ov.__st.view==='thread')?3500:8000);
   }
 
   /* ---- Teacher tools: class switch, reports, pause one student ---- */
@@ -8645,6 +8645,17 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     };
   }
   let progressSyncTimer=null, progressSyncInFlight=false, progressSyncRetryQueued=false;
+  /* FIX: a failed or pending sync used to be retried only if the student happened to save
+     again, so a learner who registered while the server was asleep or offline could stay
+     invisible to the teacher indefinitely. Retry with backoff (8s, 16s ... 60s) until synced. */
+  let syncRetryN=0, syncRetryTimer=null;
+  function scheduleSyncRetry(){
+    if(S && S.lastSyncStatus==='synced'){ syncRetryN=0; return; }
+    if(syncRetryTimer) return;
+    const d=Math.min(60000, 8000*Math.pow(2,Math.min(syncRetryN++,4)));
+    syncRetryTimer=setTimeout(()=>{ syncRetryTimer=null; if(S && S.onboarded && S.lastSyncStatus!=='synced') pushProgressSnapshot(); }, d);
+  }
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && S && S.onboarded && S.playerCodename && S.lastSyncStatus!=='synced') queueProgressSync(); });
   function queueProgressSync(){
     clearTimeout(progressSyncTimer);
     progressSyncTimer=setTimeout(()=>{ progressSyncTimer=null; pushProgressSnapshot(); }, 1500);
@@ -8653,7 +8664,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(!S || !S.onboarded || !S.playerCodename) return;
     let snap = buildProgressSnapshot();
     mergeSnapshotIntoRoster(snap);
-    if(!mpHasBackend()){ S.lastSyncStatus='pending'; return; }
+    if(!mpHasBackend()){ S.lastSyncStatus='pending'; scheduleSyncRetry(); return; }
     if(progressSyncInFlight){ progressSyncRetryQueued=true; return; }
     progressSyncInFlight=true;
     try{
@@ -8678,7 +8689,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       if(ok){ await updateProgressRosterIndex(snap.studentId); S.lastSyncStatus='synced'; S.lastSyncAt=Date.now(); pushAccountBackup(); }
       else { S.lastSyncStatus='failed'; }
     }catch(e){ S.lastSyncStatus='failed'; }
-    finally{ progressSyncInFlight=false; if(progressSyncRetryQueued){ progressSyncRetryQueued=false; queueProgressSync(); } }
+    finally{ progressSyncInFlight=false; scheduleSyncRetry(); if(progressSyncRetryQueued){ progressSyncRetryQueued=false; queueProgressSync(); } }
   }
   window.addEventListener('online', () => { if(S) queueProgressSync(); }, {passive:true});
 
@@ -8863,11 +8874,23 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   const PROGRESS_INDEX_KEY='progress:index';
   async function updateProgressRosterIndex(studentId){
     try{
-      const raw = await mpStGet(PROGRESS_INDEX_KEY);
-      let ids=[]; if(raw){ try{ ids=JSON.parse(raw); }catch(e){ ids=[]; } }
-      if(!Array.isArray(ids)) ids=[];
-      if(!ids.includes(studentId)){ ids.push(studentId); await mpStSet(PROGRESS_INDEX_KEY, JSON.stringify(ids)); }
-    }catch(e){}
+      // FIX: a plain read-merge-write lost entries when two devices synced at
+      // the same moment (last writer wins), so those students never showed up
+      // on the dashboard. Now: write, read back, and retry until our id is
+      // really present.
+      for(let i=0;i<4;i++){
+        const g = await cnGet(PROGRESS_INDEX_KEY);
+        if(g.fail) return false;
+        let ids=cnJ(g.v,[]); if(!Array.isArray(ids)) ids=[];
+        if(ids.includes(studentId)) return true;
+        ids.push(studentId);
+        if(!await mpStSet(PROGRESS_INDEX_KEY, JSON.stringify(ids))) return false;
+        const chk = await cnGet(PROGRESS_INDEX_KEY);
+        if(!chk.fail){ const a=cnJ(chk.v,[]); if(Array.isArray(a) && a.includes(studentId)) return true; }
+        await new Promise(r=>setTimeout(r,200+Math.random()*500));
+      }
+      return false;
+    }catch(e){ return false; }
   }
   async function fetchRemoteRosterAndMerge(){
     if(!mpHasBackend()) return false;
@@ -8883,16 +8906,22 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       return true;
     }
     try{
-      const idsFromIndex = await (async () => {
-        try{ const raw=await mpStGet(PROGRESS_INDEX_KEY); const a=raw?JSON.parse(raw):[]; return Array.isArray(a)?a:[]; }catch(e){ return []; }
-      })();
+      // FIX: mpStListPrefix may return plain strings OR {key:...} objects; the
+      // old code called .startsWith() on whatever came back and threw on
+      // objects, which also threw away the index results and returned false.
+      const idg = await cnGet(PROGRESS_INDEX_KEY);
+      const idxFailed = !!idg.fail;
+      const idsFromIndex = (()=>{ const a=cnJ(idg.v,[]); return Array.isArray(a)?a:[]; })();
       const idsFromList = (await mpStListPrefix('progress:'))
+        .map(k => String(k && k.key !== undefined ? k.key : k))
         .map(k => k.startsWith('progress:') ? k.slice('progress:'.length) : k)
         .filter(id => id && id!=='index');
       const allIds = [...new Set([...idsFromIndex, ...idsFromList])];
-      const values = await Promise.all(allIds.map(id => mpStGet('progress:'+id)));
-      values.forEach(v => { if(!v) return; try{ mergeSnapshotIntoRoster(JSON.parse(v)); }catch(e){} });
-      return true;
+      if(idxFailed && !allIds.length) return false; // server unreachable: do not claim a sync happened
+      let failedReads=0;
+      const values = await Promise.all(allIds.map(async id => { const g=await cnGet('progress:'+id); if(g.fail) failedReads++; return g.v; }));
+      values.forEach(v => { if(!v) return; try{ mergeSnapshotIntoRoster(typeof v==='string'?JSON.parse(v):v); }catch(e){} });
+      return failedReads===0;
     }catch(e){ return false; }
   }
   function renderSyncStatus(){
@@ -8948,7 +8977,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   async function teacherApi(path, method, payload){
     const base=getMpBaseUrl();
     if(!base || navigator.onLine===false) return null;
-    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),9000);
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),20000);
     try{
       const tok=teacherToken();
       const r=await fetch(base+path,{method:method||'GET',signal:ctl.signal,
@@ -10164,13 +10193,46 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
      over the Internet when the Node server is deployed publicly. Offline/local
      mode continues to work without the server. */
   const MP_CONFIG_KEY='adaptcocu:multiplayerServerUrl';
-  const MP_CONFIG={ serverUrl: localStorage.getItem(MP_CONFIG_KEY) || '', timeoutMs:9000 };
+  const MP_CONFIG={ serverUrl: localStorage.getItem(MP_CONFIG_KEY) || '', timeoutMs:20000 };
+  /* FIX: the page's own origin was always trusted as the API host. When the
+     file is hosted anywhere else (GitHub Pages, Netlify, a school server...)
+     every /api/mp call hit a host with no API and failed silently, so each
+     device ended up with its own private "database". The origin is now used
+     only if it is the official server, a local/LAN dev server, or it has
+     actually answered the API probe below; otherwise the official server is used. */
+  let MP_ORIGIN_OK=null; // null = not probed yet, true/false = probe result
+  function mpOriginLooksLocal(){ const h=location.hostname; return h==='localhost'||h==='127.0.0.1'||/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h); }
   function getMpBaseUrl(){
     if(MP_CONFIG.serverUrl) return MP_CONFIG.serverUrl.replace(/\/+$/,'');
-    if(location.protocol==='http:' || location.protocol==='https:') return location.origin;
+    const web=String(ADAPT_COCU_WEB_URL||'').replace(/\/+$/,'');
+    if(location.protocol==='http:' || location.protocol==='https:'){
+      if(!web || location.origin===web) return location.origin;
+      if(MP_ORIGIN_OK===true) return location.origin;
+      if(MP_ORIGIN_OK===null && mpOriginLooksLocal()) return location.origin;
+      return web;
+    }
     // Installed app / opened from a file: use the official Adapt CoCu server.
-    return ADAPT_COCU_WEB_URL.replace(/\/+$/,'');
+    return web;
   }
+  async function mpProbeOrigin(){
+    if(!(location.protocol==='http:'||location.protocol==='https:')) return;
+    const web=String(ADAPT_COCU_WEB_URL||'').replace(/\/+$/,'');
+    if(MP_CONFIG.serverUrl || (web && location.origin===web)) return;
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),6000);
+    try{
+      const r=await fetch(location.origin+'/api/mp/list?prefix=__probe__',{signal:ctl.signal});
+      const j=r.ok?await r.json():null;
+      MP_ORIGIN_OK=!!(j && Array.isArray(j.keys));
+    }catch(e){ MP_ORIGIN_OK=false; } finally{ clearTimeout(t); }
+  }
+  /* Wake the server early: a sleeping host needs 30s+ to answer its first request. */
+  async function mpWarmUp(){
+    const base=getMpBaseUrl(); if(!base || navigator.onLine===false) return;
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),60000);
+    try{ await fetch(base+'/api/mp/list?prefix=__warm__',{signal:ctl.signal}); }catch(e){} finally{ clearTimeout(t); }
+  }
+  document.addEventListener('DOMContentLoaded',()=>{ mpProbeOrigin().then(mpWarmUp); });
+  if(document.readyState!=='loading') mpProbeOrigin();
   function mpHasBackend(){ return !!getMpBaseUrl() && !S.settings.offlineMode && navigator.onLine!==false; }
   function mpRoomKey(code, suffix){ return `mp:room:${code}:${suffix}`; }
   async function mpApi(path, options){
