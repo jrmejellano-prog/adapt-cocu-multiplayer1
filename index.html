@@ -1545,6 +1545,15 @@
 .cc-emo{max-height:132px;overflow-y:auto;background:#f6f7fd;border:2px solid #dbe3f5;border-radius:12px;padding:6px;margin-bottom:6px}.cc-emo small{display:block;font-weight:800;font-size:.65rem;color:#8a97b5;margin:2px 0}.cc-emo div{display:flex;flex-wrap:wrap;gap:2px}.cc-emo button{all:unset;cursor:pointer;font-size:1.3rem;width:34px;height:34px;text-align:center;line-height:34px;border-radius:8px;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}.cc-emo button:hover{background:#e4e8f8}
 #cc-emoji{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:1rem}
 .cn-chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin:0 -2px}.cn-chip{all:unset;cursor:pointer;flex:none;font-size:.72rem;font-weight:800;padding:5px 10px;border-radius:14px;border:2px solid #dbe3f5;color:#25305a;white-space:nowrap}.cn-chip.on{background:#8b5cf6;border-color:#8b5cf6;color:#fff}.cn-chip i{font-style:normal;background:#ff5a5a;color:#fff;border-radius:9px;padding:0 5px;margin-left:3px;font-size:.62rem}
+
+/* ---- v3: simplified header, copy restriction, scrollable FAQ ---- */
+#nav-profile,#nav-trophies,#nav-history,#mobile-nav-profile,#mobile-nav-trophies,#mobile-nav-history,.hbtn[data-card="card-lesson"],#btn-mp-copy-code{display:none!important}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"],.allow-copy{-webkit-user-select:text;user-select:text}
+.btn-copy-code{margin:6px auto 0;min-height:40px;padding:6px 16px;border-radius:12px;border:2px solid #5b3df5;background:#fff;color:#5b3df5;font-weight:700;cursor:pointer}
+.btn-copy-code:focus-visible{outline:3px solid #5b3df5;outline-offset:2px}
+#faq-search{width:100%;box-sizing:border-box;min-height:38px;margin:0 0 6px;padding:6px 10px;border:2px solid #cfd6ee;border-radius:10px;font:inherit}
+#chat-suggest.chat-suggest-row{max-height:28vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 </style>
 
 <style id="menu-groups-css">
@@ -2001,6 +2010,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       <div class="profile-edit-row"><input type="text" id="profile-name-input" maxlength="24" aria-label="Player name"><button class="btn" id="btn-edit-name">Edit Name</button></div>
       <p class="subtitle" id="profile-section-display">Section: —</p>
       <p class="subtitle profile-player-code" id="profile-player-code">Player Code: —</p>
+      <button type="button" class="btn-copy-code" id="btn-copy-player-code" aria-label="Copy my Player Code">📋 Copy Code</button>
       <p class="subtitle" id="profile-sync-status" style="margin-top:-6px"></p>
       <div class="card cocu-account-card" id="account-recovery-card">
         <h2 class="cocu-section-title" style="margin-top:0">🔐 Account Recovery</h2>
@@ -2529,7 +2539,8 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   </div>
   <div class="chat-body">
     <div class="chat-log" id="chat-log"></div>
-    <div class="chat-suggest-row" id="chat-suggest"></div>
+    <input type="search" id="faq-search" placeholder="Search questions…" aria-label="Search questions" autocomplete="off">
+    <div class="chat-suggest-row" id="chat-suggest" role="list"></div>
   </div>
 </div>
 
@@ -7841,6 +7852,13 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 
   /* ================= AI ASSISTANT ================= */
   const ASSISTANT_FAQ = [
+    { q:'What is my Player Code?', k:['player code','my code','student id','account code'], a:"Your Player Code (like ADAPT-1234) is your unique ID. Open Profile from the Main Menu to see it and tap Copy Code. Classmates use it to add you, and your teacher uses it to find your records." },
+    { q:'How do I sync my account?', k:['sync','synchronize','synced','offline'], a:"Syncing is automatic when you are online. Profile shows whether your progress is synced. If you play offline, your progress is saved on this device and syncs when the connection returns." },
+    { q:'What does the Teacher Dashboard show?', k:['teacher dashboard','teacher','dashboard'], a:"Teachers sign in from the Profile area to see synced students, their sections, scores and activity. Only students whose accounts have synced appear." },
+    { q:'How do I add a friend?', k:['add friend','friend','add player'], a:"Tap the 👤 account button, choose Add Player, and enter your classmate's Player Code. They must accept your request before you are connected." },
+    { q:'How do I chat with a friend?', k:['chat','message','talk'], a:"Tap the 💬 button, start a New chat with a friend's Player Code, and wait for them to accept. Teachers can pause chat at any time." },
+    { q:'How do I change text size or sound?', k:['settings','text size','sound','volume','accessibility'], a:"Tap the ⚙️ button to adjust sound, Smaller or Larger Text, high contrast, reduced motion and Offline Mode." },
+    { q:'How do I customize my character?', k:['customize','character','outfit','store','pets'], a:"Open the Store to buy items and pets with your coins, then equip them from your character area. Owned items stay on your account." },
     { q:'What is Adapt CoCu?', k:['what is','adapt cocu','about'], a:"Adapt CoCu is a game-based learning app for the Strengthened Senior High School Curriculum. You explore Challenge Mode, Quick Games, and while answering real Core Subject questions to earn coins, XP, and trophies." },
     { q:'How do I play the game?', k:['how do i play','how to play','getting started'], a:"Pick a mode from the Main Menu. Challenge Mode is a board game where correct trivia answers move your token. Quick Game is a fast arcade challenge followed by trivia." },
     { q:'What are the game modes?', k:['game modes','modes'], a:"There are two main game modes: 🎯 Challenge Mode and ⚡ Quick Game, plus 🏪 the Store for spending coins on cosmetics." },
@@ -7926,7 +7944,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   }
   function renderChatSuggestions(){
     const row = $('chat-suggest'); row.innerHTML='';
-    const items=botCtx().concat(ASSISTANT_FAQ).filter((f,i,a)=>!botAsked.has(f.q)&&a.findIndex(x=>x.q===f.q)===i).slice(0,5);
+    const items=botCtx().concat(ASSISTANT_FAQ).filter((f,i,a)=>!botAsked.has(f.q)&&a.findIndex(x=>x.q===f.q)===i).filter(f=>{ const q=($('faq-search')&&$('faq-search').value||'').trim().toLowerCase(); return !q || f.q.toLowerCase().includes(q) || (f.k||[]).some(k=>k.includes(q)); });
     items.forEach(f => {
       const b=document.createElement('button'); b.className='chat-suggest'; b.textContent=f.q;
       b.addEventListener('click', () => sendChatMessage(f.q));
@@ -9133,7 +9151,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const dashSub = $('teacher-dash-sub');
     try{
       renderTeacherDashboard();
-      if(dashSub) dashSub.textContent = 'Student Records loaded. Sync Progress to retrieve the latest online records.';
+      if(dashSub) dashSub.textContent = '⏳ Loading shared student records from the server…';
     }catch(e){
       console.error('Teacher Dashboard render failed:', e);
       const list = $('teacher-roster-list');
@@ -9148,11 +9166,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
         try{ renderTeacherDashboard(); }catch(e){ console.error('Teacher Dashboard refresh failed:', e); }
         if(dashSub) dashSub.textContent = 'Student Records synchronized from the Adapt CoCu online server.';
       }else if(dashSub){
-        dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
+        dashSub.textContent = '⚠️ Shared records could not be retrieved from the server. The list below shows only students saved on this device and is probably incomplete. Check your connection and tap Sync Progress.';
       }
     }).catch(err => {
       console.warn('Teacher Dashboard sync failed:', err);
-      if(dashSub) dashSub.textContent = 'Showing saved student records. Online sync is currently unavailable.';
+      if(dashSub) dashSub.textContent = '⚠️ Shared records could not be retrieved from the server. The list below shows only students saved on this device and is probably incomplete. Check your connection and tap Sync Progress.';
     });
   }
   /* Teacher section corrections live on the server as secfix:<id>; applied on top of what the student typed. */
@@ -10419,9 +10437,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   $('btn-mp-join-submit').addEventListener('click', async () => { sfx('click'); await mpJoinOnlineRoom($('mp-join-code-input').value); });
   $('btn-mp-copy-code').addEventListener('click', () => {
     const code = MP.online.code || '';
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(code).then(()=>showInfo('📋 Copied', 'Room code copied: '+code)).catch(()=>showInfo('Room Code', code));
-    } else showInfo('Room Code', code);
+    showInfo('Room Code', code);
     sfx('click');
   });
   $('btn-mp-online-add-bot').addEventListener('click', async () => {
@@ -12124,6 +12140,27 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
     setTimeout(() => startAppTutorial(true), 80);
   });
 
+  /* ---- v3: copy restriction, Copy Code, safe Restart/Exit, FAQ search ---- */
+  ['copy','cut'].forEach(ev=>document.addEventListener(ev,e=>{ const t=e.target; if(t&&t.closest&&t.closest('input,textarea,[contenteditable="true"],.allow-copy')) return; e.preventDefault(); },true));
+  const btnCopyCode=$('btn-copy-player-code');
+  if(btnCopyCode) btnCopyCode.addEventListener('click', async () => {
+    const code=String(S.playerCodename||'').trim();
+    if(!code){ showInfo('Player Code','Finish setup first to get a Player Code.'); return; }
+    let ok=false;
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ await navigator.clipboard.writeText(code); ok=true; } }catch(e){}
+    if(!ok){ try{ const ta=document.createElement('textarea'); ta.value=code; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e){} }
+    showInfo(ok?'📋 Copied':'Copy failed', ok?('Your Player Code '+code+' was copied.'):('Could not copy automatically. Your code is '+code));
+    sfx('click');
+  });
+  $('modal-pause').addEventListener('click', e => {
+    const b=e.target.closest&&e.target.closest('#btn-playagain,#btn-mainmenu'); if(!b) return;
+    if(b.dataset.arm==='1'){ delete b.dataset.arm; clearTimeout(b._t); if(b.dataset.lbl) b.textContent=b.dataset.lbl; return; }
+    e.stopPropagation(); e.preventDefault();
+    b.dataset.lbl=b.textContent; b.dataset.arm='1'; b.textContent='⚠️ Tap again to confirm';
+    clearTimeout(b._t); b._t=setTimeout(()=>{ delete b.dataset.arm; if(b.dataset.lbl) b.textContent=b.dataset.lbl; },3000);
+  },true);
+  document.addEventListener('input', e => { if(e.target && e.target.id==='faq-search') renderChatSuggestions(); });
+
   /* ================= PAUSE ================= */
   $('btn-pause').addEventListener('click', () => {
     const gameScreens=['screen-adventure','screen-trivia','screen-quickgame','screen-challenge','screen-spec-play'];
@@ -12263,7 +12300,6 @@ S.adventuresCompleted++; S.gamesPlayed++; S.challengePlayed=(S.challengePlayed||
   /* ================= KNOW THE APP TUTORIAL ================= */
   const APP_TUTORIAL_STEPS = [
     { target:'btn-gear', title:'Settings', body:'Customize your game experience, audio, text size, accessibility, and other preferences.' },
-    { target:'nav-profile', title:'Profile', body:'View and manage your player profile, character, statistics, and personal information.' },
     { target:'card-adventure', title:'Challenge Mode', body:'Test your Life & Career Skills through a longer game session with questions, turns, and challenges.' },
     { target:'card-speculation', title:'Speculation', body:'Solve clue-based activities and use your reasoning to complete the word puzzle.' },
     { target:'card-quickgame', title:'Quick Game', body:'Play a short, focused activity when you want a faster learning session.' },
