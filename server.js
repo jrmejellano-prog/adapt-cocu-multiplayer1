@@ -20,7 +20,13 @@
      app never calls them). Only the key/value sync API remains. Its "/api/mp/"
      name is historical: accounts, progress, friends, chat and the Teacher
      Dashboard all depend on it, so the paths were left unchanged.
-  6. GET /api/mp/health reports uptime and key count, so you can see whether
+  6. Teacher authorization now lives on the server (see /api/teacher/*). The
+     passcode is set with the TEACHER_PASSCODE environment variable (best on
+     Render) or created once with TEACHER_SETUP_KEY. It is stored only as a
+     salted hash, never in the HTML. Student records are returned only to a
+     signed teacher token, and once a passcode exists, listing every
+     progress:/account: key also requires that token.
+  7. GET /api/mp/health reports uptime and key count, so you can see whether
      the server has been restarting and whether saved data was reloaded.
 
   IMPORTANT (hosting): on Render the app's own disk is wiped on every deploy
@@ -34,6 +40,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = "0.0.0.0";
@@ -82,7 +89,7 @@ function persistKvNow() {
     if (!kvDirty) return;
     kvDirty = false;
     try {
-        writeAtomic(KV_FILE, JSON.stringify({ store: mpStore, savedAt: Date.now() }));
+        writeAtomic(KV_FILE, JSON.stringify({ store: mpStore, teacher: teacherState, savedAt: Date.now() }));
     } catch (error) {
         kvDirty = true;
         console.error("Could not save data: " + error.message);
@@ -93,6 +100,58 @@ function markKvDirty() {
     kvDirty = true;
     if (!kvTimer) kvTimer = setTimeout(persistKvNow, 1000);
 }
+
+/* ---------------- teacher authentication ---------------- */
+
+// Private to the server: never exposed through /api/mp/key.
+const teacherState = (savedKv && savedKv.teacher && typeof savedKv.teacher === "object") ? savedKv.teacher : {};
+if (!teacherState.secret) { teacherState.secret = crypto.randomBytes(32).toString("hex"); markKvDirty(); }
+
+const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
+const loginFails = new Map(); // ip -> { n, until }
+
+function scryptHex(code, salt) { return crypto.scryptSync(String(code), String(salt), 32).toString("hex"); }
+function safeEq(a, b) {
+    const A = Buffer.from(String(a)), B = Buffer.from(String(b));
+    return A.length === B.length && crypto.timingSafeEqual(A, B);
+}
+function teacherConfigured() { return !!(process.env.TEACHER_PASSCODE || teacherState.hash); }
+function checkTeacherCode(code) {
+    code = String(code || "");
+    if (process.env.TEACHER_PASSCODE) return safeEq(scryptHex(code, "env"), scryptHex(process.env.TEACHER_PASSCODE, "env"));
+    if (!teacherState.hash) return false;
+    return safeEq(scryptHex(code, teacherState.salt), teacherState.hash);
+}
+function setTeacherCode(code) {
+    teacherState.salt = crypto.randomBytes(16).toString("hex");
+    teacherState.hash = scryptHex(code, teacherState.salt);
+    teacherState.secret = crypto.randomBytes(32).toString("hex"); // invalidates older tokens
+    markKvDirty();
+}
+function tokenSecret() { return process.env.TEACHER_TOKEN_SECRET || teacherState.secret; }
+function signToken() {
+    const p = Buffer.from(JSON.stringify({ r: "teacher", exp: Date.now() + TOKEN_TTL_MS })).toString("base64url");
+    return p + "." + crypto.createHmac("sha256", tokenSecret()).update(p).digest("base64url");
+}
+function verifyToken(tok) {
+    if (typeof tok !== "string") return false;
+    const parts = tok.split(".");
+    if (parts.length !== 2) return false;
+    const want = crypto.createHmac("sha256", tokenSecret()).update(parts[0]).digest("base64url");
+    if (!safeEq(parts[1], want)) return false;
+    try { const d = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); return d.r === "teacher" && d.exp > Date.now(); }
+    catch (e) { return false; }
+}
+function bearer(req) { const h = req.headers.authorization || ""; return h.startsWith("Bearer ") ? h.slice(7) : ""; }
+function clientIp(req) { return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(); }
+function isLocked(ip) { const f = loginFails.get(ip); return !!(f && f.until > Date.now()); }
+function noteFail(ip) {
+    const f = loginFails.get(ip) || { n: 0, until: 0 };
+    if (f.until && f.until <= Date.now()) { f.n = 0; f.until = 0; }
+    f.n++; if (f.n >= 5) f.until = Date.now() + 60 * 1000;
+    loginFails.set(ip, f);
+}
+setInterval(() => { for (const [ip, f] of loginFails) if (f.until && f.until <= Date.now()) loginFails.delete(ip); }, 5 * 60 * 1000).unref();
 
 function shutdown() {
     try { persistKvNow(); } finally { process.exit(0); }
@@ -227,6 +286,66 @@ const server = http.createServer(async (req, res) => {
     try { url = new URL(req.url, "http://" + (req.headers.host || "localhost")); }
     catch (e) { res.writeHead(400); res.end("Bad Request"); return; }
 
+    /* ===== TEACHER AUTH + ROSTER ===== */
+    if (url.pathname === "/api/teacher/status" && req.method === "GET") {
+        sendJSON(res, 200, { ok: true, configured: teacherConfigured(), setupAvailable: !teacherConfigured() && !!process.env.TEACHER_SETUP_KEY });
+        return;
+    }
+    if (url.pathname === "/api/teacher/login" && req.method === "POST") {
+        try {
+            const ip = clientIp(req);
+            if (isLocked(ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
+            const body = await getRequestBody(req);
+            if (!teacherConfigured()) { sendJSON(res, 400, { ok: false, error: "not_configured" }); return; }
+            if (!checkTeacherCode(body.code)) { noteFail(ip); sendJSON(res, 401, { ok: false, error: "bad_code" }); return; }
+            loginFails.delete(ip);
+            sendJSON(res, 200, { ok: true, token: signToken() });
+        } catch (error) { badRequest(res, error); }
+        return;
+    }
+    if (url.pathname === "/api/teacher/setup" && req.method === "POST") {
+        try {
+            const ip = clientIp(req);
+            if (isLocked(ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
+            const body = await getRequestBody(req);
+            if (teacherConfigured()) { sendJSON(res, 400, { ok: false, error: "already_configured" }); return; }
+            if (!process.env.TEACHER_SETUP_KEY) { sendJSON(res, 403, { ok: false, error: "setup_disabled" }); return; }
+            if (!safeEq(String(body.setupKey || ""), process.env.TEACHER_SETUP_KEY)) { noteFail(ip); sendJSON(res, 403, { ok: false, error: "bad_setup_key" }); return; }
+            const code = String(body.code || "");
+            if (code.length < 4) { sendJSON(res, 400, { ok: false, error: "too_short" }); return; }
+            setTeacherCode(code);
+            sendJSON(res, 200, { ok: true, token: signToken() });
+        } catch (error) { badRequest(res, error); }
+        return;
+    }
+    if (url.pathname === "/api/teacher/reset" && req.method === "POST") {
+        try {
+            const ip = clientIp(req);
+            if (isLocked(ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
+            const body = await getRequestBody(req);
+            if (!process.env.TEACHER_SETUP_KEY) { sendJSON(res, 403, { ok: false, error: "setup_disabled" }); return; }
+            if (process.env.TEACHER_PASSCODE) { sendJSON(res, 400, { ok: false, error: "managed_by_environment" }); return; }
+            if (!safeEq(String(body.setupKey || ""), process.env.TEACHER_SETUP_KEY)) { noteFail(ip); sendJSON(res, 403, { ok: false, error: "bad_setup_key" }); return; }
+            const code = String(body.newCode || "");
+            if (code.length < 4) { sendJSON(res, 400, { ok: false, error: "too_short" }); return; }
+            setTeacherCode(code);
+            sendJSON(res, 200, { ok: true });
+        } catch (error) { badRequest(res, error); }
+        return;
+    }
+    if (url.pathname === "/api/teacher/roster" && req.method === "GET") {
+        if (!verifyToken(bearer(req))) { sendJSON(res, 401, { ok: false, error: "unauthorized" }); return; }
+        const students = [];
+        for (const key of Object.keys(mpStore)) {
+            if (!key.startsWith("progress:") || key === "progress:index") continue;
+            let v = mpStore[key];
+            if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { continue; } }
+            if (v && typeof v === "object") students.push(v);
+        }
+        sendJSON(res, 200, { ok: true, count: students.length, students });
+        return;
+    }
+
     /* ===== KEY/VALUE SYNC API (accounts, progress, friends, chat, teacher records) ===== */
 
     if (url.pathname === "/api/mp/health" && req.method === "GET") {
@@ -235,6 +354,7 @@ const server = http.createServer(async (req, res) => {
             service: "adapt-cocu-sync",
             keys: Object.keys(mpStore).length,
             loadedFromDiskAtStart: loadedKeys,
+            teacherConfigured: teacherConfigured(),
             uptimeSeconds: Math.round((Date.now() - STARTED_AT) / 1000)
         });
         return;
@@ -268,6 +388,11 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname === "/api/mp/list" && req.method === "GET") {
         const prefix = url.searchParams.get("prefix") || "";
+        // Once a teacher passcode exists, enumerating every student requires a teacher token.
+        if (teacherConfigured() && ["progress:", "account:"].some(sp => sp.startsWith(prefix) || prefix.startsWith(sp)) && !verifyToken(bearer(req))) {
+            sendJSON(res, 401, { ok: false, error: "unauthorized" });
+            return;
+        }
         const keys = Object.keys(mpStore).filter(key => key.startsWith(prefix));
         sendJSON(res, 200, { ok: true, keys });
         return;
