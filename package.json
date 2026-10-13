@@ -3,14 +3,11 @@
   "version": "2.0.0",
   "description": "Adapt CoCu multiplayer + centralized Teacher/Facilitator server.",
   "main": "server.js",
+  "license": "UNLICENSED",
   "scripts": {
     "start": "node server.js"
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "pg": "^8.11.5"
   }
 }
-
