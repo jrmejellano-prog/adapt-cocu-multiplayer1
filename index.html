@@ -8767,7 +8767,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   }
   function buildAccountBackupState(){
     const o=JSON.parse(JSON.stringify(S));
-    o.activeSession=null; delete o.settings; delete o.lastSyncStatus; delete o.lastSyncAt;
+    o.activeSession=null; delete o.syncKey; delete o.settings; delete o.lastSyncStatus; delete o.lastSyncAt;
     o.history=(o.history||[]).slice(0,40);
     return o;
   }
@@ -8853,6 +8853,21 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 
   let signinFails=0, signinLockUntil=0;
   $('btn-show-signin')?.addEventListener('click', () => { $('signin-panel').classList.toggle('hidden'); });
+  // The PIN is checked on the server (with lockouts); the stored PIN hash is never sent to the app.
+  async function serverRecover(id, pin){
+    const base=getMpBaseUrl();
+    const post=async (pth,b)=>{ const r=await fetch(base+pth,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); let j=null; try{ j=await r.json(); }catch(e){} return {status:r.status,json:j}; };
+    try{
+      const s1=await post('/api/account/salt',{id});
+      if(s1.status===404) return {};
+      if(!s1.json || !s1.json.ok) return {network:true};
+      const h=await pinHashes(pin, s1.json.salt);
+      const r2=await post('/api/account/recover',{id, sha:h.sha, fnv:h.fnv});
+      if(r2.status===429) return {locked:true};
+      if(r2.json && r2.json.ok && r2.json.record) return {rec:r2.json.record};
+      return {};
+    }catch(e){ return {network:true}; }
+  }
   $('btn-signin-restore')?.addEventListener('click', async () => {
     const err=$('signin-error'), btn=$('btn-signin-restore'); err.textContent='';
     if(Date.now()<signinLockUntil){ err.textContent='Too many tries. Please wait a moment.'; return; }
@@ -8862,8 +8877,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     if(!mpHasBackend()){ err.textContent='Restoring an account needs an internet connection.'; return; }
     btn.disabled=true; btn.textContent='⏳ Restoring…';
     try{
-      const rec=await fetchAccountRecord(id);
-      if(!rec || !(await pinMatches(pin, rec))){
+      const rr=await serverRecover(id, pin);
+      if(rr.locked){ err.textContent='Too many wrong tries for this account. Please try again in 15 minutes.'; sfx('wrong'); return; }
+      if(rr.network){ err.textContent='Could not reach the server. Try again.'; return; }
+      const rec=rr.rec;
+      if(!rec){
         signinFails++; if(signinFails>=5){ signinLockUntil=Date.now()+60000; signinFails=0; }
         err.textContent='Player Code or PIN is incorrect.'; sfx('wrong'); return;
       }
@@ -8982,7 +9000,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
      passcode, replace both values with the hashes of the new one. This ships
      with the app, so every device has the same passcode and nobody is ever
      asked to create one. */
-  const TEACHER_BUILTIN_HASHES = ["sha256:73e7bf57a16289b9c3426a08c2c37631409a79f8f91d2879201a55173524e82a","fnv:baf38cf2a8c4a9e0"];
+  const TEACHER_BUILTIN_HASHES = []; // removed: the passcode now lives only on the server
   async function verifyBuiltinTeacherCode(code){
     // Phone keyboards often capitalise the first letter; the PIN is lowercase.
     const tries=[...new Set([String(code), String(code).toLowerCase()])];
@@ -9080,9 +9098,9 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     $b.disabled=false;
     if(!r || !r.json || !r.json.ok){
       // No central server: use the passcode built into the app.
-      teacherGateMode='builtin'; fieldsOn(true,false,false);
-      $d.textContent='Enter the Dashboard passcode to open the Progress Dashboard.';
-      $b.textContent='Unlock Dashboard'; $('teacher-gate-reset-row').classList.add('hidden'); return;
+      teacherGateMode='unreachable'; fieldsOn(false,false,false);
+      $d.textContent='Can\u2019t reach the central server, so the shared student records can\u2019t be opened right now. Check the connection and try again.';
+      $b.textContent='Try Again'; $('teacher-gate-reset-row').classList.add('hidden'); return;
     }
     if(r.json.configured){
       teacherGateMode='login'; fieldsOn(true,false,false);
@@ -10253,11 +10271,38 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   if(document.readyState!=='loading') mpProbeOrigin();
   function mpHasBackend(){ return !!getMpBaseUrl() && !S.settings.offlineMode && navigator.onLine!==false; }
   function mpRoomKey(code, suffix){ return `mp:room:${code}:${suffix}`; }
+  /* Each Player Code is claimed once by the device that created it; the server then
+     issues a private write key. Without it nobody else can change that student's records. */
+  let studentKeyPromise=null, studentKeyFailAt=0;
+  async function ensureStudentKey(){
+    if(!S || !S.onboarded || !S.playerCodename || S.syncKey) return;
+    if(Date.now()-studentKeyFailAt<60000) return;
+    if(!studentKeyPromise){
+      studentKeyPromise=(async()=>{
+        try{
+          if(!S.deviceClaimToken){ S.deviceClaimToken=newRandomDeviceToken(); try{ saveState(); }catch(e){} }
+          for(let attempt=0; attempt<2; attempt++){
+            const r=await fetch(getMpBaseUrl()+'/api/student/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:S.playerCodename,ownerToken:S.deviceClaimToken})});
+            let j=null; try{ j=await r.json(); }catch(e){}
+            if(r.ok && j && j.ok && j.key){ S.syncKey=j.key; try{ saveState(); }catch(e){} return; }
+            if(r.status===409 && attempt===0 && !S.accountSecured && typeof reassignPlayerCodenameDueToCollision==='function'){ reassignPlayerCodenameDueToCollision(); continue; }
+            break;
+          }
+          studentKeyFailAt=Date.now();
+        }catch(e){ studentKeyFailAt=Date.now(); } finally{ studentKeyPromise=null; }
+      })();
+    }
+    await studentKeyPromise;
+  }
   async function mpApi(path, options){
     if(!mpHasBackend()) return null;
+    await ensureStudentKey();
+    const headers={'Content-Type':'application/json'};
+    if(S && S.syncKey && S.playerCodename){ headers['X-Student-Id']=S.playerCodename; headers['X-Student-Key']=S.syncKey; }
+    const tt=teacherToken(); if(tt && tt!=='builtin') headers['Authorization']='Bearer '+tt;
     const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),MP_CONFIG.timeoutMs);
     try{
-      const r = await fetch(getMpBaseUrl()+path, Object.assign({ headers:{'Content-Type':'application/json'}, signal:controller.signal }, options||{}));
+      const r = await fetch(getMpBaseUrl()+path, Object.assign({ headers, signal:controller.signal }, options||{}));
       if(!r.ok) return null;
       return await r.json();
     }catch(e){ return null; } finally { clearTimeout(timer); }
