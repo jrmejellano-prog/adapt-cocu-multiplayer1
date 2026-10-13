@@ -26,7 +26,20 @@
      salted hash, never in the HTML. Student records are returned only to a
      signed teacher token, and once a passcode exists, listing every
      progress:/account: key also requires that token.
-  7. GET /api/mp/health reports uptime and key count, so you can see whether
+  7. Student accounts: each Player Code is claimed by the device that created it
+     (POST /api/student/claim) and receives a private write key. Writes to a
+     student's own records, and reads of their full record, need that key.
+     Other people only see a minimal public card. Recovery PINs are checked
+     on the server (POST /api/account/salt and /recover) with lockouts, and
+     the PIN hash is never returned to anyone else.
+  8. Class-limited teachers: set TEACHER_ACCOUNTS (JSON) to give a teacher a
+     passcode that only shows certain sections. Example:
+       [{"name":"Ms. Reyes","code":"reyes-2026","sections":["Grade 11 - Rizal"]}]
+     The admin passcode (TEACHER_PASSCODE / setup key) still sees everyone.
+  9. STRICT_STUDENT_AUTH=1 rejects ALL unauthenticated writes to student
+     records. Leave it off while old app versions are still in use; turn it
+     on once everyone has updated.
+ 10. GET /api/mp/health reports uptime and key count, so you can see whether
      the server has been restarting and whether saved data was reloaded.
 
   IMPORTANT (hosting): on Render the app's own disk is wiped on every deploy
@@ -89,7 +102,7 @@ function persistKvNow() {
     if (!kvDirty) return;
     kvDirty = false;
     try {
-        writeAtomic(KV_FILE, JSON.stringify({ store: mpStore, teacher: teacherState, savedAt: Date.now() }));
+        writeAtomic(KV_FILE, JSON.stringify({ store: mpStore, teacher: teacherState, claims, savedAt: Date.now() }));
     } catch (error) {
         kvDirty = true;
         console.error("Could not save data: " + error.message);
@@ -107,6 +120,17 @@ function markKvDirty() {
 const teacherState = (savedKv && savedKv.teacher && typeof savedKv.teacher === "object") ? savedKv.teacher : {};
 if (!teacherState.secret) { teacherState.secret = crypto.randomBytes(32).toString("hex"); markKvDirty(); }
 
+const claims = (savedKv && savedKv.claims && typeof savedKv.claims === "object") ? savedKv.claims : {};
+if (!teacherState.studentSecret) { teacherState.studentSecret = crypto.randomBytes(32).toString("hex"); markKvDirty(); }
+const STRICT = process.env.STRICT_STUDENT_AUTH === "1";
+const normSec = v => String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
+let teacherAccounts = [];
+try {
+    const arr = JSON.parse(process.env.TEACHER_ACCOUNTS || "[]");
+    if (Array.isArray(arr)) teacherAccounts = arr.filter(x => x && typeof x.code === "string" && x.code.length >= 4 && Array.isArray(x.sections))
+        .map(x => ({ name: String(x.name || "Teacher"), code: x.code, sections: x.sections.map(normSec) }));
+} catch (e) { console.error("TEACHER_ACCOUNTS is not valid JSON; ignored."); }
+
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
 const loginFails = new Map(); // ip -> { n, until }
 
@@ -115,7 +139,7 @@ function safeEq(a, b) {
     const A = Buffer.from(String(a)), B = Buffer.from(String(b));
     return A.length === B.length && crypto.timingSafeEqual(A, B);
 }
-function teacherConfigured() { return !!(process.env.TEACHER_PASSCODE || teacherState.hash); }
+function teacherConfigured() { return !!(process.env.TEACHER_PASSCODE || teacherState.hash || teacherAccounts.length); }
 function checkTeacherCode(code) {
     code = String(code || "");
     if (process.env.TEACHER_PASSCODE) return safeEq(scryptHex(code, "env"), scryptHex(process.env.TEACHER_PASSCODE, "env"));
@@ -129,8 +153,8 @@ function setTeacherCode(code) {
     markKvDirty();
 }
 function tokenSecret() { return process.env.TEACHER_TOKEN_SECRET || teacherState.secret; }
-function signToken() {
-    const p = Buffer.from(JSON.stringify({ r: "teacher", exp: Date.now() + TOKEN_TTL_MS })).toString("base64url");
+function signToken(grant) {
+    const p = Buffer.from(JSON.stringify({ r: "teacher", exp: Date.now() + TOKEN_TTL_MS, s: grant == null ? "*" : grant })).toString("base64url");
     return p + "." + crypto.createHmac("sha256", tokenSecret()).update(p).digest("base64url");
 }
 function verifyToken(tok) {
@@ -139,8 +163,8 @@ function verifyToken(tok) {
     if (parts.length !== 2) return false;
     const want = crypto.createHmac("sha256", tokenSecret()).update(parts[0]).digest("base64url");
     if (!safeEq(parts[1], want)) return false;
-    try { const d = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); return d.r === "teacher" && d.exp > Date.now(); }
-    catch (e) { return false; }
+    try { const d = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); return (d.r === "teacher" && d.exp > Date.now()) ? d : null; }
+    catch (e) { return null; }
 }
 function bearer(req) { const h = req.headers.authorization || ""; return h.startsWith("Bearer ") ? h.slice(7) : ""; }
 function clientIp(req) { return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(); }
@@ -151,6 +175,57 @@ function noteFail(ip) {
     f.n++; if (f.n >= 5) f.until = Date.now() + 60 * 1000;
     loginFails.set(ip, f);
 }
+
+/* ---------------- student identity ---------------- */
+
+const ID_RE = /^ADAPT-\d{4,6}$/;
+const sha256 = v => crypto.createHash("sha256").update(String(v)).digest("hex");
+function studentKey(id) { return crypto.createHmac("sha256", teacherState.studentSecret).update("student:" + id).digest("hex").slice(0, 40); }
+function studentAuth(req) {
+    const id = String(req.headers["x-student-id"] || "").toUpperCase();
+    const k = String(req.headers["x-student-key"] || "");
+    return (ID_RE.test(id) && k && claims[id] && safeEq(k, studentKey(id))) ? id : null;
+}
+const OWNER_RES = [
+    /^(progress|account|frlist|frprefs|friendcard|chatlist|chatprefs|notifread):(ADAPT-\d+)$/,
+    /^(frok|chatok|chatmsg):(ADAPT-\d+):ADAPT-\d+$/
+];
+function keyOwner(key) { for (const re of OWNER_RES) { const m = re.exec(key); if (m) return m[2]; } return null; }
+const TEACHER_KEY_RE = /^(secfix:|deleted:|chatban:|chat:cfg$)/;
+const SHARED_KEY_RE = /^(frreq:|chatreq:|notif:|chatreport:|progress:index$)/;
+
+function authorizeWrite(req, key) {
+    if (verifyToken(bearer(req))) return true;
+    if (TEACHER_KEY_RE.test(key)) return false;
+    const sid = studentAuth(req);
+    const owner = keyOwner(key);
+    if (owner) return sid === owner || (!STRICT && !claims[owner]);
+    if (SHARED_KEY_RE.test(key)) return !!sid || !STRICT;
+    return true;
+}
+function parseVal(v) { if (typeof v !== "string") return v; try { return JSON.parse(v); } catch (e) { return null; } }
+function viewFor(req, key, value) {
+    const m = /^(progress|account):(ADAPT-\d+)$/.exec(key);
+    if (!m || value === null || value === undefined) return value;
+    const sid = studentAuth(req);
+    if (sid === m[2]) return value;
+    if (m[1] === "progress" && verifyToken(bearer(req))) return value;
+    const v = parseVal(value);
+    if (!v || typeof v !== "object") return value;
+    const pub = { studentId: v.studentId, name: v.name || v.studentName || (v.state && (v.state.name || v.state.playerName)) || undefined, version: v.version, updatedAt: v.updatedAt };
+    return typeof value === "string" ? JSON.stringify(pub) : pub;
+}
+
+const failBuckets = new Map();
+function failBlocked(k) { const f = failBuckets.get(k); return !!(f && f.until > Date.now()); }
+function failNote(k, limit, lockMs) {
+    const f = failBuckets.get(k) || { n: 0, until: 0 };
+    if (f.until && f.until <= Date.now()) { f.n = 0; f.until = 0; }
+    f.n++; if (f.n >= limit) f.until = Date.now() + lockMs;
+    failBuckets.set(k, f);
+}
+setInterval(() => { for (const [k, f] of failBuckets) if (f.until && f.until <= Date.now()) failBuckets.delete(k); }, 10 * 60 * 1000).unref();
+
 setInterval(() => { for (const [ip, f] of loginFails) if (f.until && f.until <= Date.now()) loginFails.delete(ip); }, 5 * 60 * 1000).unref();
 
 function shutdown() {
@@ -163,7 +238,7 @@ process.on("SIGINT", shutdown);
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Student-Id, X-Student-Key",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Max-Age": "600"
 };
@@ -297,9 +372,14 @@ const server = http.createServer(async (req, res) => {
             if (isLocked(ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
             const body = await getRequestBody(req);
             if (!teacherConfigured()) { sendJSON(res, 400, { ok: false, error: "not_configured" }); return; }
-            if (!checkTeacherCode(body.code)) { noteFail(ip); sendJSON(res, 401, { ok: false, error: "bad_code" }); return; }
+            let grant = checkTeacherCode(body.code) ? "*" : null;
+            if (!grant) {
+                const c = String(body.code || "");
+                for (const a of teacherAccounts) if (safeEq(scryptHex(c, "acct"), scryptHex(a.code, "acct"))) grant = a.sections;
+            }
+            if (!grant) { noteFail(ip); sendJSON(res, 401, { ok: false, error: "bad_code" }); return; }
             loginFails.delete(ip);
-            sendJSON(res, 200, { ok: true, token: signToken() });
+            sendJSON(res, 200, { ok: true, token: signToken(grant) });
         } catch (error) { badRequest(res, error); }
         return;
     }
@@ -334,15 +414,78 @@ const server = http.createServer(async (req, res) => {
         return;
     }
     if (url.pathname === "/api/teacher/roster" && req.method === "GET") {
-        if (!verifyToken(bearer(req))) { sendJSON(res, 401, { ok: false, error: "unauthorized" }); return; }
+        const tk = verifyToken(bearer(req));
+        if (!tk) { sendJSON(res, 401, { ok: false, error: "unauthorized" }); return; }
+        const allowed = (tk.s == null || tk.s === "*") ? null : new Set(tk.s);
         const students = [];
         for (const key of Object.keys(mpStore)) {
             if (!key.startsWith("progress:") || key === "progress:index") continue;
             let v = mpStore[key];
             if (typeof v === "string") { try { v = JSON.parse(v); } catch (e) { continue; } }
-            if (v && typeof v === "object") students.push(v);
+            if (!v || typeof v !== "object") continue;
+            if (allowed) {
+                const fix = parseVal(mpStore["secfix:" + key.slice(9)]);
+                const sec = (fix && typeof fix.section === "string") ? fix.section : v.section;
+                if (!allowed.has(normSec(sec))) continue;
+            }
+            const copy = Object.assign({}, v); delete copy.ownerToken;
+            students.push(copy);
         }
         sendJSON(res, 200, { ok: true, count: students.length, students });
+        return;
+    }
+
+    /* ===== STUDENT CLAIM + ACCOUNT RECOVERY ===== */
+    if (url.pathname === "/api/student/claim" && req.method === "POST") {
+        try {
+            const ip = clientIp(req);
+            if (failBlocked("claim:" + ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
+            failNote("claim:" + ip, 60, 60 * 1000); // at most ~60 claim calls per minute per address
+            const body = await getRequestBody(req);
+            const id = String(body.id || "").toUpperCase();
+            const token = String(body.ownerToken || "");
+            if (!ID_RE.test(id) || token.length < 8) { sendJSON(res, 400, { ok: false, error: "bad_request" }); return; }
+            const h = sha256(token);
+            if (claims[id]) {
+                if (safeEq(claims[id], h)) { sendJSON(res, 200, { ok: true, key: studentKey(id) }); return; }
+                sendJSON(res, 409, { ok: false, error: "already_claimed" }); return;
+            }
+            for (const k of ["progress:" + id, "account:" + id]) {
+                const rec = parseVal(mpStore[k]);
+                if (rec && typeof rec === "object" && rec.ownerToken && rec.ownerToken !== token) { sendJSON(res, 409, { ok: false, error: "already_claimed" }); return; }
+            }
+            claims[id] = h; markKvDirty();
+            sendJSON(res, 200, { ok: true, key: studentKey(id) });
+        } catch (error) { badRequest(res, error); }
+        return;
+    }
+    if (url.pathname === "/api/account/salt" && req.method === "POST") {
+        try {
+            const body = await getRequestBody(req);
+            const id = String(body.id || "").toUpperCase();
+            const rec = ID_RE.test(id) ? parseVal(mpStore["account:" + id]) : null;
+            if (!rec || !rec.pinSalt) { sendJSON(res, 404, { ok: false, error: "not_found" }); return; }
+            sendJSON(res, 200, { ok: true, salt: rec.pinSalt });
+        } catch (error) { badRequest(res, error); }
+        return;
+    }
+    if (url.pathname === "/api/account/recover" && req.method === "POST") {
+        try {
+            const ip = clientIp(req);
+            const body = await getRequestBody(req);
+            const id = String(body.id || "").toUpperCase();
+            if (!ID_RE.test(id)) { sendJSON(res, 400, { ok: false, error: "bad_request" }); return; }
+            if (failBlocked("pin:" + id) || failBlocked("pinip:" + ip)) { sendJSON(res, 429, { ok: false, error: "locked" }); return; }
+            const rec = parseVal(mpStore["account:" + id]);
+            let good = false;
+            if (rec && rec.pinSalt) {
+                const sha = String(body.sha || ""), fnv = String(body.fnv || "");
+                good = (rec.pinSha && sha) ? safeEq(sha, rec.pinSha) : (!!rec.pinFnv && safeEq(fnv, rec.pinFnv));
+            }
+            if (!good) { failNote("pin:" + id, 5, 15 * 60 * 1000); failNote("pinip:" + ip, 30, 15 * 60 * 1000); sendJSON(res, 401, { ok: false, error: "bad_pin" }); return; }
+            failBuckets.delete("pin:" + id);
+            sendJSON(res, 200, { ok: true, record: rec });
+        } catch (error) { badRequest(res, error); }
         return;
     }
 
@@ -355,6 +498,7 @@ const server = http.createServer(async (req, res) => {
             keys: Object.keys(mpStore).length,
             loadedFromDiskAtStart: loadedKeys,
             teacherConfigured: teacherConfigured(),
+            studentAuth: STRICT ? "strict" : "compat",
             uptimeSeconds: Math.round((Date.now() - STARTED_AT) / 1000)
         });
         return;
@@ -363,7 +507,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/api/mp/key" && req.method === "GET") {
         const key = url.searchParams.get("key") || "";
         const value = mpStore[key];
-        sendJSON(res, 200, { ok: true, value: value === undefined ? null : value });
+        sendJSON(res, 200, { ok: true, value: value === undefined ? null : viewFor(req, key, value) });
         return;
     }
 
@@ -372,6 +516,7 @@ const server = http.createServer(async (req, res) => {
             const body = await getRequestBody(req);
             const key = body.key;
             if (!validKey(key)) { sendJSON(res, 400, { ok: false, message: "Missing or invalid key." }); return; }
+            if (!authorizeWrite(req, key)) { sendJSON(res, 403, { ok: false, error: "forbidden" }); return; }
             mpStore[key] = body.value === undefined ? null : body.value;
             markKvDirty();
             sendJSON(res, 200, { ok: true });
@@ -381,6 +526,7 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname === "/api/mp/key" && req.method === "DELETE") {
         const key = url.searchParams.get("key") || "";
+        if (!authorizeWrite(req, key)) { sendJSON(res, 403, { ok: false, error: "forbidden" }); return; }
         if (key in mpStore) { delete mpStore[key]; markKvDirty(); }
         sendJSON(res, 200, { ok: true });
         return;
