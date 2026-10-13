@@ -8609,8 +8609,9 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     try{ const o=JSON.parse(localStorage.getItem(TEACHER_ROSTER_KEY)||'{}'); return (o && typeof o==='object' && !Array.isArray(o)) ? o : {}; }catch(e){ return {}; }
   }
   function writeLocalRoster(obj){ try{ localStorage.setItem(TEACHER_ROSTER_KEY, JSON.stringify(obj)); }catch(e){} }
-  function mergeSnapshotIntoRoster(snapshot){
+  function mergeSnapshotIntoRoster(snapshot, src){
     if(!snapshot || !snapshot.studentId) return;
+    if(src==='import') snapshot = Object.assign({}, snapshot, {_imported:true});
     const roster = readLocalRoster();
     const existing = roster[snapshot.studentId];
     // Newest lastActive always wins, so importing an old export or a stale
@@ -8928,7 +8929,18 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       return false;
     }catch(e){ return false; }
   }
+  /* Teacher roster sync state, so the Dashboard can show a real loading / error / ok status
+     instead of silently displaying whatever happens to be cached on this device. */
+  const rosterSync={ state:'idle', at:0, source:'' };
   async function fetchRemoteRosterAndMerge(){
+    rosterSync.state='loading';
+    let ok=false;
+    try{ ok=await fetchRemoteRosterAndMergeInner(); }catch(e){ ok=false; }
+    rosterSync.state = ok ? 'ok' : 'error';
+    if(ok) rosterSync.at=Date.now();
+    return ok;
+  }
+  async function fetchRemoteRosterAndMergeInner(){
     if(!mpHasBackend()) return false;
     // Authoritative path: the central server returns every student's record
     // to an authorized Dashboard session only.
@@ -8938,7 +8950,15 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const auth = teacherToken()==='builtin' ? null : await teacherApi('/api/teacher/roster');
     if(auth && auth.status===401 && teacherToken() && teacherToken()!=='builtin'){ setTeacherSessionActive(false); showScreen('teacher-gate'); renderTeacherGate(); return false; }
     if(auth && auth.json && auth.json.ok && Array.isArray(auth.json.students)){
-      auth.json.students.forEach(snap => mergeSnapshotIntoRoster(snap));
+      // The server is the source of truth: rebuild the cache from it so students that were
+      // removed server-side (or stale local-only copies) do not linger. Hand-imported records
+      // that the server does not know about are kept.
+      const fresh={};
+      auth.json.students.forEach(snap => { if(snap && snap.studentId) fresh[snap.studentId]=snap; });
+      const old=readLocalRoster();
+      Object.keys(old).forEach(id => { if(!fresh[id] && old[id] && old[id]._imported) fresh[id]=old[id]; });
+      writeLocalRoster(fresh);
+      rosterSync.source='server';
       return true;
     }
     try{
@@ -8957,6 +8977,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       let failedReads=0;
       const values = await Promise.all(allIds.map(async id => { const g=await cnGet('progress:'+id); if(g.fail) failedReads++; return g.v; }));
       values.forEach(v => { if(!v) return; try{ mergeSnapshotIntoRoster(typeof v==='string'?JSON.parse(v):v); }catch(e){} });
+      rosterSync.source='fallback';
       return failedReads===0;
     }catch(e){ return false; }
   }
@@ -9162,34 +9183,30 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
 
   /* ---- Dashboard state / rendering ---- */
   let teacherFilter = { q:'', grade:'all', section:'all', mode:'all', sort:'recent' };
+  let teacherPollTimer=null;
+  function teacherDashVisible(){ return !!$('screen-teacher-dashboard')?.classList.contains('active'); }
+  async function refreshTeacherRoster(){
+    if(rosterSync.state==='loading') return false;
+    rosterSync.state='loading'; try{ renderTeacherRoster(); }catch(e){}
+    const ok=await fetchRemoteRosterAndMerge();
+    try{ if(typeof loadSecFixes==='function') await loadSecFixes(); }catch(e){}
+    try{ if(typeof cnLoadDeleted==='function') await cnLoadDeleted(); }catch(e){}
+    try{ renderTeacherRoster(); }catch(e){ console.error('Teacher Dashboard render failed:', e); }
+    return ok;
+  }
+  /* Light periodic refresh: only while the Dashboard is on screen AND the tab is visible. */
+  function startTeacherPoll(){
+    if(teacherPollTimer) return;
+    teacherPollTimer=setInterval(()=>{
+      if(!teacherDashVisible() || !isTeacherSessionActive()){ clearInterval(teacherPollTimer); teacherPollTimer=null; return; }
+      if(document.hidden) return;
+      refreshTeacherRoster();
+    }, 60000);
+  }
   function openTeacherDashboard(){
-    // Always switch to the dashboard immediately. The local roster is usable
-    // even while the remote sync is loading or temporarily unavailable.
     showScreen('teacher-dashboard');
-    const dashSub = $('teacher-dash-sub');
-    try{
-      renderTeacherDashboard();
-      if(dashSub) dashSub.textContent = '⏳ Loading shared student records from the server…';
-    }catch(e){
-      console.error('Teacher Dashboard render failed:', e);
-      const list = $('teacher-roster-list');
-      if(list){
-        list.innerHTML = '<div class="card history-empty"><strong>Dashboard loaded, but the student list could not be rendered.</strong><p>Please use Sync Progress or reload the dashboard.</p></div>';
-      }
-    }
-
-    // Sync in the background; never block the initial dashboard view.
-    fetchRemoteRosterAndMerge().then(ok => {
-      if(ok){
-        try{ renderTeacherDashboard(); }catch(e){ console.error('Teacher Dashboard refresh failed:', e); }
-        if(dashSub) dashSub.textContent = 'Student Records synchronized from the Adapt CoCu online server.';
-      }else if(dashSub){
-        dashSub.textContent = '⚠️ Shared records could not be retrieved from the server. The list below shows only students saved on this device and is probably incomplete. Check your connection and tap Sync Progress.';
-      }
-    }).catch(err => {
-      console.warn('Teacher Dashboard sync failed:', err);
-      if(dashSub) dashSub.textContent = '⚠️ Shared records could not be retrieved from the server. The list below shows only students saved on this device and is probably incomplete. Check your connection and tap Sync Progress.';
-    });
+    refreshTeacherRoster();
+    startTeacherPoll();
   }
   /* Teacher section corrections live on the server as secfix:<id>; applied on top of what the student typed. */
   var secFix={};
@@ -9268,11 +9285,28 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
       return (Number(b.lastActive)||0)-(Number(a.lastActive)||0); // recent
     });
     const list=$('teacher-roster-list');
+    const dsub=$('teacher-dash-sub');
+    const when = rosterSync.at ? new Date(rosterSync.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+    if(dsub){
+      dsub.textContent = rosterSync.state==='loading' ? '⏳ Loading shared student records from the server…'
+        : rosterSync.state==='ok' ? ('Student records from the Adapt CoCu server'+(rosterSync.source==='fallback'?' (limited listing)':'')+(when?' · updated '+when:'')+'.')
+        : rosterSync.state==='error' ? '⚠️ The server could not be reached. Records below (if any) are only what this device last saved and may be incomplete or out of date.'
+        : 'Student Records synchronized from the Adapt CoCu online server. Tap Sync Progress to load the latest.';
+    }
+    const banner = rosterSync.state==='error'
+      ? `<div class="card cocu-notice" role="alert"><strong>⚠️ Could not load the shared student list.</strong><p>This list may be incomplete. <button type="button" class="btn" data-teacher-retry="1">🔁 Try again</button></p></div>`
+      : rosterSync.state==='loading' && rows.length ? `<div class="card cocu-notice" role="status">⏳ Refreshing from the server…</div>` : '';
     if(!filtered.length){
-      list.innerHTML = `<div class="card history-empty"><div class="history-empty-icon">🧑\u200d🏫</div><strong>${rows.length? 'No learners match these filters.' : 'No learner records yet.'}</strong><p>${rows.length? 'Try a different search or filter.' : 'Records appear here automatically as learners play on this device, or use Import to load progress files exported from other devices.'}</p></div>`;
+      if(rosterSync.state==='loading' && !rows.length){
+        list.innerHTML = `<div class="card history-empty" role="status"><div class="history-empty-icon">⏳</div><strong>Loading student records…</strong><p>The server may take up to a minute to wake up.</p></div>`;
+      } else if(rosterSync.state==='error' && !rows.length){
+        list.innerHTML = banner;
+      } else {
+        list.innerHTML = banner + `<div class="card history-empty"><div class="history-empty-icon">🧑\u200d🏫</div><strong>${rows.length? 'No learners match these filters.' : 'No students have registered yet.'}</strong><p>${rows.length? 'Try a different search or filter.' : 'Students appear here after they register and sync from any device. You can also use Import to load an exported progress file.'}</p></div>`;
+      }
       return;
     }
-    list.innerHTML = filtered.map(r => {
+    list.innerHTML = banner + filtered.map(r => {
       const dot = isRecentlyActive(r.lastActive) ? 'teacher-dot-active' : 'teacher-dot-idle';
       return `<article class="history-card teacher-row" data-student-id="${escapeHtml(r.studentId)}">
         <div class="history-card-head">
@@ -9295,8 +9329,9 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
   $('teacher-filter-section')?.addEventListener('change', e => { teacherFilter.section=e.target.value; renderTeacherRoster(); });
   $('teacher-filter-mode')?.addEventListener('change', e => { teacherFilter.mode=e.target.value; renderTeacherRoster(); });
   $('teacher-sort')?.addEventListener('change', e => { teacherFilter.sort=e.target.value; renderTeacherRoster(); });
-  $('teacher-refresh')?.addEventListener('click', async () => { sfx('click'); const btn=$('teacher-refresh'); btn.disabled=true; btn.textContent='⏳ Syncing…'; await fetchRemoteRosterAndMerge(); renderTeacherRoster(); btn.disabled=false; btn.textContent='🔄 Sync Progress'; });
+  $('teacher-refresh')?.addEventListener('click', async () => { sfx('click'); const btn=$('teacher-refresh'); btn.disabled=true; btn.textContent='⏳ Syncing…'; await refreshTeacherRoster(); btn.disabled=false; btn.textContent='🔄 Sync Progress'; });
   $('teacher-roster-list')?.addEventListener('click', e => {
+    if(e.target.closest('[data-teacher-retry]')){ sfx('click'); refreshTeacherRoster(); return; }
     const btn=e.target.closest('[data-teacher-report]'); if(!btn) return;
     sfx('click'); openTeacherReport(btn.dataset.teacherReport);
   });
@@ -9325,7 +9360,7 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
         const text = await f.text();
         const data = JSON.parse(text);
         const list = Array.isArray(data) ? data : [data];
-        list.forEach(snap => { if(snap && snap.studentId){ mergeSnapshotIntoRoster(snap); imported++; } else { skipped++; } });
+        list.forEach(snap => { if(snap && snap.studentId){ mergeSnapshotIntoRoster(snap,'import'); imported++; } else { skipped++; } });
       }catch(e){ skipped++; }
     }
     renderTeacherRoster();
@@ -10303,6 +10338,11 @@ body.high-contrast .char-nameplate{background:#1a2440;border-color:#a99aff}body.
     const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),MP_CONFIG.timeoutMs);
     try{
       const r = await fetch(getMpBaseUrl()+path, Object.assign({ headers, signal:controller.signal }, options||{}));
+      if(r.status===403 && S && S.syncKey && !(tt && tt!=='builtin')){
+        // The server no longer accepts this device's private key (e.g. server data was reset).
+        // Forget it so ensureStudentKey() asks for a fresh one on the next call, instead of failing forever.
+        S.syncKey=''; studentKeyFailAt=0; try{ saveState(); }catch(e){}
+      }
       if(!r.ok) return null;
       return await r.json();
     }catch(e){ return null; } finally { clearTimeout(timer); }
